@@ -1,4 +1,5 @@
 // lib/router/navigation_service.dart
+import 'package:flutter/foundation.dart';
 import 'package:go_router/go_router.dart';
 import 'app_router.dart';
 import 'app_routes.dart';
@@ -8,7 +9,15 @@ class NavigationService {
 
   // Basic
   static void go(String path) => _router.go(path);
-  static void push(String path) => _router.push(path);
+  static void push(String path) {
+    try {
+      if (kDebugMode) print('Navigating to: $path');
+      _router.push(path);
+    } catch (e) {
+      if (kDebugMode) print('Navigation error: $e');
+    }
+  }
+
   static void pop() {
     if (_router.canPop()) _router.pop();
   }

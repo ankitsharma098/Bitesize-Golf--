@@ -13,6 +13,8 @@ import '../features/auth/presentation/bloc/auth_state.dart';
 import '../features/auth/presentation/pages/forgot_password.dart';
 import '../features/auth/presentation/pages/login_page.dart';
 import '../features/auth/presentation/pages/register_page.dart';
+import '../features/auth/presentation/pages/splash_page.dart';
+import '../features/auth/presentation/pages/welcome_page.dart';
 import '../injection.dart';
 import 'app_routes.dart';
 
@@ -45,23 +47,29 @@ class AppRouter {
       GoRoute(
         path: RouteNames.letStart,
         name: 'letStart',
-        builder: (_, __) => const _LetStartPage(),
+        builder: (_, __) => SplashScreen(),
       ),
       GoRoute(
         path: RouteNames.welcome,
         name: 'welcome',
-        builder: (_, __) => const _WelcomePage(),
+        builder: (_, __) => WelcomeScreen(),
+      ),
+      // In your app_router.dart
+      GoRoute(
+        path: RouteNames.login,
+        builder: (context, state) => BlocProvider<AuthBloc>(
+          create: (context) => getIt<AuthBloc>(),
+          child: const LoginPage(),
+        ),
       ),
       GoRoute(
         path: RouteNames.login,
-        name: 'login',
-        builder: (_, __) => const LoginPage(),
+        builder: (context, state) => BlocProvider<AuthBloc>(
+          create: (context) => getIt<AuthBloc>(),
+          child: const RegisterPage(),
+        ),
       ),
-      GoRoute(
-        path: RouteNames.register,
-        name: 'register',
-        builder: (_, __) => const RegisterPage(),
-      ),
+
       GoRoute(
         path: RouteNames.forgetPass,
         name: 'forgetPass',

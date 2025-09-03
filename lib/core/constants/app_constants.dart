@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 
 /// App
-const AppName = '3fitech Golf Learn';
+const AppName = 'Bitesize-Golf';
 
 /// Firebase project/app (update if you change your Firebase)
 const mFirebaseAppId = '1:552392197011:android:ab575c967631768f989e66';

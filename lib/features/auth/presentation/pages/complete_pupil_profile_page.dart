@@ -1,12 +1,18 @@
 // features/auth/presentation/pages/complete_profile_pupil_page.dart
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
-
-import 'dart:io';
+import '../../../../core/themes/theme_colors.dart';
 import '../../../../route/routes_names.dart';
+import '../../../components/custom_button.dart';
+import '../../../components/custom_image_picker.dart';
+import '../../../components/text_field_component.dart';
+import '../../../components/utils/custom_app_bar.dart';
+import '../../../components/utils/size_config.dart';
 import '../bloc/auth_bloc.dart';
 
 class CompleteProfilePupilPage extends StatefulWidget {
@@ -27,7 +33,6 @@ class _CompleteProfilePupilPageState extends State<CompleteProfilePupilPage> {
   final golfClubCtrl = TextEditingController();
 
   File? _profileImage;
-  bool _isLoading = false;
   DateTime? _selectedDateOfBirth;
   String? _selectedGolfClub;
   String? _selectedCoach;
@@ -35,11 +40,10 @@ class _CompleteProfilePupilPageState extends State<CompleteProfilePupilPage> {
   @override
   void initState() {
     super.initState();
-    // Pre-fill with existing data
-    final currentUser = context.read<AuthBloc>().state;
-    if (currentUser is AuthAuthenticated) {
-      firstNameCtrl.text = currentUser.user.firstName ?? '';
-      lastNameCtrl.text = currentUser.user.lastName ?? '';
+    final user = context.read<AuthBloc>().state;
+    if (user is AuthAuthenticated) {
+      firstNameCtrl.text = user.user.firstName ?? '';
+      lastNameCtrl.text = user.user.lastName ?? '';
     }
   }
 
@@ -54,25 +58,13 @@ class _CompleteProfilePupilPageState extends State<CompleteProfilePupilPage> {
     super.dispose();
   }
 
-  Future<void> _pickImage() async {
-    final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
-
-    if (pickedFile != null) {
-      setState(() {
-        _profileImage = File(pickedFile.path);
-      });
-    }
-  }
-
-  Future<void> _selectDateOfBirth() async {
-    final DateTime? picked = await showDatePicker(
+  Future<void> _selectDate(BuildContext context) async {
+    final picked = await showDatePicker(
       context: context,
       initialDate: DateTime.now().subtract(const Duration(days: 365 * 15)),
       firstDate: DateTime.now().subtract(const Duration(days: 365 * 80)),
       lastDate: DateTime.now().subtract(const Duration(days: 365 * 5)),
     );
-
     if (picked != null) {
       setState(() {
         _selectedDateOfBirth = picked;
@@ -81,9 +73,9 @@ class _CompleteProfilePupilPageState extends State<CompleteProfilePupilPage> {
     }
   }
 
-  void _handleSaveProfile() {
+  void _save() {
     if (_formKey.currentState!.validate()) {
-      final profileData = {
+      final data = {
         'firstName': firstNameCtrl.text.trim(),
         'lastName': lastNameCtrl.text.trim(),
         'dateOfBirth': _selectedDateOfBirth?.toIso8601String(),
@@ -91,91 +83,79 @@ class _CompleteProfilePupilPageState extends State<CompleteProfilePupilPage> {
         'coachName': _selectedCoach,
         'golfClubOrFacility': _selectedGolfClub,
         'profileCompleted': true,
-        'skillLevel': 'beginner', // Default
+        'skillLevel': 'beginner',
         'learningGoals': [],
       };
-
-      context.read<AuthBloc>().add(AuthUpdateProfile(profileData));
+      context.read<AuthBloc>().add(AuthUpdateProfile(data));
     }
   }
 
-  void _handleSkip() {
-    context.go(RouteNames.pupilHome);
+  void _skip() => context.go(RouteNames.pupilHome);
+
+  /* ---------- Dropdown helpers ---------- */
+  void _showClubSheet() {
+    final clubs = [
+      'Local Golf Club',
+      'Pebble Beach Golf Links',
+      'Augusta National Golf Club',
+      'St Andrews Links',
+      'Pinehurst Resort',
+      'TPC Sawgrass',
+      'Bandon Dunes Golf Resort',
+      'Whistling Straits',
+      'Torrey Pines Golf Course',
+      'Spyglass Hill Golf Course',
+    ];
+    _showPicker(clubs, (v) {
+      _selectedGolfClub = v;
+      golfClubCtrl.text = v;
+    });
   }
 
-  void _selectGolfClub() {
+  void _showCoachSheet() {
+    final coaches = [
+      'Coach Mike Johnson',
+      'Coach Sarah Williams',
+      'Coach David Brown',
+      'Coach Emma Davis',
+      'Coach Robert Smith',
+    ];
+    _showPicker(['No Coach (Self-learning)', ...coaches], (v) {
+      _selectedCoach = v == 'No Coach (Self-learning)' ? null : v;
+      coachNameCtrl.text = _selectedCoach ?? '';
+    });
+  }
+
+  void _showPicker(List<String> items, ValueChanged<String> onSelect) {
     showModalBottomSheet(
       context: context,
-      builder: (context) => SizedBox(
+      builder: (_) => SizedBox(
         height: 300,
-        child: ListView(
-          children: [
-            const Padding(
-              padding: EdgeInsets.all(16),
-              child: Text(
-                'Select Golf Club or Facility',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-            ),
-            ..._getGolfClubs().map(
-              (club) => ListTile(
-                title: Text(club),
-                onTap: () {
-                  setState(() {
-                    _selectedGolfClub = club;
-                    golfClubCtrl.text = club;
-                  });
-                  Navigator.pop(context);
-                },
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _selectCoach() {
-    showModalBottomSheet(
-      context: context,
-      builder: (context) => SizedBox(
-        height: 400,
         child: Column(
           children: [
-            const Padding(
-              padding: EdgeInsets.all(16),
+            Padding(
+              padding: EdgeInsets.all(SizeConfig.scaleWidth(16)),
               child: Text(
-                'Select Coach (Optional)',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                'Select',
+                style: GoogleFonts.inter(
+                  fontSize: SizeConfig.scaleWidth(18),
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
             Expanded(
               child: ListView(
-                children: [
-                  ListTile(
-                    title: const Text('No Coach (Self-learning)'),
-                    onTap: () {
-                      setState(() {
-                        _selectedCoach = null;
-                        coachNameCtrl.clear();
-                      });
-                      Navigator.pop(context);
-                    },
-                  ),
-                  ..._getCoaches().map(
-                    (coach) => ListTile(
-                      title: Text(coach),
-                      subtitle: const Text('Available for mentorship'),
-                      onTap: () {
-                        setState(() {
-                          _selectedCoach = coach;
-                          coachNameCtrl.text = coach;
-                        });
-                        Navigator.pop(context);
-                      },
-                    ),
-                  ),
-                ],
+                children: items
+                    .map(
+                      (e) => ListTile(
+                        title: Text(e),
+                        onTap: () {
+                          onSelect(e);
+                          Navigator.pop(context);
+                        },
+                      ),
+                    )
+                    .toList(),
               ),
             ),
           ],
@@ -184,39 +164,17 @@ class _CompleteProfilePupilPageState extends State<CompleteProfilePupilPage> {
     );
   }
 
-  List<String> _getGolfClubs() => [
-    'Local Golf Club',
-    'Pebble Beach Golf Links',
-    'Augusta National Golf Club',
-    'St Andrews Links',
-    'Pinehurst Resort',
-    'TPC Sawgrass',
-    'Bandon Dunes Golf Resort',
-    'Whistling Straits',
-    'Torrey Pines Golf Course',
-    'Spyglass Hill Golf Course',
-  ];
-
-  List<String> _getCoaches() => [
-    'Coach Mike Johnson',
-    'Coach Sarah Williams',
-    'Coach David Brown',
-    'Coach Emma Davis',
-    'Coach Robert Smith',
-  ];
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Complete Your Profile'),
-        elevation: 0,
-        actions: [
-          TextButton(onPressed: _handleSkip, child: const Text('Skip')),
-        ],
+      backgroundColor: AppColors.scaffoldBgColor,
+      appBar: CustomAppBar(
+        title: 'Complete Your Profile',
+        levelType: LevelType.redLevel,
+        centerTitle: false,
       ),
       body: BlocConsumer<AuthBloc, AuthState>(
-        listener: (context, state) {
+        listener: (_, state) {
           if (state is AuthProfileUpdated) {
             context.go(RouteNames.pupilHome);
           } else if (state is AuthError) {
@@ -225,208 +183,133 @@ class _CompleteProfilePupilPageState extends State<CompleteProfilePupilPage> {
             ).showSnackBar(SnackBar(content: Text(state.message)));
           }
         },
-        builder: (context, state) {
+        builder: (_, state) {
           final isLoading = state is AuthLoading;
 
           return SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
+            padding: EdgeInsets.all(SizeConfig.scaleWidth(12)),
             child: Form(
               key: _formKey,
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // Header
-                  const Text(
-                    'Tell Us About Yourself',
-                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    'Help us personalize your learning experience',
-                    style: TextStyle(fontSize: 16, color: Colors.grey),
-                  ),
-                  const SizedBox(height: 32),
+                  SizedBox(height: SizeConfig.scaleHeight(20)),
 
-                  // Profile Photo
-                  Center(
-                    child: GestureDetector(
-                      onTap: _pickImage,
-                      child: Container(
-                        width: 120,
-                        height: 120,
-                        decoration: BoxDecoration(
-                          color: Colors.grey[200],
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: Theme.of(context).primaryColor,
-                            width: 2,
-                          ),
-                        ),
-                        child: _profileImage != null
-                            ? ClipOval(
-                                child: Image.file(
-                                  _profileImage!,
-                                  fit: BoxFit.cover,
-                                ),
-                              )
-                            : Icon(
-                                Icons.camera_alt,
-                                size: 40,
-                                color: Colors.grey[600],
-                              ),
-                      ),
+                  /* ---- Header ---- */
+                  Text(
+                    'Tell us a bit more about yourself to personalize your experience.',
+                    style: GoogleFonts.inter(
+                      fontSize: SizeConfig.scaleWidth(16),
+                      color: AppColors.grey600,
                     ),
                   ),
-                  const SizedBox(height: 32),
+                  SizedBox(height: SizeConfig.scaleHeight(32)),
 
-                  // Personal Info
-                  const Text(
-                    'Personal Information',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  /* ---- Photo ---- */
+                  Center(
+                    child: CustomImagePicker(
+                      image: _profileImage,
+                      onImage: (f) => setState(() => _profileImage = f),
+                      levelType: LevelType.redLevel,
+                    ),
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: SizeConfig.scaleHeight(32)),
 
+                  /* ---- Names ---- */
                   Row(
                     children: [
                       Expanded(
-                        child: TextFormField(
+                        child: CustomTextFieldFactory.name(
                           controller: firstNameCtrl,
-                          decoration: const InputDecoration(
-                            labelText: 'First Name *',
-                            border: OutlineInputBorder(),
-                          ),
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Please enter your first name';
-                            }
-                            return null;
-                          },
+                          label: 'First Name *',
+                          placeholder: 'Alex',
+                          levelType: LevelType.redLevel,
+                          validator: (v) =>
+                              (v ?? '').trim().isEmpty ? 'Required' : null,
                         ),
                       ),
-                      const SizedBox(width: 16),
+                      SizedBox(width: SizeConfig.scaleWidth(12)),
                       Expanded(
-                        child: TextFormField(
+                        child: CustomTextFieldFactory.name(
                           controller: lastNameCtrl,
-                          decoration: const InputDecoration(
-                            labelText: 'Last Name *',
-                            border: OutlineInputBorder(),
-                          ),
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Please enter your last name';
-                            }
-                            return null;
-                          },
+                          label: 'Last Name *',
+                          placeholder: 'Johnson',
+                          levelType: LevelType.redLevel,
+                          validator: (v) =>
+                              (v ?? '').trim().isEmpty ? 'Required' : null,
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: SizeConfig.scaleHeight(20)),
 
-                  // Date of Birth
-                  TextFormField(
+                  /* ---- Date ---- */
+                  CustomTextFieldFactory.date(
                     controller: dateOfBirthCtrl,
-                    decoration: const InputDecoration(
-                      labelText: 'Date of Birth *',
-                      hintText: 'MM/DD/YYYY',
-                      prefixIcon: Icon(Icons.calendar_today),
-                      border: OutlineInputBorder(),
-                    ),
-                    readOnly: true,
-                    onTap: _selectDateOfBirth,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please select your date of birth';
-                      }
-                      return null;
-                    },
+                    label: 'Date of Birth *',
+                    placeholder: 'MM/DD/YYYY',
+                    levelType: LevelType.redLevel,
+                    onTap: () => _selectDate(context),
+                    validator: (v) =>
+                        (v ?? '').trim().isEmpty ? 'Required' : null,
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: SizeConfig.scaleHeight(20)),
 
-                  // Handicap
-                  TextFormField(
+                  /* ---- Handicap ---- */
+                  CustomTextFieldFactory.number(
                     controller: handicapCtrl,
-                    keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(
-                      labelText: 'Current Handicap *',
-                      hintText: 'e.g., 14',
-                      border: OutlineInputBorder(),
-                    ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter your handicap';
-                      }
-                      final handicap = int.tryParse(value);
-                      if (handicap == null || handicap < 0 || handicap > 36) {
-                        return 'Please enter a valid handicap (0-36)';
+                    label: 'Current Handicap *',
+                    placeholder: 'e.g. 14',
+                    levelType: LevelType.redLevel,
+                    validator: (v) {
+                      final val = int.tryParse((v ?? '').trim());
+                      if (val == null || val < 0 || val > 36) {
+                        return '0-36 only';
                       }
                       return null;
                     },
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: SizeConfig.scaleHeight(20)),
 
-                  // Golf Club
-                  TextFormField(
+                  /* ---- Golf Club ---- */
+                  CustomTextFieldFactory.dropdown(
                     controller: golfClubCtrl,
-                    decoration: InputDecoration(
-                      labelText: 'Primary Golf Club *',
-                      hintText: 'Select your golf club',
-                      suffixIcon: const Icon(Icons.arrow_drop_down),
-                      border: const OutlineInputBorder(),
-                    ),
-                    readOnly: true,
-                    onTap: _selectGolfClub,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please select a golf club';
-                      }
-                      return null;
-                    },
+                    label: 'Primary Golf Club *',
+                    placeholder: 'Select Golf Club or Facility',
+                    levelType: LevelType.redLevel,
+                    onTap: _showClubSheet,
+                    validator: (v) =>
+                        (v ?? '').trim().isEmpty ? 'Required' : null,
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: SizeConfig.scaleHeight(20)),
 
-                  // Coach Selection
-                  TextFormField(
+                  /* ---- Coach ---- */
+                  CustomTextFieldFactory.dropdown(
                     controller: coachNameCtrl,
-                    decoration: InputDecoration(
-                      labelText: 'Coach (Optional)',
-                      hintText: 'Select a coach for guidance',
-                      suffixIcon: const Icon(Icons.arrow_drop_down),
-                      border: const OutlineInputBorder(),
-                    ),
-                    readOnly: true,
-                    onTap: _selectCoach,
+                    label: 'Coach (Optional)',
+                    placeholder: 'Select Coach',
+                    levelType: LevelType.redLevel,
+                    onTap: _showCoachSheet,
                   ),
-                  const SizedBox(height: 32),
+                  SizedBox(height: SizeConfig.scaleHeight(40)),
 
-                  // Buttons
+                  /* ---- Buttons ---- */
                   Row(
                     children: [
                       Expanded(
-                        child: OutlinedButton(
-                          onPressed: isLoading ? null : _handleSkip,
-                          style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                          ),
-                          child: const Text('Skip for now'),
+                        child: CustomButtonFactory.outline(
+                          text: 'Skip for now',
+                          onPressed: _skip,
+                          levelType: LevelType.redLevel,
                         ),
                       ),
-                      const SizedBox(width: 16),
+                      SizedBox(width: SizeConfig.scaleWidth(12)),
                       Expanded(
-                        child: ElevatedButton(
-                          onPressed: isLoading ? null : _handleSaveProfile,
-                          style: ElevatedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                          ),
-                          child: isLoading
-                              ? const SizedBox(
-                                  height: 20,
-                                  width: 20,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                  ),
-                                )
-                              : const Text('Save and Continue'),
+                        child: CustomButtonFactory.primary(
+                          text: 'Save and Continue',
+                          onPressed: isLoading ? null : _save,
+                          levelType: LevelType.redLevel,
+                          isLoading: isLoading,
                         ),
                       ),
                     ],

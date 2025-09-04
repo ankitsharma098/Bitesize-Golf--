@@ -46,6 +46,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<AuthEmailVerificationRequested>(_onEmailVerificationRequested);
   }
 
+  // In your AuthBloc - update _onAppStarted
   Future<void> _onAppStarted(
     AuthAppStarted event,
     Emitter<AuthState> emit,
@@ -53,6 +54,9 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     emit(AuthLoading());
 
     try {
+      // Give Firebase Auth time to initialize
+      await Future.delayed(const Duration(milliseconds: 500));
+
       final user = await checkAuthStatusUseCase();
       if (user != null) {
         emit(AuthAuthenticated(user));
@@ -94,6 +98,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       firstName: event.firstName,
       lastName: event.lastName,
     );
+
+    print("result--------------------------------> ${result}");
 
     result.fold(
       (failure) => emit(AuthError(failure.message)),

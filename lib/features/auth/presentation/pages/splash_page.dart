@@ -71,24 +71,25 @@ class _SplashScreenState extends State<SplashScreen> {
       body: BlocListener<AuthBloc, AuthState>(
         listener: (context, state) {
           if (state is AuthAuthenticated) {
-            // Check if profile is complete
             if (state.user.profileCompleted) {
-              final isPupil = state.user.isPupil;
-
-              isPupil
-                  ? context.go(RouteNames.pupilHome)
-                  : context.go(RouteNames.guestHome);
+              context.go(
+                state.user.isCoach
+                    ? RouteNames.coachHome
+                    : RouteNames.pupilHome,
+              );
             } else {
-              if (state.user.role == 'coach') {
-                context.replace(RouteNames.coachHome);
-              } else {
-                context.replace(RouteNames.pupilHome);
-              }
+              context.go(
+                state.user.isCoach
+                    ? RouteNames.completeProfileCoach
+                    : RouteNames.completeProfilePupil,
+              );
             }
           } else if (state is AuthUnauthenticated) {
-            context.replace(RouteNames.welcome);
+            // Allow showing welcome/login/register
+            context.go(RouteNames.welcome);
           }
         },
+
         child: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,

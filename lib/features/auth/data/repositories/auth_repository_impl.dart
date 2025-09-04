@@ -61,6 +61,8 @@ class AuthRepositoryImpl implements AuthRepository {
         password: password,
       );
 
+      print("cred--------------------------------> ${cred}");
+
       final authUser = cred.user!;
 
       final userDoc = {
@@ -78,17 +80,23 @@ class AuthRepositoryImpl implements AuthRepository {
         'updatedAt': FieldValue.serverTimestamp(),
       };
 
+      print("User doc befor----------------->${userDoc}");
+
+      //await _users.doc(authUser.uid).set(userDoc);
+
       await _users.doc(authUser.uid).set(userDoc);
+      final freshDoc = await _users.doc(authUser.uid).get(); // re-read
 
       // ✅ FIXED: Create model and convert to entity
       final userModel = UserModel.fromFirebase(
         firebaseUser: authUser,
-        userDoc: userDoc,
+        userDoc: freshDoc.data()!,
       );
 
       await localDataSource.cacheUser(userModel);
       return Right(userModel.toEntity());
     } on fb.FirebaseAuthException catch (e) {
+      print("error--------------------------------> ${e}");
       return Left(AuthFailure(message: _getAuthErrorMessage(e.code)));
     } catch (e) {
       return Left(AuthFailure(message: e.toString()));
@@ -129,17 +137,55 @@ class AuthRepositoryImpl implements AuthRepository {
     }
   }
 
+  // @override
+  // Future<Either<Failure, entity.User?>> getCurrentUser() async {
+  //   try {
+  //     final cachedUser = await localDataSource.getUser();
+  //     if (cachedUser != null) return Right(cachedUser.toEntity());
+  //
+  //     final authUser = firebaseAuth.currentUser;
+  //     if (authUser == null) return const Right(null);
+  //
+  //     final userDoc = await _getUserDoc(authUser.uid);
+  //     if (!userDoc.exists) return const Right(null);
+  //
+  //     final userModel = UserModel.fromFirebase(
+  //       firebaseUser: authUser,
+  //       userDoc: userDoc.data(),
+  //     );
+  //
+  //     await localDataSource.cacheUser(userModel);
+  //     return Right(userModel.toEntity());
+  //   } catch (e) {
+  //     return Left(AuthFailure(message: e.toString()));
+  //   }
+  // }
+  // In your AuthRepositoryImpl - add debugging
   @override
   Future<Either<Failure, entity.User?>> getCurrentUser() async {
     try {
-      final cachedUser = await localDataSource.getUser();
-      if (cachedUser != null) return Right(cachedUser.toEntity());
+      print("DEBUG: Checking current user...");
+
+      final cached = await localDataSource.getUser();
+      print("DEBUG: Cached user: ${cached?.uid}");
+
+      if (cached != null) {
+        return Right(cached.toEntity());
+      }
 
       final authUser = firebaseAuth.currentUser;
-      if (authUser == null) return const Right(null);
+      print("DEBUG: Firebase user: ${authUser?.uid}");
+
+      if (authUser == null) {
+        return const Right(null);
+      }
 
       final userDoc = await _getUserDoc(authUser.uid);
-      if (!userDoc.exists) return const Right(null);
+      print("DEBUG: User doc exists: ${userDoc.exists}");
+
+      if (!userDoc.exists) {
+        return const Right(null);
+      }
 
       final userModel = UserModel.fromFirebase(
         firebaseUser: authUser,
@@ -149,6 +195,7 @@ class AuthRepositoryImpl implements AuthRepository {
       await localDataSource.cacheUser(userModel);
       return Right(userModel.toEntity());
     } catch (e) {
+      print("DEBUG: Auth check error: $e");
       return Left(AuthFailure(message: e.toString()));
     }
   }

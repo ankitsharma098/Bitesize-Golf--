@@ -89,18 +89,24 @@
 // features/auth/presentation/pages/welcome_page.dart
 import 'package:bitesize_golf/route/navigator_service.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/themes/theme_colors.dart';
 import '../../../../route/routes_names.dart';
 import '../../../components/custom_button.dart';
+import '../../../components/utils/size_config.dart';
+import '../bloc/auth_bloc.dart';
 
 class WelcomePage extends StatelessWidget {
   const WelcomePage({super.key});
 
   @override
   Widget build(BuildContext context) {
+    SizeConfig.init(context);
     return Scaffold(
+      backgroundColor: AppColors.scaffoldBgColor,
+
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(24.0),
@@ -146,16 +152,19 @@ class WelcomePage extends StatelessWidget {
                 text: 'Log in',
                 onPressed: () {
                   print("Log In Clicked");
-                  NavigationService.goToLogin();
-                  // context.go(RouteNames.login);
+                  NavigationService.push(RouteNames.login);
+                  //context.go(RouteNames.login);
                 },
                 customGradient: AppColors.redGradient,
               ),
               SizedBox(height: 12),
+
+              // Add this debug button to your WelcomePage
               CustomButton(
                 text: 'Create an Account',
                 onPressed: () {
-                  context.go(RouteNames.register);
+                  NavigationService.push(RouteNames.register);
+                  // context.go(RouteNames.register);
                 },
                 customColor: AppColors.redLight,
               ),

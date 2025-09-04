@@ -1,7 +1,12 @@
+import 'package:bitesize_golf/core/themes/theme_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../route/routes_names.dart';
+import '../../../components/custom_button.dart';
+import '../../../components/text_field_component.dart';
+import '../../../components/utils/custom_app_bar.dart';
+import '../../../components/utils/size_config.dart';
 import '../bloc/auth_bloc.dart';
 
 class LoginPage extends StatefulWidget {
@@ -44,7 +49,12 @@ class _LoginPageState extends State<LoginPage> {
   Widget build(BuildContext context) {
     print("Login Screen");
     return Scaffold(
-      appBar: AppBar(title: const Text('Welcome Back'), elevation: 0),
+      backgroundColor: AppColors.scaffoldBgColor,
+      appBar: CustomAppBar(
+        title: 'Log in',
+        levelType: LevelType.redLevel,
+        centerTitle: false,
+      ),
       body: BlocConsumer<AuthBloc, AuthState>(
         listener: (context, state) {
           if (state is AuthAuthenticated) {
@@ -63,133 +73,85 @@ class _LoginPageState extends State<LoginPage> {
         builder: (context, state) {
           final isLoading = state is AuthLoading;
 
-          return SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const SizedBox(height: 40),
-                  const Text(
-                    'Welcome Back!',
-                    style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Sign in to continue your golf journey',
-                    style: TextStyle(fontSize: 16, color: Colors.grey[600]),
-                  ),
-                  const SizedBox(height: 48),
+          return SafeArea(
+            child: Padding(
+              padding: EdgeInsets.all(SizeConfig.scaleWidth(12)),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        children: [
+                          SizedBox(height: SizeConfig.scaleHeight(20)),
 
-                  // Email Field
-                  TextFormField(
-                    controller: emailCtrl,
-                    keyboardType: TextInputType.emailAddress,
-                    decoration: const InputDecoration(
-                      labelText: 'Email',
-                      hintText: 'Enter your email',
-                      prefixIcon: Icon(Icons.email_outlined),
-                      border: OutlineInputBorder(),
-                    ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter your email';
-                      }
-                      if (!value.contains('@')) {
-                        return 'Please enter a valid email';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 16),
+                          // Email field using factory
+                          CustomTextFieldFactory.email(
+                            controller: emailCtrl,
+                            levelType: LevelType.redLevel,
+                            validator: (value) {
+                              final v =
+                                  value ?? ''; // null becomes empty string
+                              if (v.trim().isEmpty) {
+                                return 'Please enter your email';
+                              }
+                              if (!v.contains('@')) {
+                                return 'Please enter a valid email';
+                              }
+                              return null;
+                            },
+                          ),
 
-                  // Password Field
-                  TextFormField(
-                    controller: passwordCtrl,
-                    obscureText: _obscurePassword,
-                    decoration: InputDecoration(
-                      labelText: 'Password',
-                      hintText: 'Enter your password',
-                      prefixIcon: const Icon(Icons.lock_outline),
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                          _obscurePassword
-                              ? Icons.visibility_outlined
-                              : Icons.visibility_off_outlined,
-                        ),
-                        onPressed: () {
-                          setState(() {
-                            _obscurePassword = !_obscurePassword;
-                          });
-                        },
+                          SizedBox(height: SizeConfig.scaleHeight(20)),
+
+                          // Password field using factory
+                          CustomTextFieldFactory.password(
+                            controller: passwordCtrl,
+                            levelType: LevelType.redLevel,
+                            obscureText: _obscurePassword,
+                            validator: (value) {
+                              final v =
+                                  value ?? ''; // null becomes empty string
+                              if (v.trim().isEmpty) {
+                                return 'Please enter your email';
+                              }
+                              return null;
+                            },
+                            onToggleObscurity: () => setState(() {
+                              _obscurePassword = !_obscurePassword;
+                            }),
+                          ),
+                        ],
                       ),
-                      border: const OutlineInputBorder(),
                     ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter your password';
-                      }
-                      if (value.length < 6) {
-                        return 'Password must be at least 6 characters';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 8),
 
-                  // Forgot Password
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: TextButton(
+                    // Login button
+                    CustomButtonFactory.primary(
+                      text: 'Log in',
+                      onPressed: isLoading
+                          ? null
+                          : () {
+                              print("Login button pressed outer");
+                              if (_formKey.currentState!.validate()) {
+                                print("Login button pressed");
+                                _handleLogin();
+                              }
+                            },
+                      levelType: LevelType.redLevel,
+                      isLoading: isLoading,
+                    ),
+
+                    SizedBox(height: SizeConfig.scaleHeight(16)),
+
+                    // Forgot password text button
+                    CustomButtonFactory.text(
+                      text: 'Forgot password?',
                       onPressed: _handleForgotPassword,
-                      child: const Text('Forgot password?'),
+                      levelType: LevelType.redLevel,
+                      size: ButtonSize.medium,
                     ),
-                  ),
-                  const SizedBox(height: 32),
-
-                  // Login Button
-                  ElevatedButton(
-                    onPressed: isLoading ? null : _handleLogin,
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                    child: isLoading
-                        ? const SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Text('Sign In', style: TextStyle(fontSize: 16)),
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Guest Login
-                  OutlinedButton(
-                    onPressed: isLoading ? null : _handleGuestLogin,
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      // shape: RoundedBorderRadius.circular(8),
-                    ),
-                    child: const Text('Continue as Guest'),
-                  ),
-                  const SizedBox(height: 24),
-
-                  // Sign Up Link
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Text("Don't have an account?"),
-                      TextButton(
-                        onPressed: () => context.push('/register'),
-                        child: const Text('Sign Up'),
-                      ),
-                    ],
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           );

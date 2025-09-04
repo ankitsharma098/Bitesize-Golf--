@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
+import '../../../../core/themes/theme_colors.dart';
 import '../../../../route/routes_names.dart';
 import '../bloc/auth_bloc.dart';
 
@@ -141,6 +142,8 @@ class _CompleteProfileCoachPageState extends State<CompleteProfileCoachPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppColors.scaffoldBgColor,
+
       appBar: AppBar(
         title: const Text('Complete Coach Profile'),
         elevation: 0,

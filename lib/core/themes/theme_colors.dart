@@ -3,6 +3,8 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 
 class AppColors {
+  static const Color scaffoldBgColor = Color(0xFFEDEDED);
+
   // Grey Scale
   static const Color grey900 = Color(0xFF1F1F1F);
   static const Color grey800 = Color(0xFF404141);
@@ -109,44 +111,78 @@ class AppColors {
 }
 
 enum LevelType {
-  beginner(
+  redLevel(
     color: AppColors.redDark,
     lightColor: AppColors.redLight,
-    name: 'Beginner',
+
+    gradient: AppColors.redGradient,
+
+    name: 'Red Level',
   ),
-  intermediate(
+  orangeLevel(
     color: AppColors.orangeDark,
     lightColor: AppColors.orangeLight,
-    name: 'Intermediate',
+    name: 'Orange Level',
+    gradient: AppColors.orangeGradient,
   ),
-  advanced(
+  yellowLevel(
     color: AppColors.yellowDark,
     lightColor: AppColors.yellowLight,
-    name: 'Advanced',
+    name: 'Yellow Level',
+    gradient: AppColors.yellowGradient,
   ),
-  expert(
+  greenLevel(
     color: AppColors.greenDark,
     lightColor: AppColors.greenLight,
-    name: 'Expert',
+    name: 'Green Level',
+    gradient: AppColors.greenGradient,
   ),
-  master(
+  blueLevel(
     color: AppColors.blueDark,
     lightColor: AppColors.blueLight,
-    name: 'Master',
+    name: 'Blue Level',
+    gradient: AppColors.blueGradient,
   ),
-  grandMaster(
+  indigoLevel(
     color: AppColors.indigoDark,
     lightColor: AppColors.indigoLight,
-    name: 'Grand Master',
+    name: 'Indigo Level',
+    gradient: AppColors.indigoGradient,
+  ),
+  violetLevel(
+    color: AppColors.violetDark,
+    lightColor: AppColors.violetLight,
+    name: 'Violet Level',
+    gradient: AppColors.violetGradient,
+  ),
+  coralLevel(
+    color: AppColors.coralDark,
+    lightColor: AppColors.coralLight,
+    name: 'Coral Level',
+    gradient: AppColors.carolGradient,
+  ),
+  silverLevel(
+    color: AppColors.silverDark,
+    lightColor: AppColors.silverLight,
+    name: 'Silver Level',
+    gradient: AppColors.silverGradient,
+  ),
+  goldLevel(
+    color: AppColors.goldDark,
+    lightColor: AppColors.goldLight,
+    name: 'Gold Level',
+    gradient: AppColors.goldGradient,
   );
 
   const LevelType({
     required this.color,
     required this.lightColor,
     required this.name,
+    required this.gradient,
   });
 
   final Color color;
   final Color lightColor;
+  final LinearGradient gradient;
   final String name;
 }

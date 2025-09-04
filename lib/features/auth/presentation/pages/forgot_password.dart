@@ -1,7 +1,12 @@
+import 'package:bitesize_golf/core/themes/theme_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../route/routes_names.dart';
+import '../../../components/custom_button.dart';
+import '../../../components/text_field_component.dart';
+import '../../../components/utils/custom_app_bar.dart';
+import '../../../components/utils/size_config.dart';
 import '../bloc/auth_bloc.dart';
 
 class ForgotPasswordPage extends StatefulWidget {
@@ -26,23 +31,27 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
       context.read<AuthBloc>().add(
         AuthResetPasswordRequested(emailCtrl.text.trim()),
       );
-      context.go(RouteNames.login);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Reset Password'), elevation: 0),
+      backgroundColor: AppColors.scaffoldBgColor,
+      appBar: CustomAppBar(
+        title: 'Forgot Password',
+        levelType: LevelType.redLevel,
+        centerTitle: false,
+      ),
       body: BlocConsumer<AuthBloc, AuthState>(
         listener: (context, state) {
           if (state is AuthPasswordResetSent) {
             showDialog(
               context: context,
-              builder: (context) => AlertDialog(
-                title: const Text('Check Your Email! 📧'),
+              builder: (_) => AlertDialog(
+                title: const Text('Check your email! 📧'),
                 content: Text(
-                  'We\'ve sent password reset instructions to ${state.email}',
+                  'We have sent password-reset instructions to ${state.email}.',
                 ),
                 actions: [
                   TextButton(
@@ -64,80 +73,58 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
         builder: (context, state) {
           final isLoading = state is AuthLoading;
 
-          return SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Forgot Password?',
-                    style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Enter your email address below and we\'ll send you instructions to reset your password.',
-                    style: TextStyle(fontSize: 16, color: Colors.grey[600]),
-                  ),
-                  const SizedBox(height: 32),
+          return SafeArea(
+            child: SingleChildScrollView(
+              padding: EdgeInsets.all(SizeConfig.scaleWidth(12)),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    SizedBox(height: SizeConfig.scaleHeight(20)),
 
-                  // Email Field
-                  TextFormField(
-                    controller: emailCtrl,
-                    keyboardType: TextInputType.emailAddress,
-                    decoration: const InputDecoration(
-                      labelText: 'Email Address *',
-                      hintText: 'Enter your email',
-                      prefixIcon: Icon(Icons.email_outlined),
-                      border: OutlineInputBorder(),
-                    ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter your email';
-                      }
-                      if (!value.contains('@')) {
-                        return 'Please enter a valid email';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 32),
-
-                  // Reset Button
-                  ElevatedButton(
-                    onPressed: isLoading ? null : _handleResetPassword,
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
+                    Text(
+                      'Enter your email address below and we\'ll send you '
+                      'instructions to reset your password.',
+                      style: TextStyle(
+                        fontSize: SizeConfig.scaleWidth(16),
+                        color: Colors.grey[600],
                       ),
                     ),
-                    child: isLoading
-                        ? const SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Text(
-                            'Send Reset Link',
-                            style: TextStyle(fontSize: 16),
-                          ),
-                  ),
-                  const SizedBox(height: 16),
+                    SizedBox(height: SizeConfig.scaleHeight(32)),
 
-                  // Back to Login
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Text('Remember your password?'),
-                      TextButton(
-                        onPressed: () => context.pop(),
-                        child: const Text('Sign In'),
-                      ),
-                    ],
-                  ),
-                ],
+                    /* ---- Email ---- */
+                    CustomTextFieldFactory.email(
+                      controller: emailCtrl,
+                      levelType: LevelType.redLevel,
+                      validator: (v) {
+                        final val = (v ?? '').trim();
+                        if (val.isEmpty) return 'Please enter your email';
+                        if (!val.contains('@')) return 'Invalid email';
+                        return null;
+                      },
+                    ),
+                    SizedBox(height: SizeConfig.scaleHeight(32)),
+
+                    /* ---- Send Reset Link ---- */
+                    CustomButtonFactory.primary(
+                      text: 'Send Reset Link',
+                      onPressed: isLoading ? null : _handleResetPassword,
+                      levelType: LevelType.redLevel,
+                      isLoading: isLoading,
+                    ),
+                    SizedBox(height: SizeConfig.scaleHeight(16)),
+
+                    /* ---- Back to Login ---- */
+                    Center(child: const Text('Remembered your password?')),
+                    CustomButtonFactory.text(
+                      text: 'Log in',
+                      onPressed: () => context.pop(),
+                      levelType: LevelType.redLevel,
+                      width: 26,
+                    ),
+                  ],
+                ),
               ),
             ),
           );

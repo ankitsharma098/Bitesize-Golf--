@@ -23,12 +23,18 @@ import 'package:bitesize_golf/features/auth/domain/usecases/check_auth_status_us
     as _i601;
 import 'package:bitesize_golf/features/auth/domain/usecases/get_current_user_usecase.dart'
     as _i433;
+import 'package:bitesize_golf/features/auth/domain/usecases/reset_password_usecase.dart'
+    as _i720;
+import 'package:bitesize_golf/features/auth/domain/usecases/sign_in_guest_usecase.dart'
+    as _i361;
 import 'package:bitesize_golf/features/auth/domain/usecases/sign_in_usecase.dart'
     as _i881;
 import 'package:bitesize_golf/features/auth/domain/usecases/sign_out_usecase.dart'
     as _i550;
 import 'package:bitesize_golf/features/auth/domain/usecases/sign_up_usecase.dart'
     as _i463;
+import 'package:bitesize_golf/features/auth/domain/usecases/update_profile_usecase.dart'
+    as _i20;
 import 'package:bitesize_golf/features/auth/presentation/bloc/auth_bloc.dart'
     as _i751;
 import 'package:cloud_firestore/cloud_firestore.dart' as _i974;
@@ -72,13 +78,18 @@ extension GetItInjectableX on _i174.GetIt {
       () => _i242.AuthRepositoryImpl(
         firebaseDataSource: gh<_i173.AuthFirebaseDataSource>(),
         localDataSource: gh<_i716.AuthLocalDataSource>(),
+        firestore: gh<_i974.FirebaseFirestore>(),
+        firebaseAuth: gh<_i59.FirebaseAuth>(),
       ),
-    );
-    gh.lazySingleton<_i601.CheckAuthStatusUseCase>(
-      () => _i601.CheckAuthStatusUseCase(repository: gh<_i48.AuthRepository>()),
     );
     gh.lazySingleton<_i433.GetCurrentUserUseCase>(
       () => _i433.GetCurrentUserUseCase(repository: gh<_i48.AuthRepository>()),
+    );
+    gh.lazySingleton<_i720.ResetPasswordUseCase>(
+      () => _i720.ResetPasswordUseCase(repository: gh<_i48.AuthRepository>()),
+    );
+    gh.lazySingleton<_i361.SignInAsGuestUseCase>(
+      () => _i361.SignInAsGuestUseCase(repository: gh<_i48.AuthRepository>()),
     );
     gh.lazySingleton<_i881.SignInUseCase>(
       () => _i881.SignInUseCase(repository: gh<_i48.AuthRepository>()),
@@ -86,15 +97,25 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i550.SignOutUseCase>(
       () => _i550.SignOutUseCase(repository: gh<_i48.AuthRepository>()),
     );
-    gh.lazySingleton<_i463.SignUpUseCase>(
-      () => _i463.SignUpUseCase(repository: gh<_i48.AuthRepository>()),
+    gh.lazySingleton<_i20.UpdateProfileUseCase>(
+      () => _i20.UpdateProfileUseCase(repository: gh<_i48.AuthRepository>()),
+    );
+    gh.factory<_i601.CheckAuthStatusUseCase>(
+      () => _i601.CheckAuthStatusUseCase(gh<_i48.AuthRepository>()),
+    );
+    gh.factory<_i463.SignUpUseCase>(
+      () => _i463.SignUpUseCase(gh<_i48.AuthRepository>()),
     );
     gh.factory<_i751.AuthBloc>(
       () => _i751.AuthBloc(
-        signIn: gh<_i881.SignInUseCase>(),
-        signUp: gh<_i463.SignUpUseCase>(),
-        signOut: gh<_i550.SignOutUseCase>(),
-        authStatus: gh<_i601.CheckAuthStatusUseCase>(),
+        signInUseCase: gh<_i881.SignInUseCase>(),
+        signUpUseCase: gh<_i463.SignUpUseCase>(),
+        signOutUseCase: gh<_i550.SignOutUseCase>(),
+        checkAuthStatusUseCase: gh<_i601.CheckAuthStatusUseCase>(),
+        updateProfileUseCase: gh<_i20.UpdateProfileUseCase>(),
+        resetPasswordUseCase: gh<_i720.ResetPasswordUseCase>(),
+        signInAsGuestUseCase: gh<_i361.SignInAsGuestUseCase>(),
+        firebaseAuth: gh<_i59.FirebaseAuth>(),
       ),
     );
     return this;

@@ -6,10 +6,22 @@ import '../models/user_model.dart';
 
 abstract class AuthFirebaseDataSource {
   Future<UserModel> signIn(String email, String password);
-  Future<UserModel> signUp(String email, String password);
+  Future<UserModel> signUp(
+    String email,
+    String password,
+    String role,
+    String firstName,
+    String lastName,
+  );
+  Future<UserModel> signUpWithProfile(Map<String, dynamic> userData);
   Future<void> signOut();
   Future<UserModel?> currentUser();
   Stream<UserModel?> authState$();
+  Future<UserModel> updateUserProfile(
+    String uid,
+    Map<String, dynamic> profileData,
+  );
+  Future<void> sendPasswordResetEmail(String email);
 }
 
 @LazySingleton(as: AuthFirebaseDataSource)
@@ -25,75 +37,154 @@ class AuthFirebaseDataSourceImpl implements AuthFirebaseDataSource {
   CollectionReference<Map<String, dynamic>> get _users =>
       firestore.collection('users');
 
-  Future<Map<String, dynamic>?> _getUserDoc(String uid) async {
-    final doc = await _users.doc(uid).get();
-    return doc.data();
-  }
-
-  Future<void> _ensureUserDocument(fb.User u) async {
-    final ref = _users.doc(u.uid);
-    final snap = await ref.get();
-    if (!snap.exists) {
-      await ref.set({
-        'uid': u.uid,
-        'email': u.email,
-        'displayName': u.displayName ?? '',
-        'photoURL': u.photoURL ?? '',
-        'role': 'pupil', // default role
-        'emailVerified': u.emailVerified,
-        'createdAt': FieldValue.serverTimestamp(),
-        'updatedAt': FieldValue.serverTimestamp(),
-      });
-    } else {
-      await ref.update({
-        'emailVerified': u.emailVerified,
-        'updatedAt': FieldValue.serverTimestamp(),
-      });
-    }
-  }
-
   @override
   Future<UserModel> signIn(String email, String password) async {
     final cred = await firebaseAuth.signInWithEmailAndPassword(
       email: email,
       password: password,
     );
-    final user = cred.user!;
-    await _ensureUserDocument(user);
-    final userDoc = await _getUserDoc(user.uid);
-    return UserModel.fromFirebase(authUser: user, userDoc: userDoc);
+
+    final authUser = cred.user!;
+    final userDoc = await _getUserDoc(authUser.uid);
+
+    return UserModel.fromFirebase(firebaseUser: authUser, userDoc: userDoc);
   }
 
   @override
-  Future<UserModel> signUp(String email, String password) async {
+  Future<UserModel> signUp(
+    String email,
+    String password,
+    String role,
+    String firstName,
+    String lastName,
+  ) async {
     final cred = await firebaseAuth.createUserWithEmailAndPassword(
       email: email,
       password: password,
     );
-    final user = cred.user!;
-    await _ensureUserDocument(user);
-    final userDoc = await _getUserDoc(user.uid);
-    return UserModel.fromFirebase(authUser: user, userDoc: userDoc);
+
+    final authUser = cred.user!;
+
+    // Create user document
+    final userDoc = {
+      'uid': authUser.uid,
+      'email': authUser.email,
+      'displayName': '$firstName $lastName',
+      'photoURL': authUser.photoURL ?? '',
+      'role': role,
+      'emailVerified': authUser.emailVerified,
+      'firstName': firstName,
+      'lastName': lastName,
+      'profileCompleted': false,
+      'preferences': _getDefaultPreferences(),
+      'createdAt': FieldValue.serverTimestamp(),
+      'updatedAt': FieldValue.serverTimestamp(),
+    };
+
+    await _users.doc(authUser.uid).set(userDoc);
+
+    return UserModel.fromFirebase(firebaseUser: authUser, userDoc: userDoc);
   }
 
   @override
-  Future<void> signOut() => firebaseAuth.signOut();
+  Future<UserModel> signUpWithProfile(Map<String, dynamic> userData) async {
+    final cred = await firebaseAuth.createUserWithEmailAndPassword(
+      email: userData['email'],
+      password: userData['password'],
+    );
+
+    final authUser = cred.user!;
+
+    final userDoc = {
+      'uid': authUser.uid,
+      'email': authUser.email,
+      'displayName': '${userData['firstName']} ${userData['lastName']}',
+      'photoURL': authUser.photoURL ?? '',
+      'role': userData['role'],
+      'emailVerified': authUser.emailVerified,
+      'firstName': userData['firstName'],
+      'lastName': userData['lastName'],
+      'dateOfBirth': userData['dateOfBirth'],
+      'handicap': userData['handicap'],
+      'coachName': userData['coachName'],
+      'golfClubOrFacility': userData['golfClubOrFacility'],
+      'experience': userData['experience'],
+      'profileCompleted': true,
+      'preferences': _getDefaultPreferences(),
+      'createdAt': FieldValue.serverTimestamp(),
+      'updatedAt': FieldValue.serverTimestamp(),
+    };
+
+    await _users.doc(authUser.uid).set(userDoc);
+
+    return UserModel.fromFirebase(firebaseUser: authUser, userDoc: userDoc);
+  }
 
   @override
   Future<UserModel?> currentUser() async {
-    final u = firebaseAuth.currentUser;
-    if (u == null) return null;
-    final userDoc = await _getUserDoc(u.uid);
-    return UserModel.fromFirebase(authUser: u, userDoc: userDoc);
-    // If userDoc is null on first login, defaults are applied.
+    final authUser = firebaseAuth.currentUser;
+    if (authUser == null) return null;
+
+    final userDoc = await _getUserDoc(authUser.uid);
+    return UserModel.fromFirebase(firebaseUser: authUser, userDoc: userDoc);
   }
 
   @override
   Stream<UserModel?> authState$() {
-    return firebaseAuth.authStateChanges().asyncMap((u) async {
-      if (u == null) return null;
-      final userDoc = await _getUserDoc(u.uid);
-      return UserModel.fromFirebase(authUser: u, userDoc: userDoc);
+    return firebaseAuth.authStateChanges().asyncMap((authUser) async {
+      if (authUser == null) return null;
+
+      final userDoc = await _getUserDoc(authUser.uid);
+      return UserModel.fromFirebase(firebaseUser: authUser, userDoc: userDoc);
     });
   }
+
+  @override
+  Future<UserModel> updateUserProfile(
+    String uid,
+    Map<String, dynamic> profileData,
+  ) async {
+    await _users.doc(uid).update({
+      ...profileData,
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+
+    final authUser = firebaseAuth.currentUser!;
+    final userDoc = await _getUserDoc(uid);
+
+    return UserModel.fromFirebase(firebaseUser: authUser, userDoc: userDoc);
+  }
+
+  @override
+  Future<void> sendPasswordResetEmail(String email) async {
+    await firebaseAuth.sendPasswordResetEmail(email: email);
+  }
+
+  @override
+  Future<void> signOut() async {
+    await firebaseAuth.signOut();
+  }
+
+  Future<Map<String, dynamic>?> _getUserDoc(String uid) async {
+    final doc = await _users.doc(uid).get();
+    return doc.data();
+  }
+
+  Map<String, dynamic> _getDefaultPreferences() => {
+    'notifications': {
+      'push': true,
+      'email': true,
+      'sms': false,
+      'reminders': true,
+      'streakWarnings': true,
+      'coachFeedback': true,
+    },
+    'units': 'metric',
+    'language': 'en',
+    'timezone': 'UTC',
+    'theme': 'auto',
+    'playbackSpeed': 1.0,
+    'captionsEnabled': false,
+    'autoplay': true,
+  };
 }

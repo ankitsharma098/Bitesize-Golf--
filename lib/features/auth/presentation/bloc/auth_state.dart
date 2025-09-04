@@ -1,6 +1,5 @@
 // features/auth/presentation/bloc/auth_state.dart
-import 'package:equatable/equatable.dart';
-import '../../../auth/domain/entities/user.dart';
+part of 'auth_bloc.dart';
 
 abstract class AuthState extends Equatable {
   const AuthState();
@@ -28,7 +27,48 @@ class AuthUnauthenticated extends AuthState {
 
 class AuthError extends AuthState {
   final String message;
-  const AuthError(this.message);
+  final String? code;
+  const AuthError(this.message, [this.code]);
   @override
-  List<Object?> get props => [message];
+  List<Object?> get props => [message, code];
+}
+
+class AuthPasswordResetSent extends AuthState {
+  final String email;
+  const AuthPasswordResetSent(this.email);
+  @override
+  List<Object?> get props => [email];
+}
+
+class AuthEmailVerificationSent extends AuthState {
+  const AuthEmailVerificationSent();
+  @override
+  List<Object?> get props => [];
+}
+
+class AuthEmailUpdateSent extends AuthState {
+  final String newEmail;
+  const AuthEmailUpdateSent(this.newEmail);
+  @override
+  List<Object?> get props => [newEmail];
+}
+
+class AuthPasswordUpdated extends AuthState {
+  const AuthPasswordUpdated();
+  @override
+  List<Object?> get props => [];
+}
+
+class AuthProfileUpdated extends AuthState {
+  final User user;
+  const AuthProfileUpdated(this.user);
+  @override
+  List<Object?> get props => [user];
+}
+
+class AuthGuestSignedIn extends AuthState {
+  final User guestUser;
+  const AuthGuestSignedIn(this.guestUser);
+  @override
+  List<Object?> get props => [guestUser];
 }

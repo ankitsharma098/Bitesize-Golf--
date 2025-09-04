@@ -1,61 +1,185 @@
 // features/auth/presentation/bloc/auth_bloc.dart
+import 'package:firebase_auth/firebase_auth.dart' as fb;
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
+import 'package:equatable/equatable.dart';
+import '../../domain/entities/user.dart';
+import '../../domain/usecases/reset_password_usecase.dart';
+import '../../domain/usecases/sign_in_guest_usecase.dart';
 import '../../domain/usecases/sign_in_usecase.dart';
 import '../../domain/usecases/sign_out_usecase.dart';
 import '../../domain/usecases/sign_up_usecase.dart';
 import '../../domain/usecases/check_auth_status_usecase.dart';
-import 'auth_event.dart';
-import 'auth_state.dart';
+import '../../domain/usecases/update_profile_usecase.dart';
+
+part 'auth_event.dart';
+part 'auth_state.dart';
 
 @injectable
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
-  final SignInUseCase signIn;
-  final SignUpUseCase signUp;
-  final SignOutUseCase signOut;
-  final CheckAuthStatusUseCase authStatus;
+  final SignInUseCase signInUseCase;
+  final SignUpUseCase signUpUseCase;
+  final SignOutUseCase signOutUseCase;
+  final CheckAuthStatusUseCase checkAuthStatusUseCase;
+  final UpdateProfileUseCase updateProfileUseCase;
+  final ResetPasswordUseCase resetPasswordUseCase;
+  final SignInAsGuestUseCase signInAsGuestUseCase;
+  final fb.FirebaseAuth firebaseAuth; // ✅ INJECTED
 
   AuthBloc({
-    required this.signIn,
-    required this.signUp,
-    required this.signOut,
-    required this.authStatus,
+    required this.signInUseCase,
+    required this.signUpUseCase,
+    required this.signOutUseCase,
+    required this.checkAuthStatusUseCase,
+    required this.updateProfileUseCase,
+    required this.resetPasswordUseCase,
+    required this.signInAsGuestUseCase,
+    required this.firebaseAuth,
   }) : super(AuthInitial()) {
-    on<AuthAppStarted>((event, emit) async {
-      emit(AuthLoading());
-      await emit.forEach(
-        authStatus(),
-        onData: (user) => user == null
-            ? const AuthUnauthenticated()
-            : AuthAuthenticated(user),
-        onError: (e, st) => AuthError(e.toString()),
-      );
-    });
+    on<AuthAppStarted>(_onAppStarted);
+    on<AuthSignInRequested>(_onSignInRequested);
+    on<AuthSignUpRequested>(_onSignUpRequested);
+    on<AuthGuestSignInRequested>(_onGuestSignInRequested);
+    on<AuthSignOutRequested>(_onSignOutRequested);
+    on<AuthUpdateProfile>(_onUpdateProfile);
+    on<AuthResetPasswordRequested>(_onResetPasswordRequested);
+    on<AuthEmailVerificationRequested>(_onEmailVerificationRequested);
+  }
 
-    on<AuthSignInRequested>((event, emit) async {
-      emit(AuthLoading());
-      final res = await signIn(email: event.email, password: event.password);
-      res.fold(
-        (l) => emit(AuthError(l.message)),
-        (r) => emit(AuthAuthenticated(r)),
-      );
-    });
+  Future<void> _onAppStarted(
+    AuthAppStarted event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(AuthLoading());
 
-    on<AuthSignUpRequested>((event, emit) async {
-      emit(AuthLoading());
-      final res = await signUp(email: event.email, password: event.password);
-      res.fold(
-        (l) => emit(AuthError(l.message)),
-        (r) => emit(AuthAuthenticated(r)),
-      );
-    });
+    try {
+      final user = await checkAuthStatusUseCase();
+      if (user != null) {
+        emit(AuthAuthenticated(user));
+      } else {
+        emit(const AuthUnauthenticated());
+      }
+    } catch (e) {
+      emit(AuthError(e.toString()));
+    }
+  }
 
-    on<AuthSignOutRequested>((event, emit) async {
-      final res = await signOut();
-      res.fold(
-        (l) => emit(AuthError(l.message)),
-        (_) => const AuthUnauthenticated(),
+  Future<void> _onSignInRequested(
+    AuthSignInRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(AuthLoading());
+
+    final result = await signInUseCase(
+      email: event.email,
+      password: event.password,
+    );
+
+    result.fold(
+      (failure) => emit(AuthError(failure.message)),
+      (user) => emit(AuthAuthenticated(user)),
+    );
+  }
+
+  Future<void> _onSignUpRequested(
+    AuthSignUpRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(AuthLoading());
+
+    final result = await signUpUseCase(
+      email: event.email,
+      password: event.password,
+      role: event.role,
+      firstName: event.firstName,
+      lastName: event.lastName,
+    );
+
+    result.fold(
+      (failure) => emit(AuthError(failure.message)),
+      (user) => emit(AuthAuthenticated(user)),
+    );
+  }
+
+  Future<void> _onGuestSignInRequested(
+    AuthGuestSignInRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(AuthLoading());
+
+    final result = await signInAsGuestUseCase();
+
+    result.fold(
+      (failure) => emit(AuthError(failure.message)),
+      (user) => emit(AuthGuestSignedIn(user)),
+    );
+  }
+
+  Future<void> _onSignOutRequested(
+    AuthSignOutRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(AuthLoading());
+
+    final result = await signOutUseCase();
+
+    result.fold(
+      (failure) => emit(AuthError(failure.message)),
+      (_) => const AuthUnauthenticated(),
+    );
+  }
+
+  Future<void> _onUpdateProfile(
+    AuthUpdateProfile event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(AuthLoading());
+
+    if (state is AuthAuthenticated) {
+      final currentUser = (state as AuthAuthenticated).user;
+
+      final result = await updateProfileUseCase(
+        uid: currentUser.uid,
+        profileData: event.profileData,
       );
-    });
+
+      result.fold(
+        (failure) => emit(AuthError(failure.message)),
+        (updatedUser) => emit(AuthProfileUpdated(updatedUser)),
+      );
+    }
+  }
+
+  Future<void> _onResetPasswordRequested(
+    AuthResetPasswordRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(AuthLoading());
+
+    final result = await resetPasswordUseCase(email: event.email);
+
+    result.fold(
+      (failure) => emit(AuthError(failure.message)),
+      (_) => emit(AuthPasswordResetSent(event.email)),
+    );
+  }
+
+  Future<void> _onEmailVerificationRequested(
+    AuthEmailVerificationRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(AuthLoading());
+
+    try {
+      final user = firebaseAuth.currentUser;
+      if (user != null) {
+        await user.sendEmailVerification();
+        emit(const AuthEmailVerificationSent());
+      } else {
+        emit(const AuthError('No user logged in'));
+      }
+    } catch (e) {
+      emit(AuthError(e.toString()));
+    }
   }
 }

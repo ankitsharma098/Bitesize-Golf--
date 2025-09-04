@@ -1,14 +1,16 @@
-import 'package:bitesize_golf/route/app_router.dart';
-import 'package:bitesize_golf/route/app_routes.dart';
-import 'package:firebase_core/firebase_core.dart';
+// main.dart
 import 'package:flutter/material.dart';
-import 'package:hive_flutter/adapters.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:bitesize_golf/route/app_router.dart';
+
 import 'core/connectivity check/screens/internet_overlay_screen.dart';
 import 'core/constants/app_constants.dart';
 import 'core/themes/app_theme.dart';
 import 'core/themes/theme_provider.dart';
-import 'features/auth/data/datasources/auth_local_datasource.dart';
+import 'features/auth/presentation/bloc/auth_bloc.dart';
 import 'features/components/utils/loader_spinner.dart';
 import 'firebase_options.dart';
 import 'injection.dart';
@@ -16,92 +18,54 @@ import 'injection.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-
-  await Hive.initFlutter(); // Boxes are opened lazily by HiveStorageService
-
+  await Hive.initFlutter();
   await configureDependencies();
-  runApp(const MyApp()); // Run MyApp instead of RegisterPage
+
+  runApp(const MyApp());
 }
 
-class MyApp extends StatefulWidget {
+class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
   @override
-  State<MyApp> createState() => _MyAppState();
+  Widget build(BuildContext context) {
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => ThemeProvider()),
+        BlocProvider(create: (_) => getIt<AuthBloc>()..add(AuthAppStarted())),
+      ],
+      child: const AppContent(),
+    );
+  }
 }
 
-class _MyAppState extends State<MyApp> {
-  late Future<bool> _initializationFuture;
+class AppContent extends StatefulWidget {
+  const AppContent({super.key});
 
   @override
-  void initState() {
-    super.initState();
-    _initializationFuture = checkLoggedIn();
-  }
+  State<AppContent> createState() => _AppContentState();
+}
 
-  Future<bool> checkLoggedIn() => getIt<AuthLocalDataSource>().isLoggedIn();
-
+class _AppContentState extends State<AppContent> {
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => ThemeProvider(),
-      child: Consumer<ThemeProvider>(
-        builder: (context, themeProvider, _) {
-          return FutureBuilder<bool>(
-            future: _initializationFuture,
-            builder: (context, snapshot) {
-              // Loading state
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return MaterialApp(
-                  debugShowCheckedModeBanner: false,
-                  theme: themeProvider.isDarkMode
-                      ? AppTheme.darkTheme(context)
-                      : AppTheme.lightTheme(context),
-                  home: Scaffold(
-                    body: Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const LoadingSpinner(),
-                          const SizedBox(height: 16),
-                          Text(
-                            'Loading...',
-                            style: TextStyle(
-                              color: Theme.of(context).canvasColor,
-                              fontSize: 20,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                );
-              }
-
-              // Determine initial route based on login status
-              final initialRoute = snapshot.data == true
-                  ? RouteNames.mainScreen
-                  : RouteNames.login;
-
-              return MaterialApp.router(
-                debugShowCheckedModeBanner: false,
-                title: AppName,
-                theme: themeProvider.isDarkMode
-                    ? AppTheme.darkTheme(context)
-                    : AppTheme.lightTheme(context),
-                themeMode:
-                    MediaQuery.platformBrightnessOf(context) == Brightness.dark
-                    ? ThemeMode.dark
-                    : ThemeMode.light,
-                routerConfig: AppRouter.router,
-                builder: (context, child) {
-                  return ConnectivityOverlay(child: child ?? Container());
-                },
-              );
-            },
-          );
-        },
-      ),
+    return Consumer<ThemeProvider>(
+      builder: (context, themeProvider, _) {
+        return MaterialApp.router(
+          debugShowCheckedModeBanner: false,
+          title: AppName,
+          theme: themeProvider.isDarkMode
+              ? AppTheme.darkTheme(context)
+              : AppTheme.lightTheme(context),
+          themeMode: MediaQuery.platformBrightnessOf(context) == Brightness.dark
+              ? ThemeMode.dark
+              : ThemeMode.light,
+          routerConfig: AppRouter.router,
+          builder: (context, child) {
+            return ConnectivityOverlay(child: child ?? Container());
+          },
+        );
+      },
     );
   }
 }

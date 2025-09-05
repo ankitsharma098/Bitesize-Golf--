@@ -31,7 +31,7 @@ class AuthLocalDataSourceImpl implements AuthLocalDataSource {
       prefs.setString(PREF_USER_ID, user.uid),
       prefs.setString(PREF_USER_NAME, user.displayName ?? ''),
       prefs.setString(PREF_USER_EMAIL, user.email ?? ''),
-      prefs.setString(PREF_USER_PHOTO, user.photoUrl ?? ''),
+      prefs.setString(PREF_USER_PHOTO, user.photoURL ?? ''),
       prefs.setString(PREF_USER_ROLE, user.role),
       prefs.setBool(PREF_EMAIL_VERIFIED, user.emailVerified),
     ]);

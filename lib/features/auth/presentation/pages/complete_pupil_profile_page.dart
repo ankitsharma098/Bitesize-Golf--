@@ -42,8 +42,8 @@ class _CompleteProfilePupilPageState extends State<CompleteProfilePupilPage> {
     super.initState();
     final user = context.read<AuthBloc>().state;
     if (user is AuthAuthenticated) {
-      firstNameCtrl.text = user.user.firstName ?? '';
-      lastNameCtrl.text = user.user.lastName ?? '';
+      firstNameCtrl.text = user.user.displayName?.split(" ").first ?? '';
+      lastNameCtrl.text = user.user.displayName?.split(" ").last ?? '';
     }
   }
 

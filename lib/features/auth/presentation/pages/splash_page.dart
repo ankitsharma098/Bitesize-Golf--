@@ -71,7 +71,7 @@ class _SplashScreenState extends State<SplashScreen> {
       body: BlocListener<AuthBloc, AuthState>(
         listener: (context, state) {
           if (state is AuthAuthenticated) {
-            if (state.user.profileCompleted) {
+            if (state.user.photoURL!.isEmpty) {
               context.go(
                 state.user.isCoach
                     ? RouteNames.coachHome

@@ -324,7 +324,7 @@ class AppRouter {
         final user = authState.user;
 
         // Redirect to profile completion if needed
-        if (!user.profileCompleted) {
+        if (user.photoURL!.isEmpty) {
           return user.isCoach
               ? RouteNames.completeProfileCoach
               : RouteNames.completeProfilePupil;

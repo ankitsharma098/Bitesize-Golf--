@@ -36,8 +36,8 @@ class _CompleteProfileCoachPageState extends State<CompleteProfileCoachPage> {
     // Pre-fill with existing data
     final currentUser = context.read<AuthBloc>().state;
     if (currentUser is AuthAuthenticated) {
-      firstNameCtrl.text = currentUser.user.firstName ?? '';
-      lastNameCtrl.text = currentUser.user.lastName ?? '';
+      firstNameCtrl.text = currentUser.user.displayName?.split(" ").first ?? '';
+      lastNameCtrl.text = currentUser.user.displayName?.split(" ").last ?? '';
     }
   }
 

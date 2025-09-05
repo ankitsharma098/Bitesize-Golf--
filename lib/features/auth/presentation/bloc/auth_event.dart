@@ -53,5 +53,74 @@ class AuthResetPasswordRequested extends AuthEvent {
   @override
   List<Object?> get props => [email];
 }
+// Add these new events to the existing file
+
+class AuthCompletePupilProfileRequested extends AuthEvent {
+  final String pupilId;
+  final String parentId;
+  final String name;
+  final DateTime? dateOfBirth;
+  final String? handicap;
+  final String? selectedCoachName;
+  final String? selectedClubId;
+  final String? avatar;
+
+  const AuthCompletePupilProfileRequested({
+    required this.pupilId,
+    required this.parentId,
+    required this.name,
+    this.dateOfBirth,
+    this.handicap,
+    this.selectedCoachName,
+    this.selectedClubId,
+    this.avatar,
+  });
+
+  @override
+  List<Object?> get props => [
+    pupilId,
+    parentId,
+    name,
+    dateOfBirth,
+    handicap,
+    selectedCoachName,
+    selectedClubId,
+    avatar,
+  ];
+}
+
+class AuthCompleteCoachProfileRequested extends AuthEvent {
+  final String coachId;
+  final String userId;
+  final String name;
+  final String? bio;
+  final List<String>? qualifications;
+  final int? experience;
+  final List<String>? specialties;
+  final String? clubId;
+
+  const AuthCompleteCoachProfileRequested({
+    required this.coachId,
+    required this.userId,
+    required this.name,
+    this.bio,
+    this.qualifications,
+    this.experience,
+    this.specialties,
+    this.clubId,
+  });
+
+  @override
+  List<Object?> get props => [
+    coachId,
+    userId,
+    name,
+    bio,
+    qualifications,
+    experience,
+    specialties,
+    clubId,
+  ];
+}
 
 class AuthEmailVerificationRequested extends AuthEvent {}

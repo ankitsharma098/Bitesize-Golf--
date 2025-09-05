@@ -1,14 +1,13 @@
 import 'package:equatable/equatable.dart';
-import 'coach_stats.dart';
+
+import 'coach_stats_entity.dart';
 
 class Coach extends Equatable {
   final String id; // same as user.uid
   final String userId; // ref to users.uid
   final String name;
   final String bio;
-  final List<String> qualifications;
   final int experience; // years – NEW
-  final List<String> specialties;
   final String? clubId; // ref to golfClubs/{id} – NEW
   final String verificationStatus;
   final String? verifiedBy;
@@ -25,9 +24,7 @@ class Coach extends Equatable {
     required this.userId,
     required this.name,
     this.bio = '',
-    this.qualifications = const [],
     this.experience = 0,
-    this.specialties = const [],
     this.clubId,
     this.verificationStatus = 'pending',
     this.verifiedBy,
@@ -46,9 +43,7 @@ class Coach extends Equatable {
     userId,
     name,
     bio,
-    qualifications,
     experience,
-    specialties,
     clubId,
     verificationStatus,
     verifiedBy,

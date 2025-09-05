@@ -72,3 +72,11 @@ class AuthGuestSignedIn extends AuthState {
   @override
   List<Object?> get props => [guestUser];
 }
+
+// Add this new state class
+class AuthProfileCompleted extends AuthState {
+  const AuthProfileCompleted();
+
+  @override
+  List<Object?> get props => [];
+}

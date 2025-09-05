@@ -73,10 +73,7 @@ class AuthFirebaseDataSourceImpl implements AuthFirebaseDataSource {
       'photoURL': authUser.photoURL ?? '',
       'role': role,
       'emailVerified': authUser.emailVerified,
-      'firstName': firstName,
-      'lastName': lastName,
-      'profileCompleted': false,
-      'preferences': _getDefaultPreferences(),
+      'accountStatus': 'active',
       'createdAt': FieldValue.serverTimestamp(),
       'updatedAt': FieldValue.serverTimestamp(),
     };

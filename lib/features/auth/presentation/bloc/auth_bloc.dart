@@ -4,13 +4,14 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
 import 'package:equatable/equatable.dart';
 import '../../domain/entities/user.dart';
+import '../../domain/usecases/create_coach_profile_usecase.dart';
+import '../../domain/usecases/create_pupil_profile_usecase.dart';
 import '../../domain/usecases/reset_password_usecase.dart';
 import '../../domain/usecases/sign_in_guest_usecase.dart';
 import '../../domain/usecases/sign_in_usecase.dart';
 import '../../domain/usecases/sign_out_usecase.dart';
 import '../../domain/usecases/sign_up_usecase.dart';
 import '../../domain/usecases/check_auth_status_usecase.dart';
-import '../../domain/usecases/update_profile_usecase.dart';
 
 part 'auth_event.dart';
 part 'auth_state.dart';
@@ -21,7 +22,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final SignUpUseCase signUpUseCase;
   final SignOutUseCase signOutUseCase;
   final CheckAuthStatusUseCase checkAuthStatusUseCase;
-  final UpdateProfileUseCase updateProfileUseCase;
+  final CreateCoachProfileUseCase createCoachProfileUseCase;
+  final CreatePupilProfileUseCase createPupilProfileUseCase;
   final ResetPasswordUseCase resetPasswordUseCase;
   final SignInAsGuestUseCase signInAsGuestUseCase;
   final fb.FirebaseAuth firebaseAuth; // ✅ INJECTED
@@ -31,7 +33,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     required this.signUpUseCase,
     required this.signOutUseCase,
     required this.checkAuthStatusUseCase,
-    required this.updateProfileUseCase,
+    required this.createCoachProfileUseCase,
+    required this.createPupilProfileUseCase,
     required this.resetPasswordUseCase,
     required this.signInAsGuestUseCase,
     required this.firebaseAuth,
@@ -44,6 +47,40 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<AuthUpdateProfile>(_onUpdateProfile);
     on<AuthResetPasswordRequested>(_onResetPasswordRequested);
     on<AuthEmailVerificationRequested>(_onEmailVerificationRequested);
+    on<AuthCompletePupilProfileRequested>((event, emit) async {
+      emit(AuthLoading());
+      final res = await createPupilProfileUseCase(
+        pupilId: event.pupilId,
+        parentId: event.parentId,
+        name: event.name,
+        dateOfBirth: event.dateOfBirth,
+        handicap: event.handicap,
+        selectedCoachName: event.selectedCoachName,
+        selectedClubId: event.selectedClubId,
+        avatar: event.avatar,
+      );
+      res.fold((l) => emit(AuthError(l.message)), (_) {
+        emit(const AuthProfileCompleted()); // your new state
+      });
+    });
+
+    on<AuthCompleteCoachProfileRequested>((event, emit) async {
+      emit(AuthLoading());
+      final res = await createCoachProfileUseCase(
+        coachId: event.coachId,
+        userId: event.userId,
+        name: event.name,
+        bio: event.bio,
+        qualifications: event.qualifications,
+        experience: event.experience,
+        specialties: event.specialties,
+        clubId: event.clubId,
+      );
+      res.fold(
+        (l) => emit(AuthError(l.message)),
+        (_) => emit(const AuthProfileCompleted()),
+      );
+    });
   }
 
   // In your AuthBloc - update _onAppStarted

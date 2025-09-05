@@ -28,8 +28,11 @@ const rtlLanguage = <String>['ar', 'ur'];
 
 /// Firestore collections (Golf learning platform)
 const USERS_COLLECTION = 'users';
+// Collections
+
 const PUPILS_COLLECTION = 'pupils';
 const COACHES_COLLECTION = 'coaches';
+const GOLF_CLUBS_COLLECTION = 'golfClubs';
 const SUBJECTS_COLLECTION = 'subjects';
 const PLANS_COLLECTION = 'plans';
 const COURSES_COLLECTION = 'courses';

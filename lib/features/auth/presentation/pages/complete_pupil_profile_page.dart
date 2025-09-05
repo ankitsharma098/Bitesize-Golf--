@@ -74,20 +74,27 @@ class _CompleteProfilePupilPageState extends State<CompleteProfilePupilPage> {
   }
 
   void _save() {
-    if (_formKey.currentState!.validate()) {
-      final data = {
-        'firstName': firstNameCtrl.text.trim(),
-        'lastName': lastNameCtrl.text.trim(),
-        'dateOfBirth': _selectedDateOfBirth?.toIso8601String(),
-        'handicap': handicapCtrl.text.trim(),
-        'coachName': _selectedCoach,
-        'golfClubOrFacility': _selectedGolfClub,
-        'profileCompleted': true,
-        'skillLevel': 'beginner',
-        'learningGoals': [],
-      };
-      context.read<AuthBloc>().add(AuthUpdateProfile(data));
-    }
+    if (!_formKey.currentState!.validate()) return;
+    final user = (context.read<AuthBloc>().state as AuthAuthenticated).user;
+
+    context.read<AuthBloc>().add(
+      AuthCompletePupilProfileRequested(
+        pupilId: user.uid,
+        parentId: user.uid, // parent == self for now
+        name: '${firstNameCtrl.text.trim()} ${lastNameCtrl.text.trim()}',
+        dateOfBirth: _selectedDateOfBirth,
+        handicap: handicapCtrl.text.trim().isEmpty
+            ? null
+            : handicapCtrl.text.trim(),
+        selectedCoachName: coachNameCtrl.text.trim().isEmpty
+            ? null
+            : coachNameCtrl.text.trim(),
+        selectedClubId: golfClubCtrl.text.trim().isEmpty
+            ? null
+            : golfClubCtrl.text.trim(),
+        avatar: null, // you can wire image upload later
+      ),
+    );
   }
 
   void _skip() => context.go(RouteNames.pupilHome);
@@ -175,7 +182,7 @@ class _CompleteProfilePupilPageState extends State<CompleteProfilePupilPage> {
       ),
       body: BlocConsumer<AuthBloc, AuthState>(
         listener: (_, state) {
-          if (state is AuthProfileUpdated) {
+          if (state is AuthCompletePupilProfileRequested) {
             context.go(RouteNames.pupilHome);
           } else if (state is AuthError) {
             ScaffoldMessenger.of(

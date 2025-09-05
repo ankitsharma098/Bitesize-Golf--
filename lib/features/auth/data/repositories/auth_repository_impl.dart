@@ -3,6 +3,8 @@ import 'package:dartz/dartz.dart';
 import 'package:firebase_auth/firebase_auth.dart' as fb;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:injectable/injectable.dart';
+import '../../../coaches/data/models/coach_model.dart';
+import '../../../pupils/data/models/pupil_model.dart';
 import '../../domain/entities/user.dart' as entity;
 import '../../domain/failure.dart';
 import '../../domain/repositories/auth_repository.dart';
@@ -306,6 +308,77 @@ class AuthRepositoryImpl implements AuthRepository {
       return const Right(null);
     } on fb.FirebaseAuthException catch (e) {
       return Left(AuthFailure(message: _getAuthErrorMessage(e.code)));
+    } catch (e) {
+      return Left(AuthFailure(message: e.toString()));
+    }
+  }
+
+  // Add these methods to AuthRepositoryImpl class
+  @override
+  Future<Either<Failure, void>> createPupilProfile({
+    required String pupilId,
+    required String parentId,
+    required String name,
+    DateTime? dateOfBirth,
+    String? handicap,
+    String? selectedCoachName,
+    String? selectedClubId,
+    String? avatar,
+  }) async {
+    try {
+      final now = DateTime.now();
+      final pupil = PupilModel(
+        id: pupilId,
+        parentId: parentId,
+        name: name,
+        dateOfBirth: dateOfBirth,
+        handicap: handicap,
+        selectedCoachName: selectedCoachName,
+        selectedClubId: selectedClubId,
+        avatar: avatar,
+        createdAt: now,
+        updatedAt: now,
+      );
+
+      await FirebaseFirestore.instance
+          .collection('pupils')
+          .doc(pupilId)
+          .set(pupil.toJson());
+
+      return const Right(null);
+    } catch (e) {
+      return Left(AuthFailure(message: e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> createCoachProfile({
+    required String coachId,
+    required String userId,
+    required String name,
+    String? bio,
+    int? experience,
+    String? clubId,
+  }) async {
+    try {
+      final now = DateTime.now();
+      final coach = CoachModel(
+        id: coachId,
+        userId: userId,
+        name: name,
+        bio: bio ?? '',
+        experience: experience ?? 0,
+        clubId: clubId,
+        createdAt: now,
+        updatedAt: now,
+      );
+
+      await FirebaseFirestore.instance
+          .collection('coaches')
+          .doc(coachId)
+          .set(coach.toJson());
+
+      return const Right(null);
     } catch (e) {
       return Left(AuthFailure(message: e.toString()));
     }

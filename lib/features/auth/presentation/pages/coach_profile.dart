@@ -64,21 +64,23 @@ class _CompleteProfileCoachPageState extends State<CompleteProfileCoachPage> {
   }
 
   void _handleSaveProfile() {
-    if (_formKey.currentState!.validate()) {
-      final profileData = {
-        'firstName': firstNameCtrl.text.trim(),
-        'lastName': lastNameCtrl.text.trim(),
-        'experience': int.tryParse(experienceCtrl.text.trim()) ?? 0,
-        'golfClubOrFacility': _selectedGolfClub,
-        'profileCompleted': true,
-        'bio': bioCtrl.text.trim(),
-        'certifications': _certifications,
-        'isAvailable': true,
-        'maxPupils': 20,
-      };
+    if (!_formKey.currentState!.validate()) return;
+    final user = (context.read<AuthBloc>().state as AuthAuthenticated).user;
 
-      context.read<AuthBloc>().add(AuthUpdateProfile(profileData));
-    }
+    context.read<AuthBloc>().add(
+      AuthCompleteCoachProfileRequested(
+        coachId: user.uid,
+        userId: user.uid,
+        name: '${firstNameCtrl.text.trim()} ${lastNameCtrl.text.trim()}',
+        bio: bioCtrl.text.trim().isEmpty ? null : bioCtrl.text.trim(),
+        experience: int.tryParse(experienceCtrl.text.trim()),
+        clubId: golfClubCtrl.text.trim().isEmpty
+            ? null
+            : golfClubCtrl.text.trim(),
+        qualifications: _certifications.isEmpty ? null : _certifications,
+        specialties: null, // add UI for this later if needed
+      ),
+    );
   }
 
   void _handleSkip() {
@@ -153,7 +155,7 @@ class _CompleteProfileCoachPageState extends State<CompleteProfileCoachPage> {
       ),
       body: BlocConsumer<AuthBloc, AuthState>(
         listener: (context, state) {
-          if (state is AuthProfileUpdated) {
+          if (state is AuthCompletePupilProfileRequested) {
             context.go(RouteNames.coachHome);
           } else if (state is AuthError) {
             ScaffoldMessenger.of(

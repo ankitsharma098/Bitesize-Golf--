@@ -1,19 +1,15 @@
 import 'package:equatable/equatable.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-import 'level_progress.dart';
-
 class Pupil extends Equatable {
   final String id; // same as user.uid
   final String parentId; // user.uid of parent (self for now)
   final String name; // copied from users.displayName
-  final DateTime? dateOfBirth; // NEW
-  final String? handicap; // NEW
-  final String? selectedCoachName; // NEW (free-text or coachId)
-  final String? selectedClubId; // NEW (reference to golfClubs/{id})
+  final DateTime? dateOfBirth; // NEW - from complete profile
+  final String? handicap; // NEW - from complete profile
+  final String? selectedCoachName; // NEW - from complete profile
+  final String? selectedClubId; // NEW - reference to golfClubs/{id}
   final String? avatar;
-  final PupilProgress progress; // existing
-  final List<String> badges; // existing
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -26,8 +22,6 @@ class Pupil extends Equatable {
     this.selectedCoachName,
     this.selectedClubId,
     this.avatar,
-    this.progress = const PupilProgress(),
-    this.badges = const [],
     required this.createdAt,
     required this.updatedAt,
   });
@@ -42,8 +36,6 @@ class Pupil extends Equatable {
     selectedCoachName,
     selectedClubId,
     avatar,
-    progress,
-    badges,
     createdAt,
     updatedAt,
   ];

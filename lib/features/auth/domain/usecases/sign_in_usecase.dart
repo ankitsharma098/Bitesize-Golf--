@@ -4,15 +4,20 @@ import '../entities/user.dart';
 import '../failure.dart';
 import '../repositories/auth_repository.dart';
 
-@lazySingleton
+@injectable
 class SignInUseCase {
   final AuthRepository repository;
-  SignInUseCase({required this.repository});
+
+  SignInUseCase(this.repository);
 
   Future<Either<Failure, User>> call({
     required String email,
     required String password,
   }) async {
-    return repository.signIn(email, password);
+    if (email.trim().isEmpty || password.isEmpty) {
+      return Left(AuthFailure(message: 'Email and password are required'));
+    }
+
+    return repository.signIn(email.trim(), password);
   }
 }

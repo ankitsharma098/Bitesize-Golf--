@@ -7,6 +7,8 @@ import 'dart:io';
 import '../../../../core/themes/theme_colors.dart';
 import '../../../../route/routes_names.dart';
 import '../bloc/auth_bloc.dart';
+import '../bloc/auth_event.dart';
+import '../bloc/auth_state.dart';
 
 class CompleteProfileCoachPage extends StatefulWidget {
   const CompleteProfileCoachPage({super.key});
@@ -77,8 +79,6 @@ class _CompleteProfileCoachPageState extends State<CompleteProfileCoachPage> {
         clubId: golfClubCtrl.text.trim().isEmpty
             ? null
             : golfClubCtrl.text.trim(),
-        qualifications: _certifications.isEmpty ? null : _certifications,
-        specialties: null, // add UI for this later if needed
       ),
     );
   }

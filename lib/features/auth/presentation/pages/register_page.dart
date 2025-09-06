@@ -1,5 +1,4 @@
-import 'package:bitesize_golf/core/themes/theme_colors.dart';
-import 'package:bitesize_golf/route/navigator_service.dart';
+// Updated features/auth/presentation/pages/register_page.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -10,6 +9,8 @@ import '../../../components/utils/custom_app_bar.dart';
 import '../../../components/utils/custom_radio.dart';
 import '../../../components/utils/size_config.dart';
 import '../bloc/auth_bloc.dart';
+import '../bloc/auth_event.dart';
+import '../bloc/auth_state.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -20,15 +21,12 @@ class RegisterPage extends StatefulWidget {
 
 class _RegisterPageState extends State<RegisterPage> {
   final _formKey = GlobalKey<FormState>();
-
-  /* ---------- controllers ---------- */
   final firstNameCtrl = TextEditingController();
   final lastNameCtrl = TextEditingController();
   final emailCtrl = TextEditingController();
   final passwordCtrl = TextEditingController();
 
-  /* ---------- local state ---------- */
-  String _selectedRole = 'pupil';
+  String _selectedRole = 'pupil'; // Changed default to parent
   bool _agreeToTerms = false;
   bool _obscurePass = true;
 
@@ -41,7 +39,6 @@ class _RegisterPageState extends State<RegisterPage> {
     super.dispose();
   }
 
-  /* ---------- handlers ---------- */
   void _handleRegister() {
     if (_formKey.currentState!.validate() && _agreeToTerms) {
       context.read<AuthBloc>().add(
@@ -60,27 +57,29 @@ class _RegisterPageState extends State<RegisterPage> {
     }
   }
 
-  void _handleRoleChange(String role) => setState(() => _selectedRole = role);
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      /* ---------- app-bar (same style as LoginPage) ---------- */
-      backgroundColor: AppColors.scaffoldBgColor,
+      backgroundColor: Colors.white,
       appBar: CustomAppBar(
         title: 'Create Your Account',
-        levelType: LevelType.redLevel,
         centerTitle: false,
         showBackButton: true,
       ),
-
-      /* ---------- body ---------- */
       body: BlocConsumer<AuthBloc, AuthState>(
         listener: (context, state) {
-          if (state is AuthAuthenticated) {
-            state.user.role == 'coach'
-                ? context.go(RouteNames.completeProfileCoach)
-                : context.go(RouteNames.completeProfilePupil);
+          if (state is AuthProfileCompletionRequired) {
+            // Navigate to appropriate profile completion screen based on role
+            if (state.user.role == 'pupil') {
+              context.go(RouteNames.completeProfilePupil);
+            } else if (state.user.role == 'coach') {
+              // Show success message for coach (profile already created, pending verification)
+
+              context.go(RouteNames.completeProfileCoach);
+              // context.go(RouteNames.home);
+            }
+          } else if (state is AuthAuthenticated) {
+            // context.go(RouteNames.home);
           } else if (state is AuthError) {
             ScaffoldMessenger.of(
               context,
@@ -98,18 +97,21 @@ class _RegisterPageState extends State<RegisterPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
+                    SizedBox(height: SizeConfig.scaleHeight(20)),
+
+                    // First Name
                     CustomTextFieldFactory.name(
                       controller: firstNameCtrl,
                       label: 'First Name',
-                      levelType: LevelType.redLevel,
                       placeholder: 'Enter First Name',
                       validator: (v) =>
                           (v ?? '').trim().isEmpty ? 'Required' : null,
                     ),
                     SizedBox(height: SizeConfig.scaleHeight(20)),
+
+                    // Last Name
                     CustomTextFieldFactory.name(
                       controller: lastNameCtrl,
-                      levelType: LevelType.redLevel,
                       label: 'Last Name',
                       placeholder: 'Enter Last Name',
                       validator: (v) =>
@@ -117,10 +119,9 @@ class _RegisterPageState extends State<RegisterPage> {
                     ),
                     SizedBox(height: SizeConfig.scaleHeight(20)),
 
-                    /* ---- Email ---- */
+                    // Email
                     CustomTextFieldFactory.email(
                       controller: emailCtrl,
-                      levelType: LevelType.redLevel,
                       validator: (v) {
                         final val = (v ?? '').trim();
                         if (val.isEmpty) return 'Please enter your email';
@@ -130,10 +131,9 @@ class _RegisterPageState extends State<RegisterPage> {
                     ),
                     SizedBox(height: SizeConfig.scaleHeight(20)),
 
-                    /* ---- Password ---- */
+                    // Password
                     CustomTextFieldFactory.password(
                       controller: passwordCtrl,
-                      levelType: LevelType.redLevel,
                       obscureText: _obscurePass,
                       validator: (v) {
                         final val = (v ?? '').trim();
@@ -146,7 +146,7 @@ class _RegisterPageState extends State<RegisterPage> {
                     ),
                     SizedBox(height: SizeConfig.scaleHeight(24)),
 
-                    /* ---- Role selector ---- */
+                    // Role selector
                     const Text(
                       'Choose your role*',
                       style: TextStyle(
@@ -155,18 +155,34 @@ class _RegisterPageState extends State<RegisterPage> {
                       ),
                     ),
                     SizedBox(height: SizeConfig.scaleHeight(12)),
-                    CustomRadioGroup<String>(
-                      levelType: LevelType.redLevel, // theme colour
-                      groupValue: _selectedRole,
-                      onChanged: (v) => setState(() => _selectedRole = v!),
-                      options: const [
-                        RadioOption(value: 'pupil', label: 'Pupil'),
-                        RadioOption(value: 'coach', label: 'Coach'),
+
+                    Column(
+                      children: [
+                        RadioListTile<String>(
+                          title: const Text('Parent'),
+                          subtitle: const Text(
+                            'Create accounts for your children',
+                          ),
+                          value: 'pupil',
+                          groupValue: _selectedRole,
+                          onChanged: (value) =>
+                              setState(() => _selectedRole = value!),
+                        ),
+                        RadioListTile<String>(
+                          title: const Text('Coach'),
+                          subtitle: const Text(
+                            'Teach and guide junior golfers',
+                          ),
+                          value: 'coach',
+                          groupValue: _selectedRole,
+                          onChanged: (value) =>
+                              setState(() => _selectedRole = value!),
+                        ),
                       ],
                     ),
                     SizedBox(height: SizeConfig.scaleHeight(24)),
 
-                    /* ---- Terms checkbox ---- */
+                    // Terms checkbox
                     Row(
                       children: [
                         Checkbox(
@@ -176,14 +192,13 @@ class _RegisterPageState extends State<RegisterPage> {
                         ),
                         Expanded(
                           child: GestureDetector(
-                            onTap: () {
-                              /* show terms */
-                            },
-                            child: Text(
+                            onTap: () =>
+                                setState(() => _agreeToTerms = !_agreeToTerms),
+                            child: const Text(
                               'I agree to the Terms and Conditions',
                               style: TextStyle(
                                 decoration: TextDecoration.underline,
-                                color: AppColors.redDark,
+                                color: Colors.blue,
                               ),
                             ),
                           ),
@@ -192,23 +207,25 @@ class _RegisterPageState extends State<RegisterPage> {
                     ),
                     SizedBox(height: SizeConfig.scaleHeight(32)),
 
-                    /* ---- Register button ---- */
-                    CustomButtonFactory.primary(
-                      text: 'Register',
+                    // Register button
+                    ElevatedButton(
                       onPressed: isLoading ? null : _handleRegister,
-                      levelType: LevelType.redLevel,
-                      isLoading: isLoading,
+                      child: isLoading
+                          ? const CircularProgressIndicator()
+                          : const Text('Create Account'),
                     ),
                     SizedBox(height: SizeConfig.scaleHeight(16)),
-                    Center(child: const Text('Already have an account?')),
-                    SizedBox(height: SizeConfig.scaleHeight(8)),
-                    CustomButtonFactory.text(
-                      text: 'Log in',
-                      levelType: LevelType.redLevel,
-                      onPressed: () {
-                        NavigationService.push(RouteNames.login);
-                      },
-                      width: SizeConfig.scaleWidth(20),
+
+                    // Login link
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Text('Already have an account? '),
+                        TextButton(
+                          onPressed: () => context.go(RouteNames.login),
+                          child: const Text('Sign In'),
+                        ),
+                      ],
                     ),
                   ],
                 ),

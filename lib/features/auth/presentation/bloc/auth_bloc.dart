@@ -1,9 +1,8 @@
-// features/auth/presentation/bloc/auth_bloc.dart
 import 'package:firebase_auth/firebase_auth.dart' as fb;
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
-import 'package:equatable/equatable.dart';
-import '../../domain/entities/user.dart';
+
+import '../../domain/usecases/check_auth_status_usecase.dart';
 import '../../domain/usecases/create_coach_profile_usecase.dart';
 import '../../domain/usecases/create_pupil_profile_usecase.dart';
 import '../../domain/usecases/reset_password_usecase.dart';
@@ -11,10 +10,8 @@ import '../../domain/usecases/sign_in_guest_usecase.dart';
 import '../../domain/usecases/sign_in_usecase.dart';
 import '../../domain/usecases/sign_out_usecase.dart';
 import '../../domain/usecases/sign_up_usecase.dart';
-import '../../domain/usecases/check_auth_status_usecase.dart';
-
-part 'auth_event.dart';
-part 'auth_state.dart';
+import 'auth_event.dart';
+import 'auth_state.dart';
 
 @injectable
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
@@ -26,7 +23,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final CreatePupilProfileUseCase createPupilProfileUseCase;
   final ResetPasswordUseCase resetPasswordUseCase;
   final SignInAsGuestUseCase signInAsGuestUseCase;
-  final fb.FirebaseAuth firebaseAuth; // ✅ INJECTED
+  final fb.FirebaseAuth firebaseAuth;
 
   AuthBloc({
     required this.signInUseCase,
@@ -44,44 +41,12 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<AuthSignUpRequested>(_onSignUpRequested);
     on<AuthGuestSignInRequested>(_onGuestSignInRequested);
     on<AuthSignOutRequested>(_onSignOutRequested);
-    //on<AuthUpdateProfile>(_onUpdateProfile);
     on<AuthResetPasswordRequested>(_onResetPasswordRequested);
     on<AuthEmailVerificationRequested>(_onEmailVerificationRequested);
-    on<AuthCompletePupilProfileRequested>((event, emit) async {
-      emit(AuthLoading());
-      final res = await createPupilProfileUseCase(
-        pupilId: event.pupilId,
-        parentId: event.parentId,
-        name: event.name,
-        dateOfBirth: event.dateOfBirth,
-        handicap: event.handicap,
-        selectedCoachName: event.selectedCoachName,
-        selectedClubId: event.selectedClubId,
-        avatar: event.avatar,
-      );
-      res.fold((l) => emit(AuthError(l.message)), (_) {
-        emit(const AuthProfileCompleted()); // your new state
-      });
-    });
-
-    on<AuthCompleteCoachProfileRequested>((event, emit) async {
-      emit(AuthLoading());
-      final res = await createCoachProfileUseCase(
-        coachId: event.coachId,
-        userId: event.userId,
-        name: event.name,
-        bio: event.bio,
-        experience: event.experience,
-        clubId: event.clubId,
-      );
-      res.fold(
-        (l) => emit(AuthError(l.message)),
-        (_) => emit(const AuthProfileCompleted()),
-      );
-    });
+    on<AuthCompletePupilProfileRequested>(_onCompletePupilProfile);
+    on<AuthCompleteCoachProfileRequested>(_onCompleteCoachProfile);
   }
 
-  // In your AuthBloc - update _onAppStarted
   Future<void> _onAppStarted(
     AuthAppStarted event,
     Emitter<AuthState> emit,
@@ -94,7 +59,12 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
       final user = await checkAuthStatusUseCase();
       if (user != null) {
-        emit(AuthAuthenticated(user));
+        // Check if profile completion is needed
+        if (user.needsProfileCompletion) {
+          emit(AuthProfileCompletionRequired(user));
+        } else {
+          emit(AuthAuthenticated(user));
+        }
       } else {
         emit(const AuthUnauthenticated());
       }
@@ -114,10 +84,13 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       password: event.password,
     );
 
-    result.fold(
-      (failure) => emit(AuthError(failure.message)),
-      (user) => emit(AuthAuthenticated(user)),
-    );
+    result.fold((failure) => emit(AuthError(failure.message)), (user) {
+      if (user.needsProfileCompletion) {
+        emit(AuthProfileCompletionRequired(user));
+      } else {
+        emit(AuthAuthenticated(user));
+      }
+    });
   }
 
   Future<void> _onSignUpRequested(
@@ -134,12 +107,17 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       lastName: event.lastName,
     );
 
-    print("result--------------------------------> ${result}");
-
-    result.fold(
-      (failure) => emit(AuthError(failure.message)),
-      (user) => emit(AuthAuthenticated(user)),
-    );
+    result.fold((failure) => emit(AuthError(failure.message)), (user) {
+      // After successful signup, user needs to complete profile
+      if (user.role == 'parent') {
+        emit(AuthProfileCompletionRequired(user));
+      } else if (user.role == 'coach') {
+        // Coach profile is created automatically but needs verification
+        emit(AuthProfileCompletionRequired(user));
+      } else {
+        emit(AuthAuthenticated(user));
+      }
+    });
   }
 
   Future<void> _onGuestSignInRequested(
@@ -166,30 +144,9 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
     result.fold(
       (failure) => emit(AuthError(failure.message)),
-      (_) => const AuthUnauthenticated(),
+      (_) => emit(const AuthUnauthenticated()),
     );
   }
-
-  // Future<void> _onUpdateProfile(
-  //   AuthUpdateProfile event,
-  //   Emitter<AuthState> emit,
-  // ) async {
-  //   emit(AuthLoading());
-  //
-  //   if (state is AuthAuthenticated) {
-  //     final currentUser = (state as AuthAuthenticated).user;
-  //
-  //     final result = await updateProfileUseCase(
-  //       uid: currentUser.uid,
-  //       profileData: event.profileData,
-  //     );
-  //
-  //     result.fold(
-  //       (failure) => emit(AuthError(failure.message)),
-  //       (updatedUser) => emit(AuthProfileUpdated(updatedUser)),
-  //     );
-  //   }
-  // }
 
   Future<void> _onResetPasswordRequested(
     AuthResetPasswordRequested event,
@@ -222,5 +179,49 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     } catch (e) {
       emit(AuthError(e.toString()));
     }
+  }
+
+  Future<void> _onCompletePupilProfile(
+    AuthCompletePupilProfileRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(AuthLoading());
+
+    final result = await createPupilProfileUseCase(
+      pupilId: event.pupilId,
+      parentId: event.parentId,
+      name: event.name,
+      dateOfBirth: event.dateOfBirth,
+      handicap: event.handicap,
+      selectedCoachName: event.selectedCoachName,
+      selectedClubId: event.selectedClubId,
+      avatar: event.avatar,
+    );
+
+    result.fold(
+      (failure) => emit(AuthError(failure.message)),
+      (_) => emit(const AuthProfileCompleted()),
+    );
+  }
+
+  Future<void> _onCompleteCoachProfile(
+    AuthCompleteCoachProfileRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(AuthLoading());
+
+    final result = await createCoachProfileUseCase(
+      coachId: event.coachId,
+      userId: event.userId,
+      name: event.name,
+      bio: event.bio,
+      experience: event.experience,
+      clubId: event.clubId,
+    );
+
+    result.fold(
+      (failure) => emit(AuthError(failure.message)),
+      (_) => emit(const AuthProfileCompleted()),
+    );
   }
 }

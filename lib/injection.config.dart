@@ -39,24 +39,6 @@ import 'package:bitesize_golf/features/auth/domain/usecases/sign_up_usecase.dart
     as _i463;
 import 'package:bitesize_golf/features/auth/presentation/bloc/auth_bloc.dart'
     as _i751;
-import 'package:bitesize_golf/features/club/data/datasources/club_remote_datasource.dart'
-    as _i629;
-import 'package:bitesize_golf/features/club/data/repositories/club_repository_impl.dart'
-    as _i426;
-import 'package:bitesize_golf/features/club/domain/repositories/golf_club_repository.dart'
-    as _i755;
-import 'package:bitesize_golf/features/coaches/data/datasources/coach_remote_datasource.dart'
-    as _i636;
-import 'package:bitesize_golf/features/coaches/data/repositories/coach_repository_impl.dart'
-    as _i823;
-import 'package:bitesize_golf/features/coaches/domain/repositories/coach_repository.dart'
-    as _i83;
-import 'package:bitesize_golf/features/pupils/data/datasources/pupil_remote_datasource.dart'
-    as _i1018;
-import 'package:bitesize_golf/features/pupils/data/repositories/pupil_repositories_impl.dart'
-    as _i656;
-import 'package:bitesize_golf/features/pupils/domain/repositoreis/pupil_repository.dart'
-    as _i619;
 import 'package:cloud_firestore/cloud_firestore.dart' as _i974;
 import 'package:firebase_analytics/firebase_analytics.dart' as _i398;
 import 'package:firebase_auth/firebase_auth.dart' as _i59;
@@ -82,29 +64,11 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i700.HiveStorageService>(
       () => _i700.HiveStorageServiceImpl(),
     );
-    gh.lazySingleton<_i636.CoachRemoteDataSource>(
-      () => _i636.CoachRemoteDataSourceImpl(gh<_i974.FirebaseFirestore>()),
-    );
-    gh.lazySingleton<_i83.CoachRepository>(
-      () => _i823.CoachRepositoryImpl(gh<_i636.CoachRemoteDataSource>()),
-    );
-    gh.lazySingleton<_i629.ClubRemoteDataSource>(
-      () => _i629.ClubRemoteDataSourceImpl(gh<_i974.FirebaseFirestore>()),
-    );
-    gh.lazySingleton<_i755.ClubRepository>(
-      () => _i426.ClubRepositoryImpl(gh<_i629.ClubRemoteDataSource>()),
-    );
-    gh.lazySingleton<_i1018.PupilRemoteDataSource>(
-      () => _i1018.PupilRemoteDataSourceImpl(gh<_i974.FirebaseFirestore>()),
-    );
     gh.lazySingleton<_i716.AuthLocalDataSource>(
       () => _i716.AuthLocalDataSourceImpl(
         prefs: gh<_i460.SharedPreferences>(),
         hiveStorage: gh<_i700.HiveStorageService>(),
       ),
-    );
-    gh.lazySingleton<_i619.PupilRepository>(
-      () => _i656.PupilRepositoryImpl(gh<_i1018.PupilRemoteDataSource>()),
     );
     gh.lazySingleton<_i173.AuthFirebaseDataSource>(
       () => _i173.AuthFirebaseDataSourceImpl(
@@ -114,42 +78,34 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i48.AuthRepository>(
       () => _i242.AuthRepositoryImpl(
-        firebaseDataSource: gh<_i173.AuthFirebaseDataSource>(),
         localDataSource: gh<_i716.AuthLocalDataSource>(),
         firestore: gh<_i974.FirebaseFirestore>(),
         firebaseAuth: gh<_i59.FirebaseAuth>(),
       ),
     );
-    gh.lazySingleton<_i433.GetCurrentUserUseCase>(
-      () => _i433.GetCurrentUserUseCase(repository: gh<_i48.AuthRepository>()),
-    );
-    gh.lazySingleton<_i720.ResetPasswordUseCase>(
-      () => _i720.ResetPasswordUseCase(repository: gh<_i48.AuthRepository>()),
-    );
-    gh.lazySingleton<_i361.SignInAsGuestUseCase>(
-      () => _i361.SignInAsGuestUseCase(repository: gh<_i48.AuthRepository>()),
-    );
-    gh.lazySingleton<_i881.SignInUseCase>(
-      () => _i881.SignInUseCase(repository: gh<_i48.AuthRepository>()),
-    );
-    gh.lazySingleton<_i550.SignOutUseCase>(
-      () => _i550.SignOutUseCase(repository: gh<_i48.AuthRepository>()),
-    );
-    gh.lazySingleton<_i874.CreateCoachProfileUseCase>(
-      () => _i874.CreateCoachProfileUseCase(
-        repository: gh<_i48.AuthRepository>(),
-      ),
-    );
-    gh.lazySingleton<_i791.CreatePupilProfileUseCase>(
-      () => _i791.CreatePupilProfileUseCase(
-        repository: gh<_i48.AuthRepository>(),
-      ),
-    );
     gh.factory<_i601.CheckAuthStatusUseCase>(
       () => _i601.CheckAuthStatusUseCase(gh<_i48.AuthRepository>()),
     );
+    gh.factory<_i720.ResetPasswordUseCase>(
+      () => _i720.ResetPasswordUseCase(gh<_i48.AuthRepository>()),
+    );
+    gh.factory<_i361.SignInAsGuestUseCase>(
+      () => _i361.SignInAsGuestUseCase(gh<_i48.AuthRepository>()),
+    );
+    gh.factory<_i881.SignInUseCase>(
+      () => _i881.SignInUseCase(gh<_i48.AuthRepository>()),
+    );
+    gh.factory<_i550.SignOutUseCase>(
+      () => _i550.SignOutUseCase(gh<_i48.AuthRepository>()),
+    );
     gh.factory<_i463.SignUpUseCase>(
       () => _i463.SignUpUseCase(gh<_i48.AuthRepository>()),
+    );
+    gh.factory<_i874.CreateCoachProfileUseCase>(
+      () => _i874.CreateCoachProfileUseCase(gh<_i48.AuthRepository>()),
+    );
+    gh.factory<_i791.CreatePupilProfileUseCase>(
+      () => _i791.CreatePupilProfileUseCase(gh<_i48.AuthRepository>()),
     );
     gh.factory<_i751.AuthBloc>(
       () => _i751.AuthBloc(
@@ -163,6 +119,9 @@ extension GetItInjectableX on _i174.GetIt {
         signInAsGuestUseCase: gh<_i361.SignInAsGuestUseCase>(),
         firebaseAuth: gh<_i59.FirebaseAuth>(),
       ),
+    );
+    gh.lazySingleton<_i433.GetCurrentUserUseCase>(
+      () => _i433.GetCurrentUserUseCase(repository: gh<_i48.AuthRepository>()),
     );
     return this;
   }

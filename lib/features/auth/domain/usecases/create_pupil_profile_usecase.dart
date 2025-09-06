@@ -3,30 +3,41 @@ import 'package:injectable/injectable.dart';
 import '../failure.dart';
 import '../repositories/auth_repository.dart';
 
-@lazySingleton
+@injectable
 class CreatePupilProfileUseCase {
   final AuthRepository repository;
-  CreatePupilProfileUseCase({required this.repository});
+
+  CreatePupilProfileUseCase(this.repository);
 
   Future<Either<Failure, void>> call({
     required String pupilId,
     required String parentId,
     required String name,
-    required String? avatar,
-    required DateTime? dateOfBirth,
-    required String? handicap,
-    required String? selectedClubId,
-    required String? selectedCoachName,
+    DateTime? dateOfBirth,
+    String? handicap,
+    String? selectedCoachName,
+    String? selectedClubId,
+    String? avatar,
   }) async {
+    // Validate inputs
+    if (name.trim().isEmpty) {
+      return Left(AuthFailure(message: 'Pupil name is required'));
+    }
+    if (dateOfBirth != null && dateOfBirth.isAfter(DateTime.now())) {
+      return Left(
+        AuthFailure(message: 'Date of birth cannot be in the future'),
+      );
+    }
+
     return repository.createPupilProfile(
       pupilId: pupilId,
       parentId: parentId,
-      name: name,
-      avatar: avatar,
+      name: name.trim(),
       dateOfBirth: dateOfBirth,
-      handicap: handicap,
-      selectedClubId: selectedClubId,
-      selectedCoachName: selectedCoachName,
+      handicap: handicap?.trim(),
+      selectedCoachName: selectedCoachName?.trim(),
+      selectedClubId: selectedClubId?.trim(),
+      avatar: avatar?.trim(),
     );
   }
 }

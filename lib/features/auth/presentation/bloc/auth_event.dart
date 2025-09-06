@@ -1,8 +1,8 @@
-// features/auth/presentation/bloc/auth_event.dart
-part of 'auth_bloc.dart';
+import 'package:equatable/equatable.dart';
 
 abstract class AuthEvent extends Equatable {
   const AuthEvent();
+
   @override
   List<Object?> get props => [];
 }
@@ -12,9 +12,11 @@ class AuthAppStarted extends AuthEvent {}
 class AuthSignInRequested extends AuthEvent {
   final String email;
   final String password;
-  const AuthSignInRequested(this.email, this.password);
+
+  const AuthSignInRequested({required this.email, required this.password});
+
   @override
-  List<Object?> get props => [email, password];
+  List<Object> get props => [email, password];
 }
 
 class AuthSignUpRequested extends AuthEvent {
@@ -33,28 +35,25 @@ class AuthSignUpRequested extends AuthEvent {
   });
 
   @override
-  List<Object?> get props => [email, password, role, firstName, lastName];
+  List<Object> get props => [email, password, role, firstName, lastName];
 }
 
 class AuthGuestSignInRequested extends AuthEvent {}
 
 class AuthSignOutRequested extends AuthEvent {}
 
-class AuthUpdateProfile extends AuthEvent {
-  final Map<String, dynamic> profileData;
-  const AuthUpdateProfile(this.profileData);
-  @override
-  List<Object?> get props => [profileData];
-}
-
 class AuthResetPasswordRequested extends AuthEvent {
   final String email;
-  const AuthResetPasswordRequested(this.email);
-  @override
-  List<Object?> get props => [email];
-}
-// Add these new events to the existing file
 
+  const AuthResetPasswordRequested({required this.email});
+
+  @override
+  List<Object> get props => [email];
+}
+
+class AuthEmailVerificationRequested extends AuthEvent {}
+
+// New events for profile completion
 class AuthCompletePupilProfileRequested extends AuthEvent {
   final String pupilId;
   final String parentId;
@@ -94,9 +93,7 @@ class AuthCompleteCoachProfileRequested extends AuthEvent {
   final String userId;
   final String name;
   final String? bio;
-  final List<String>? qualifications;
   final int? experience;
-  final List<String>? specialties;
   final String? clubId;
 
   const AuthCompleteCoachProfileRequested({
@@ -104,23 +101,10 @@ class AuthCompleteCoachProfileRequested extends AuthEvent {
     required this.userId,
     required this.name,
     this.bio,
-    this.qualifications,
     this.experience,
-    this.specialties,
     this.clubId,
   });
 
   @override
-  List<Object?> get props => [
-    coachId,
-    userId,
-    name,
-    bio,
-    qualifications,
-    experience,
-    specialties,
-    clubId,
-  ];
+  List<Object?> get props => [coachId, userId, name, bio, experience, clubId];
 }
-
-class AuthEmailVerificationRequested extends AuthEvent {}

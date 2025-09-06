@@ -1,11 +1,13 @@
-// features/auth/data/repositories/auth_repository_impl.dart
+import 'package:bitesize_golf/features/auth/domain/entities/subscription.dart';
 import 'package:dartz/dartz.dart';
 import 'package:firebase_auth/firebase_auth.dart' as fb;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:injectable/injectable.dart';
+import '../../../../models/join_request_models.dart';
 import '../../../coaches/data/models/coach_model.dart';
 import '../../../pupils/data/models/pupil_model.dart';
 import '../../domain/entities/user.dart' as entity;
+import '../../domain/entities/user_enums.dart';
 import '../../domain/failure.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../datasources/auth_firebase_datasource.dart';
@@ -14,13 +16,13 @@ import '../models/user_model.dart';
 
 @LazySingleton(as: AuthRepository)
 class AuthRepositoryImpl implements AuthRepository {
-  final AuthFirebaseDataSource firebaseDataSource;
+  //  final AuthFirebaseDataSource firebaseDataSource;
   final AuthLocalDataSource localDataSource;
   final FirebaseFirestore firestore;
   final fb.FirebaseAuth firebaseAuth;
 
   AuthRepositoryImpl({
-    required this.firebaseDataSource,
+    // required this.firebaseDataSource,
     required this.localDataSource,
     required this.firestore,
     required this.firebaseAuth,
@@ -28,26 +30,12 @@ class AuthRepositoryImpl implements AuthRepository {
 
   CollectionReference<Map<String, dynamic>> get _users =>
       firestore.collection('users');
-  Future<DocumentSnapshot<Map<String, dynamic>>> _getUserDoc(String uid) async {
-    return await _users.doc(uid).get();
-  }
-
-  @override
-  Future<Either<Failure, entity.User>> signIn(
-    String email,
-    String password,
-  ) async {
-    try {
-      // ✅ FIXED: Convert model to entity
-      final userModel = await firebaseDataSource.signIn(email, password);
-      await localDataSource.cacheUser(userModel);
-      return Right(userModel.toEntity()); // Convert to entity
-    } on fb.FirebaseAuthException catch (e) {
-      return Left(AuthFailure(message: _getAuthErrorMessage(e.code)));
-    } catch (e) {
-      return Left(AuthFailure(message: e.toString()));
-    }
-  }
+  CollectionReference<Map<String, dynamic>> get _pupils =>
+      firestore.collection('pupils');
+  CollectionReference<Map<String, dynamic>> get _coaches =>
+      firestore.collection('coaches');
+  CollectionReference<Map<String, dynamic>> get _joinRequests =>
+      firestore.collection('joinRequests');
 
   @override
   Future<Either<Failure, entity.User>> signUp({
@@ -58,220 +46,96 @@ class AuthRepositoryImpl implements AuthRepository {
     required String lastName,
   }) async {
     try {
+      // Create Firebase Auth user
       final cred = await firebaseAuth.createUserWithEmailAndPassword(
         email: email,
         password: password,
       );
 
-      print("cred--------------------------------> ${cred}");
-
       final authUser = cred.user!;
+      final now = DateTime.now();
 
-      final userDoc = {
-        'uid': authUser.uid,
-        'email': authUser.email,
-        'displayName': '$firstName $lastName',
-        'photoURL': authUser.photoURL ?? '',
-        'role': role,
-        'emailVerified': authUser.emailVerified,
-        'firstName': firstName,
-        'lastName': lastName,
-        'profileCompleted': false,
-        'preferences': _getDefaultPreferences(),
-        'createdAt': FieldValue.serverTimestamp(),
-        'updatedAt': FieldValue.serverTimestamp(),
-      };
+      // Create user document
+      final userModel = UserModel(
+        uid: authUser.uid,
+        accountStatus: 'active',
+        displayName: '$firstName $lastName',
+        emailVerified: authUser.emailVerified,
+        firstName: firstName,
+        lastName: lastName,
+        profileCompleted: false,
+        email: authUser.email,
+        photoURL: authUser.photoURL ?? '',
+        role: role,
+        subscription: _getDefaultSubscription(),
+        preferences: _getDefaultPreferences(),
 
-      print("User doc befor----------------->${userDoc}");
-
-      //await _users.doc(authUser.uid).set(userDoc);
-
-      await _users.doc(authUser.uid).set(userDoc);
-      final freshDoc = await _users.doc(authUser.uid).get(); // re-read
-
-      // ✅ FIXED: Create model and convert to entity
-      final userModel = UserModel.fromFirebase(
-        firebaseUser: authUser,
-        userDoc: freshDoc.data()!,
+        createdAt: now,
+        updatedAt: now,
       );
 
-      await localDataSource.cacheUser(userModel);
-      return Right(userModel.toEntity());
-    } on fb.FirebaseAuthException catch (e) {
-      print("error--------------------------------> ${e}");
-      return Left(AuthFailure(message: _getAuthErrorMessage(e.code)));
-    } catch (e) {
-      return Left(AuthFailure(message: e.toString()));
-    }
-  }
+      final batch = firestore.batch();
 
-  @override
-  Future<Either<Failure, entity.User>> signInAsGuest() async {
-    try {
-      final cred = await firebaseAuth.signInAnonymously();
-      final authUser = cred.user!;
+      // Add user document
+      batch.set(_users.doc(authUser.uid), userModel.toJson());
 
-      final guestDoc = {
-        'uid': authUser.uid,
-        'email':
-            'guest_${DateTime.now().millisecondsSinceEpoch}@bitesizegolf.com',
-        'displayName': 'Guest User',
-        'role': 'guest',
-        'emailVerified': true,
-        'profileCompleted': true,
-        'preferences': _getDefaultPreferences(),
-        'createdAt': FieldValue.serverTimestamp(),
-        'updatedAt': FieldValue.serverTimestamp(),
-      };
+      // Create role-specific profile
+      if (role == 'pupil') {
+        final pupilModel = PupilModel(
+          id: authUser.uid,
+          parentId: authUser.uid,
+          name: '$firstName $lastName',
+          assignedCoach: null,
+          avatar: authUser.photoURL ?? '',
+          createdAt: now,
+          updatedAt: now,
+        );
+        batch.set(_pupils.doc(authUser.uid), pupilModel.toJson());
 
-      await _users.doc(authUser.uid).set(guestDoc);
+        //final pupilModel = PupilModel();
+      } else if (role == 'coach') {
+        // Create coach profile
+        final coachModel = CoachModel(
+          id: authUser.uid,
+          userId: authUser.uid,
+          displayName: '$firstName $lastName',
+          bio: '',
+          experience: 0,
+          verificationStatus: 'pending',
+          createdAt: now,
+          updatedAt: now,
+        );
+        batch.set(_coaches.doc(authUser.uid), coachModel.toJson());
 
-      // ✅ FIXED: Convert to entity
-      final userModel = UserModel.fromFirebase(
-        firebaseUser: authUser,
-        userDoc: guestDoc,
-      );
-
-      await localDataSource.cacheUser(userModel);
-      return Right(userModel.toEntity());
-    } catch (e) {
-      return Left(AuthFailure(message: e.toString()));
-    }
-  }
-
-  // @override
-  // Future<Either<Failure, entity.User?>> getCurrentUser() async {
-  //   try {
-  //     final cachedUser = await localDataSource.getUser();
-  //     if (cachedUser != null) return Right(cachedUser.toEntity());
-  //
-  //     final authUser = firebaseAuth.currentUser;
-  //     if (authUser == null) return const Right(null);
-  //
-  //     final userDoc = await _getUserDoc(authUser.uid);
-  //     if (!userDoc.exists) return const Right(null);
-  //
-  //     final userModel = UserModel.fromFirebase(
-  //       firebaseUser: authUser,
-  //       userDoc: userDoc.data(),
-  //     );
-  //
-  //     await localDataSource.cacheUser(userModel);
-  //     return Right(userModel.toEntity());
-  //   } catch (e) {
-  //     return Left(AuthFailure(message: e.toString()));
-  //   }
-  // }
-  // In your AuthRepositoryImpl - add debugging
-  @override
-  Future<Either<Failure, entity.User?>> getCurrentUser() async {
-    try {
-      print("DEBUG: Checking current user...");
-
-      final cached = await localDataSource.getUser();
-      print("DEBUG: Cached user: ${cached?.uid}");
-
-      if (cached != null) {
-        return Right(cached.toEntity());
+        // Create coach verification request
+        final verificationRequest = JoinRequestModel(
+          id: firestore.collection('joinRequests').doc().id,
+          coachId: authUser.uid,
+          requestType: 'coach_verification',
+          requestedAt: now,
+          createdAt: now,
+          updatedAt: now,
+        );
+        batch.set(
+          _joinRequests.doc(verificationRequest.id),
+          verificationRequest.toJson(),
+        );
       }
 
-      final authUser = firebaseAuth.currentUser;
-      print("DEBUG: Firebase user: ${authUser?.uid}");
+      // Commit all operations
+      await batch.commit();
 
-      if (authUser == null) {
-        return const Right(null);
+      // Re-read the user document to get server timestamps
+      final freshSnap = await _users.doc(authUser.uid).get();
+
+      final userMap = freshSnap.data();
+
+      if (userMap == null) {
+        return Left(AuthFailure(message: 'User data not found'));
       }
 
-      final userDoc = await _getUserDoc(authUser.uid);
-      print("DEBUG: User doc exists: ${userDoc.exists}");
-
-      if (!userDoc.exists) {
-        return const Right(null);
-      }
-
-      final userModel = UserModel.fromFirebase(
-        firebaseUser: authUser,
-        userDoc: userDoc.data(),
-      );
-
-      await localDataSource.cacheUser(userModel);
-      return Right(userModel.toEntity());
-    } catch (e) {
-      print("DEBUG: Auth check error: $e");
-      return Left(AuthFailure(message: e.toString()));
-    }
-  }
-
-  @override
-  Stream<entity.User?> authState$() async* {
-    await for (final authUser in firebaseAuth.authStateChanges()) {
-      if (authUser == null) {
-        await localDataSource.clear();
-        yield null;
-        continue;
-      }
-
-      final userDoc = await _getUserDoc(authUser.uid);
-      final userModel = UserModel.fromFirebase(
-        firebaseUser: authUser,
-        userDoc: userDoc.data(),
-      );
-
-      await localDataSource.cacheUser(userModel);
-      yield userModel.toEntity();
-    }
-  }
-
-  @override
-  Future<Either<Failure, entity.User>> updateProfile(
-    String uid,
-    Map<String, dynamic> profileData,
-  ) async {
-    try {
-      await _users.doc(uid).update({
-        ...profileData,
-        'updatedAt': FieldValue.serverTimestamp(),
-      });
-
-      final authUser = firebaseAuth.currentUser!;
-      final userDoc = await _getUserDoc(uid);
-      final userModel = UserModel.fromFirebase(
-        firebaseUser: authUser,
-        userDoc: userDoc.data(),
-      );
-
-      await localDataSource.cacheUser(userModel);
-
-      if (profileData.containsKey('firstName') ||
-          profileData.containsKey('lastName')) {
-        final displayName =
-            '${profileData['firstName'] ?? ''} ${profileData['lastName'] ?? ''}'
-                .trim();
-        await authUser.updateDisplayName(displayName);
-      }
-
-      return Right(userModel.toEntity());
-    } catch (e) {
-      return Left(AuthFailure(message: e.toString()));
-    }
-  }
-
-  @override
-  Future<Either<Failure, void>> signOut() async {
-    try {
-      await firebaseDataSource.signOut();
-      await localDataSource.clear();
-      return const Right(null);
-    } catch (e) {
-      return Left(AuthFailure(message: e.toString()));
-    }
-  }
-
-  @override
-  Future<Either<Failure, void>> resetPassword(String email) async {
-    try {
-      await firebaseAuth.sendPasswordResetEmail(email: email);
-      return const Right(null);
+      final model = UserModel.fromFirestore(userMap);
+      return Right(model.toEntity());
     } on fb.FirebaseAuthException catch (e) {
       return Left(AuthFailure(message: _getAuthErrorMessage(e.code)));
     } catch (e) {
@@ -279,41 +143,6 @@ class AuthRepositoryImpl implements AuthRepository {
     }
   }
 
-  @override
-  Future<Either<Failure, void>> updateEmail(String newEmail) async {
-    try {
-      final user = firebaseAuth.currentUser;
-      if (user == null) {
-        return Left(AuthFailure(message: 'No user logged in'));
-      }
-
-      await user.verifyBeforeUpdateEmail(newEmail);
-      return const Right(null);
-    } on fb.FirebaseAuthException catch (e) {
-      return Left(AuthFailure(message: _getAuthErrorMessage(e.code)));
-    } catch (e) {
-      return Left(AuthFailure(message: e.toString()));
-    }
-  }
-
-  @override
-  Future<Either<Failure, void>> updatePassword(String newPassword) async {
-    try {
-      final user = firebaseAuth.currentUser;
-      if (user == null) {
-        return Left(AuthFailure(message: 'No user logged in'));
-      }
-
-      await user.updatePassword(newPassword);
-      return const Right(null);
-    } on fb.FirebaseAuthException catch (e) {
-      return Left(AuthFailure(message: _getAuthErrorMessage(e.code)));
-    } catch (e) {
-      return Left(AuthFailure(message: e.toString()));
-    }
-  }
-
-  // Add these methods to AuthRepositoryImpl class
   @override
   Future<Either<Failure, void>> createPupilProfile({
     required String pupilId,
@@ -340,11 +169,143 @@ class AuthRepositoryImpl implements AuthRepository {
         updatedAt: now,
       );
 
-      await FirebaseFirestore.instance
-          .collection('pupils')
-          .doc(pupilId)
-          .set(pupil.toJson());
+      final batch = firestore.batch();
 
+      // Create pupil profile
+      batch.set(_pupils.doc(pupilId), pupil.toJson());
+
+      // If a coach was selected, create a join request
+      if (selectedCoachName != null && selectedCoachName.isNotEmpty) {
+        // Note: In a real implementation, you'd need to find the coach by name
+        // For now, we'll create a request without a specific coach ID
+        final joinRequest = JoinRequestModel(
+          id: firestore.collection('joinRequests').doc().id,
+          pupilId: pupilId,
+          parentId: parentId,
+          requestType: 'pupil_to_coach',
+          requestedAt: now,
+          parentMessage: 'Request to join coach: $selectedCoachName',
+          createdAt: now,
+          updatedAt: now,
+        );
+        batch.set(_joinRequests.doc(joinRequest.id), joinRequest.toJson());
+      }
+
+      // Update parent's profile completion status
+      batch.update(_users.doc(parentId), {
+        'profileCompleted': true,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+
+      await batch.commit();
+      return const Right(null);
+    } catch (e) {
+      return Left(AuthFailure(message: e.toString()));
+    }
+  }
+
+  // Keep existing methods...
+  // @override
+  // Future<Either<Failure, entity.User>> signIn(
+  //   String email,
+  //   String password,
+  // ) async {
+  //   try {
+  //     final userModel = await firebaseDataSource.signIn(email, password);
+  //     await localDataSource.cacheUser(userModel);
+  //     return Right(userModel.toEntity());
+  //   } on fb.FirebaseAuthException catch (e) {
+  //     return Left(AuthFailure(message: _getAuthErrorMessage(e.code)));
+  //   } catch (e) {
+  //     return Left(AuthFailure(message: e.toString()));
+  //   }
+  // }
+
+  @override
+  Future<Either<Failure, entity.User>> signInAsGuest() async {
+    try {
+      final cred = await firebaseAuth.signInAnonymously();
+      final authUser = cred.user!;
+
+      final guestDoc = {
+        'uid': authUser.uid,
+        'email':
+            'guest_${DateTime.now().millisecondsSinceEpoch}@bitesizegolf.com',
+        'displayName': 'Guest User',
+        'role': 'guest',
+        'emailVerified': true,
+        'profileCompleted': true,
+        'subscription': _getDefaultSubscription(),
+        'preferences': _getDefaultPreferences(),
+        'createdAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      };
+
+      await _users.doc(authUser.uid).set(guestDoc);
+
+      final userModel = UserModel.fromFirebase(authUser);
+
+      await localDataSource.cacheUser(userModel);
+      return Right(userModel.toEntity());
+    } catch (e) {
+      return Left(AuthFailure(message: e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, entity.User?>> getCurrentUser() async {
+    try {
+      final cached = await localDataSource.getUser();
+      if (cached != null) {
+        return Right(cached.toEntity());
+      }
+
+      final authUser = firebaseAuth.currentUser;
+      if (authUser == null) {
+        return const Right(null);
+      }
+
+      final userDoc = await _users.doc(authUser.uid).get();
+      if (!userDoc.exists) {
+        return const Right(null);
+      }
+
+      final userModel = UserModel.fromFirebase(authUser);
+
+      await localDataSource.cacheUser(userModel);
+      return Right(userModel.toEntity());
+    } catch (e) {
+      return Left(AuthFailure(message: e.toString()));
+    }
+  }
+
+  @override
+  Stream<entity.User?> authState$() async* {
+    await for (final authUser in firebaseAuth.authStateChanges()) {
+      if (authUser == null) {
+        await localDataSource.clear();
+        yield null;
+        continue;
+      }
+
+      final userDoc = await _users.doc(authUser.uid).get();
+      if (!userDoc.exists) {
+        yield null;
+        continue;
+      }
+
+      final userModel = UserModel.fromFirebase(authUser);
+
+      await localDataSource.cacheUser(userModel);
+      yield userModel.toEntity();
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> signOut() async {
+    try {
+      //  await firebaseDataSource.signOut();
+      await localDataSource.clear();
       return const Right(null);
     } catch (e) {
       return Left(AuthFailure(message: e.toString()));
@@ -352,39 +313,42 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<Either<Failure, void>> createCoachProfile({
-    required String coachId,
-    required String userId,
-    required String name,
-    String? bio,
-    int? experience,
-    String? clubId,
-  }) async {
+  Future<Either<Failure, void>> resetPassword(String email) async {
     try {
-      final now = DateTime.now();
-      final coach = CoachModel(
-        id: coachId,
-        userId: userId,
-        name: name,
-        bio: bio ?? '',
-        experience: experience ?? 0,
-        clubId: clubId,
-        createdAt: now,
-        updatedAt: now,
-      );
-
-      await FirebaseFirestore.instance
-          .collection('coaches')
-          .doc(coachId)
-          .set(coach.toJson());
-
+      await firebaseAuth.sendPasswordResetEmail(email: email);
       return const Right(null);
+    } on fb.FirebaseAuthException catch (e) {
+      return Left(AuthFailure(message: _getAuthErrorMessage(e.code)));
     } catch (e) {
       return Left(AuthFailure(message: e.toString()));
     }
   }
 
   // Helper methods
+  Subscription? _getDefaultSubscription() => Subscription(
+    autoRenew: false,
+    endDate: calculateEndDate(DateTime.now()),
+    startDate: DateTime.now(),
+    status: SubscriptionStatus.free,
+    tier: SubscriptionTier.free,
+  );
+
+  DateTime calculateEndDate(DateTime startDate) {
+    // Add two months to the start date.
+    // This handles month length variations correctly.
+    DateTime endDate = DateTime(
+      startDate.year,
+      startDate.month + 2,
+      startDate.day,
+      startDate.hour,
+      startDate.minute,
+      startDate.second,
+      startDate.millisecond,
+      startDate.microsecond,
+    );
+    return endDate;
+  }
+
   Map<String, dynamic> _getDefaultPreferences() => {
     'notifications': {
       'push': true,
@@ -426,5 +390,45 @@ class AuthRepositoryImpl implements AuthRepository {
       default:
         return 'An unexpected error occurred. Please try again.';
     }
+  }
+
+  @override
+  Future<Either<Failure, void>> createCoachProfile({
+    required String coachId,
+    required String userId,
+    required String name,
+    String? bio,
+    int? experience,
+    String? clubId,
+  }) {
+    // TODO: implement createCoachProfile
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<Either<Failure, void>> updateEmail(String newEmail) {
+    // TODO: implement updateEmail
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<Either<Failure, void>> updatePassword(String newPassword) {
+    // TODO: implement updatePassword
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<Either<Failure, entity.User>> updateProfile(
+    String uid,
+    Map<String, dynamic> profileData,
+  ) {
+    // TODO: implement updateProfile
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<Either<Failure, entity.User>> signIn(String email, String password) {
+    // TODO: implement signIn
+    throw UnimplementedError();
   }
 }

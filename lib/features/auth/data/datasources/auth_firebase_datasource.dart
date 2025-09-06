@@ -6,14 +6,13 @@ import '../models/user_model.dart';
 
 abstract class AuthFirebaseDataSource {
   Future<UserModel> signIn(String email, String password);
-  Future<UserModel> signUp(
-    String email,
-    String password,
-    String role,
-    String firstName,
-    String lastName,
-  );
-  Future<UserModel> signUpWithProfile(Map<String, dynamic> userData);
+  // Future<UserModel> signUp(
+  //   String email,
+  //   String password,
+  //   String role,
+  //   String firstName,
+  //   String lastName,
+  // );
   Future<void> signOut();
   Future<UserModel?> currentUser();
   Stream<UserModel?> authState$();
@@ -47,83 +46,54 @@ class AuthFirebaseDataSourceImpl implements AuthFirebaseDataSource {
     final authUser = cred.user!;
     final userDoc = await _getUserDoc(authUser.uid);
 
-    return UserModel.fromFirebase(firebaseUser: authUser, userDoc: userDoc);
+    return UserModel.fromFirebase(authUser);
   }
 
-  @override
-  Future<UserModel> signUp(
-    String email,
-    String password,
-    String role,
-    String firstName,
-    String lastName,
-  ) async {
-    final cred = await firebaseAuth.createUserWithEmailAndPassword(
-      email: email,
-      password: password,
-    );
-
-    final authUser = cred.user!;
-
-    // Create user document
-    final userDoc = {
-      'uid': authUser.uid,
-      'email': authUser.email,
-      'displayName': '$firstName $lastName',
-      'photoURL': authUser.photoURL ?? '',
-      'role': role,
-      'emailVerified': authUser.emailVerified,
-      'accountStatus': 'active',
-      'createdAt': FieldValue.serverTimestamp(),
-      'updatedAt': FieldValue.serverTimestamp(),
-    };
-
-    await _users.doc(authUser.uid).set(userDoc);
-
-    return UserModel.fromFirebase(firebaseUser: authUser, userDoc: userDoc);
-  }
-
-  @override
-  Future<UserModel> signUpWithProfile(Map<String, dynamic> userData) async {
-    final cred = await firebaseAuth.createUserWithEmailAndPassword(
-      email: userData['email'],
-      password: userData['password'],
-    );
-
-    final authUser = cred.user!;
-
-    final userDoc = {
-      'uid': authUser.uid,
-      'email': authUser.email,
-      'displayName': '${userData['firstName']} ${userData['lastName']}',
-      'photoURL': authUser.photoURL ?? '',
-      'role': userData['role'],
-      'emailVerified': authUser.emailVerified,
-      'firstName': userData['firstName'],
-      'lastName': userData['lastName'],
-      'dateOfBirth': userData['dateOfBirth'],
-      'handicap': userData['handicap'],
-      'coachName': userData['coachName'],
-      'golfClubOrFacility': userData['golfClubOrFacility'],
-      'experience': userData['experience'],
-      'profileCompleted': true,
-      'preferences': _getDefaultPreferences(),
-      'createdAt': FieldValue.serverTimestamp(),
-      'updatedAt': FieldValue.serverTimestamp(),
-    };
-
-    await _users.doc(authUser.uid).set(userDoc);
-
-    return UserModel.fromFirebase(firebaseUser: authUser, userDoc: userDoc);
-  }
+  // @override
+  // Future<UserModel> signUp(
+  //   String email,
+  //   String password,
+  //   String role,
+  //   String firstName,
+  //   String lastName,
+  // ) async {
+  //   final cred = await firebaseAuth.createUserWithEmailAndPassword(
+  //     email: email,
+  //     password: password,
+  //   );
+  //
+  //   final authUser = cred.user!;
+  //
+  //   // Create user document
+  //   final userDoc = {
+  //     'uid': authUser.uid,
+  //     'email': authUser.email,
+  //     'displayName': '$firstName $lastName',
+  //     'photoURL': authUser.photoURL ?? '',
+  //     'role': role,
+  //     'emailVerified': authUser.emailVerified,
+  //     'accountStatus': 'active',
+  //     'createdAt': FieldValue.serverTimestamp(),
+  //     'updatedAt': FieldValue.serverTimestamp(),
+  //   };
+  //
+  //   await _users.doc(authUser.uid).set(userDoc);
+  //
+  //   return UserModel.fromFirebase(firebaseUser: authUser, userDoc: userDoc);
+  // }
 
   @override
   Future<UserModel?> currentUser() async {
     final authUser = firebaseAuth.currentUser;
     if (authUser == null) return null;
 
-    final userDoc = await _getUserDoc(authUser.uid);
-    return UserModel.fromFirebase(firebaseUser: authUser, userDoc: userDoc);
+    final freshSnap = await _users.doc(authUser.uid).get();
+
+    final userMap = freshSnap.data();
+
+    final model = UserModel.fromFirestore(userMap!);
+
+    return model;
   }
 
   @override
@@ -131,26 +101,30 @@ class AuthFirebaseDataSourceImpl implements AuthFirebaseDataSource {
     return firebaseAuth.authStateChanges().asyncMap((authUser) async {
       if (authUser == null) return null;
 
-      final userDoc = await _getUserDoc(authUser.uid);
-      return UserModel.fromFirebase(firebaseUser: authUser, userDoc: userDoc);
+      final freshSnap = await _users.doc(authUser.uid).get();
+
+      final userMap = freshSnap.data();
+
+      final model = UserModel.fromFirestore(userMap!);
+      return model;
     });
   }
 
-  @override
-  Future<UserModel> updateUserProfile(
-    String uid,
-    Map<String, dynamic> profileData,
-  ) async {
-    await _users.doc(uid).update({
-      ...profileData,
-      'updatedAt': FieldValue.serverTimestamp(),
-    });
-
-    final authUser = firebaseAuth.currentUser!;
-    final userDoc = await _getUserDoc(uid);
-
-    return UserModel.fromFirebase(firebaseUser: authUser, userDoc: userDoc);
-  }
+  // @override
+  // Future<UserModel> updateUserProfile(
+  //   String uid,
+  //   Map<String, dynamic> profileData,
+  // ) async {
+  //   await _users.doc(uid).update({
+  //     ...profileData,
+  //     'updatedAt': FieldValue.serverTimestamp(),
+  //   });
+  //
+  //   final authUser = firebaseAuth.currentUser!;
+  //   final userDoc = await _getUserDoc(uid);
+  //
+  //   return UserModel.fromFirebase(firebaseUser: authUser, userDoc: userDoc);
+  // }
 
   @override
   Future<void> sendPasswordResetEmail(String email) async {
@@ -184,4 +158,13 @@ class AuthFirebaseDataSourceImpl implements AuthFirebaseDataSource {
     'captionsEnabled': false,
     'autoplay': true,
   };
+
+  @override
+  Future<UserModel> updateUserProfile(
+    String uid,
+    Map<String, dynamic> profileData,
+  ) {
+    // TODO: implement updateUserProfile
+    throw UnimplementedError();
+  }
 }

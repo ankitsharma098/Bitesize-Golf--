@@ -190,6 +190,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../features/auth/presentation/bloc/auth_bloc.dart';
+import '../features/auth/presentation/bloc/auth_state.dart';
 import '../features/auth/presentation/pages/coach_profile.dart';
 import '../features/auth/presentation/pages/complete_pupil_profile_page.dart';
 import '../features/auth/presentation/pages/forgot_password.dart';
@@ -245,7 +246,7 @@ class AppRouter {
       GoRoute(
         path: RouteNames.completeProfilePupil,
         name: 'completeProfilePupil',
-        builder: (context, state) => const CompleteProfilePupilPage(),
+        builder: (context, state) => const CompletePupilProfilePage(),
       ),
 
       // Protected routes - only after auth
@@ -268,7 +269,7 @@ class AppRouter {
         builder: (context, state) {
           final authBloc = getIt<AuthBloc>(); // ✅ Using DI
           final authState = authBloc.state;
-          if (authState is AuthAuthenticated && authState.user.isPupil) {
+          if (authState is AuthAuthenticated && authState.user.isParent) {
             return const Placeholder();
           }
           return const SizedBox.shrink();

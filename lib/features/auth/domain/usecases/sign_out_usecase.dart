@@ -3,10 +3,13 @@ import 'package:injectable/injectable.dart';
 import '../failure.dart';
 import '../repositories/auth_repository.dart';
 
-@lazySingleton
+@injectable
 class SignOutUseCase {
   final AuthRepository repository;
-  SignOutUseCase({required this.repository});
 
-  Future<Either<Failure, void>> call() => repository.signOut();
+  SignOutUseCase(this.repository);
+
+  Future<Either<Failure, void>> call() async {
+    return repository.signOut();
+  }
 }

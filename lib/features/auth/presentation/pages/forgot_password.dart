@@ -8,6 +8,8 @@ import '../../../components/text_field_component.dart';
 import '../../../components/utils/custom_app_bar.dart';
 import '../../../components/utils/size_config.dart';
 import '../bloc/auth_bloc.dart';
+import '../bloc/auth_event.dart';
+import '../bloc/auth_state.dart';
 
 class ForgotPasswordPage extends StatefulWidget {
   const ForgotPasswordPage({super.key});
@@ -29,7 +31,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
   void _handleResetPassword() {
     if (_formKey.currentState!.validate()) {
       context.read<AuthBloc>().add(
-        AuthResetPasswordRequested(emailCtrl.text.trim()),
+        AuthResetPasswordRequested(email: emailCtrl.text.trim()),
       );
     }
   }

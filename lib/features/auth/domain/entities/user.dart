@@ -1,4 +1,5 @@
-// features/auth/domain/entities/user.dart
+import 'package:bitesize_golf/features/auth/domain/entities/subscription.dart';
+import 'package:bitesize_golf/features/auth/domain/entities/user_enums.dart';
 import 'package:equatable/equatable.dart';
 
 class User extends Equatable {
@@ -6,9 +7,14 @@ class User extends Equatable {
   final String? email;
   final String? displayName;
   final String? photoURL;
-  final String role; // pupil | coach | admin
-  final String accountStatus;
+  final String role;
   final bool emailVerified;
+  final String? firstName;
+  final String? lastName;
+  final String accountStatus;
+  final bool profileCompleted;
+  final Subscription? subscription;
+  final Map<String, dynamic>? preferences;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -17,17 +23,17 @@ class User extends Equatable {
     this.email,
     this.displayName,
     this.photoURL,
-    this.role = 'pupil',
-    this.accountStatus = 'active',
+    this.role = 'parent',
     this.emailVerified = false,
+    this.firstName,
+    this.lastName,
+    this.accountStatus = 'active',
+    this.profileCompleted = false,
+    this.subscription,
+    this.preferences,
     required this.createdAt,
     required this.updatedAt,
   });
-
-  bool get isPupil => role == 'pupil';
-  bool get isCoach => role == 'coach';
-  bool get isAdmin => role == 'admin';
-  bool get isGuest => role == 'guest';
 
   @override
   List<Object?> get props => [
@@ -36,13 +42,17 @@ class User extends Equatable {
     displayName,
     photoURL,
     role,
-    accountStatus,
     emailVerified,
+    firstName,
+    lastName,
+    accountStatus,
+    profileCompleted,
+    subscription,
+    preferences,
     createdAt,
     updatedAt,
   ];
 
-  // Copy with for immutability
   User copyWith({
     String? uid,
     String? email,
@@ -50,18 +60,36 @@ class User extends Equatable {
     String? photoURL,
     String? role,
     bool? emailVerified,
+    String? firstName,
+    String? lastName,
     String? accountStatus,
+    bool? profileCompleted,
+    Subscription? subscription,
+    Map<String, dynamic>? preferences,
     DateTime? createdAt,
     DateTime? updatedAt,
-  }) => User(
-    uid: uid ?? this.uid,
-    email: email ?? this.email,
-    displayName: displayName ?? this.displayName,
-    photoURL: photoURL ?? this.photoURL,
-    role: role ?? this.role,
-    accountStatus: role ?? this.accountStatus,
-    emailVerified: emailVerified ?? this.emailVerified,
-    createdAt: createdAt ?? this.createdAt,
-    updatedAt: updatedAt ?? this.updatedAt,
-  );
+  }) {
+    return User(
+      uid: uid ?? this.uid,
+      email: email ?? this.email,
+      displayName: displayName ?? this.displayName,
+      photoURL: photoURL ?? this.photoURL,
+      role: role ?? this.role,
+      emailVerified: emailVerified ?? this.emailVerified,
+      firstName: firstName ?? this.firstName,
+      lastName: lastName ?? this.lastName,
+      accountStatus: accountStatus ?? this.accountStatus,
+      profileCompleted: profileCompleted ?? this.profileCompleted,
+      subscription: subscription ?? this.subscription,
+      preferences: preferences ?? this.preferences,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
+  }
+
+  bool get isPremium => subscription?.status == SubscriptionStatus.active;
+  bool get isCoach => role == 'coach';
+  bool get isParent => role == 'parent';
+  bool get isGuest => role == 'guest';
+  bool get needsProfileCompletion => !profileCompleted && !isGuest;
 }

@@ -1,15 +1,19 @@
 import 'package:dartz/dartz.dart';
 import 'package:injectable/injectable.dart';
-import '../entities/user.dart';
 import '../failure.dart';
 import '../repositories/auth_repository.dart';
 
-@lazySingleton
+@injectable
 class ResetPasswordUseCase {
   final AuthRepository repository;
-  ResetPasswordUseCase({required this.repository});
+
+  ResetPasswordUseCase(this.repository);
 
   Future<Either<Failure, void>> call({required String email}) async {
-    return repository.resetPassword(email);
+    if (email.trim().isEmpty || !email.contains('@')) {
+      return Left(AuthFailure(message: 'Please enter a valid email address'));
+    }
+
+    return repository.resetPassword(email.trim());
   }
 }

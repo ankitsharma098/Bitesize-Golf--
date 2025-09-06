@@ -8,6 +8,8 @@ import '../../../components/text_field_component.dart';
 import '../../../components/utils/custom_app_bar.dart';
 import '../../../components/utils/size_config.dart';
 import '../bloc/auth_bloc.dart';
+import '../bloc/auth_event.dart';
+import '../bloc/auth_state.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -32,7 +34,10 @@ class _LoginPageState extends State<LoginPage> {
   void _handleLogin() {
     if (_formKey.currentState!.validate()) {
       context.read<AuthBloc>().add(
-        AuthSignInRequested(emailCtrl.text.trim(), passwordCtrl.text.trim()),
+        AuthSignInRequested(
+          email: emailCtrl.text.trim(),
+          password: passwordCtrl.text.trim(),
+        ),
       );
     }
   }
@@ -58,7 +63,7 @@ class _LoginPageState extends State<LoginPage> {
       body: BlocConsumer<AuthBloc, AuthState>(
         listener: (context, state) {
           if (state is AuthAuthenticated) {
-            final isPupil = state.user.isPupil;
+            final isPupil = state.user.isParent;
             isPupil
                 ? context.go(RouteNames.pupilHome)
                 : context.go(RouteNames.coachHome);

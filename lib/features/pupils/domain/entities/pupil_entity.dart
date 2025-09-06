@@ -1,15 +1,18 @@
 import 'package:equatable/equatable.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 
 class Pupil extends Equatable {
-  final String id; // same as user.uid
-  final String parentId; // user.uid of parent (self for now)
-  final String name; // copied from users.displayName
-  final DateTime? dateOfBirth; // NEW - from complete profile
-  final String? handicap; // NEW - from complete profile
-  final String? selectedCoachName; // NEW - from complete profile
-  final String? selectedClubId; // NEW - reference to golfClubs/{id}
+  final String id;
+  final String parentId;
+  final String name;
+  final DateTime? dateOfBirth;
   final String? avatar;
+  final String? handicap;
+  final String? selectedCoachName;
+  final String? selectedClubId;
+  final String? assignedCoach;
+  final DateTime? coachAssignedAt;
+  final Map<String, dynamic>? progress;
+  final List<String> badges;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -18,10 +21,14 @@ class Pupil extends Equatable {
     required this.parentId,
     required this.name,
     this.dateOfBirth,
+    this.avatar,
     this.handicap,
     this.selectedCoachName,
     this.selectedClubId,
-    this.avatar,
+    this.assignedCoach,
+    this.coachAssignedAt,
+    this.progress,
+    this.badges = const [],
     required this.createdAt,
     required this.updatedAt,
   });
@@ -32,11 +39,25 @@ class Pupil extends Equatable {
     parentId,
     name,
     dateOfBirth,
+    avatar,
     handicap,
     selectedCoachName,
     selectedClubId,
-    avatar,
+    assignedCoach,
+    coachAssignedAt,
+    progress,
+    badges,
     createdAt,
     updatedAt,
   ];
+
+  int? get age => dateOfBirth != null
+      ? DateTime.now().difference(dateOfBirth!).inDays ~/ 365
+      : null;
+
+  bool get hasCoach => assignedCoach != null;
+  bool get hasRequestedCoach =>
+      selectedCoachName != null && selectedCoachName!.isNotEmpty;
+  int get currentLevel => progress?['currentLevel'] ?? 1;
+  int get totalXP => progress?['totalXP'] ?? 0;
 }

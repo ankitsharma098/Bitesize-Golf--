@@ -1,8 +1,8 @@
 // features/auth/data/models/user_model.dart
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart' as fb;
-// ✅ FIXED: Import the entity with alias to avoid conflicts
 import '../../domain/entities/user.dart' as entity;
+import '../../domain/entities/subscription.dart';
 
 class UserModel {
   final String uid;
@@ -11,7 +11,12 @@ class UserModel {
   final String? photoURL;
   final String role;
   final bool emailVerified;
+  final String? firstName;
+  final String? lastName;
   final String accountStatus;
+  final bool profileCompleted;
+  final Subscription? subscription;
+  final Map<String, dynamic>? preferences;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -19,15 +24,21 @@ class UserModel {
     required this.uid,
     this.email,
     this.displayName,
-    this.accountStatus = 'active',
     this.photoURL,
-    this.role = 'pupil',
+    this.role = 'parent',
     this.emailVerified = false,
+    this.firstName,
+    this.lastName,
+    this.accountStatus = 'active',
+    this.profileCompleted = false,
+    this.subscription,
+    this.preferences,
     required this.createdAt,
     required this.updatedAt,
   });
 
-  // ✅ FIXED: Convert to entity.User (not fb.User)
+  /* ---------- to / from entity ---------- */
+
   entity.User toEntity() => entity.User(
     uid: uid,
     email: email,
@@ -35,43 +46,34 @@ class UserModel {
     photoURL: photoURL,
     role: role,
     emailVerified: emailVerified,
+    firstName: firstName,
+    lastName: lastName,
     accountStatus: accountStatus,
+    profileCompleted: profileCompleted,
+    subscription: subscription,
+    preferences: preferences,
     createdAt: createdAt,
     updatedAt: updatedAt,
   );
 
-  // ✅ FIXED: Rename method to avoid confusion
-  factory UserModel.fromFirebase({
-    required fb.User firebaseUser,
-    Map<String, dynamic>? userDoc,
-  }) {
-    return UserModel(
-      uid: firebaseUser.uid,
-      email: firebaseUser.email,
-      displayName: firebaseUser.displayName ?? userDoc?['displayName'] ?? '',
-      photoURL: firebaseUser.photoURL ?? userDoc?['photoURL'],
-      role: userDoc?['role'] ?? 'pupil',
-      emailVerified: firebaseUser.emailVerified,
-      accountStatus: userDoc?['accountStatus'],
-      createdAt: userDoc?['createdAt']?.toDate() ?? DateTime.now(),
-      updatedAt: userDoc?['updatedAt']?.toDate() ?? DateTime.now(),
-    );
-  }
+  factory UserModel.fromEntity(entity.User user) => UserModel(
+    uid: user.uid,
+    email: user.email,
+    displayName: user.displayName,
+    photoURL: user.photoURL,
+    role: user.role,
+    emailVerified: user.emailVerified,
+    firstName: user.firstName,
+    lastName: user.lastName,
+    accountStatus: user.accountStatus,
+    profileCompleted: user.profileCompleted,
+    subscription: user.subscription,
+    preferences: user.preferences,
+    createdAt: user.createdAt,
+    updatedAt: user.updatedAt,
+  );
 
-  // ✅ FIXED: Correct import and conversion
-  factory UserModel.fromEntity(entity.User user) {
-    return UserModel(
-      uid: user.uid,
-      email: user.email,
-      displayName: user.displayName,
-      photoURL: user.photoURL,
-      role: user.role,
-      emailVerified: user.emailVerified,
-      accountStatus: user.accountStatus,
-      createdAt: user.createdAt,
-      updatedAt: user.updatedAt,
-    );
-  }
+  /* ---------- to / from JSON ---------- */
 
   Map<String, dynamic> toJson() => {
     'uid': uid,
@@ -80,20 +82,63 @@ class UserModel {
     'photoURL': photoURL,
     'role': role,
     'emailVerified': emailVerified,
+    'firstName': firstName,
+    'lastName': lastName,
     'accountStatus': accountStatus,
+    'profileCompleted': profileCompleted,
+    'subscription': subscription?.toJson(),
+    'preferences': preferences,
     'createdAt': createdAt,
     'updatedAt': updatedAt,
   };
 
   factory UserModel.fromJson(Map<String, dynamic> json) => UserModel(
-    uid: json['uid'],
-    email: json['email'],
-    displayName: json['displayName'],
-    photoURL: json['photoURL'],
-    role: (json['role'] as String?) ?? 'pupil',
-    emailVerified: json['emailVerified'] == true,
-    accountStatus: json['accountStatus'],
-    createdAt: json['createdAt'],
-    updatedAt: json['updatedAt'],
+    uid: json['uid'] as String,
+    email: json['email'] as String?,
+    displayName: json['displayName'] as String?,
+    photoURL: json['photoURL'] as String?,
+    role: json['role'] as String? ?? 'parent',
+    emailVerified: json['emailVerified'] as bool? ?? false,
+    firstName: json['firstName'] as String?,
+    lastName: json['lastName'] as String?,
+    accountStatus: json['accountStatus'] as String? ?? 'active',
+    profileCompleted: json['profileCompleted'] as bool? ?? false,
+    subscription: json['subscription'] == null
+        ? null
+        : Subscription.fromJson(json['subscription']),
+    preferences: json['preferences'] as Map<String, dynamic>?,
+    createdAt: DateTime.parse(json['createdAt']),
+    updatedAt: DateTime.parse(json['updatedAt']),
+  );
+
+  /* ---------- from Firebase Auth only ---------- */
+
+  factory UserModel.fromFirebase(fb.User firebaseUser) => UserModel(
+    uid: firebaseUser.uid,
+    email: firebaseUser.email,
+    displayName: firebaseUser.displayName,
+    photoURL: firebaseUser.photoURL,
+    emailVerified: firebaseUser.emailVerified,
+    createdAt: DateTime.now(),
+    updatedAt: DateTime.now(),
+  );
+
+  factory UserModel.fromFirestore(Map<String, dynamic> data) => UserModel(
+    uid: data['uid'] as String,
+    email: data['email'] as String?,
+    displayName: data['displayName'] as String?,
+    photoURL: data['photoURL'] as String?,
+    role: data['role'] as String? ?? 'parent',
+    emailVerified: data['emailVerified'] as bool? ?? false,
+    firstName: data['firstName'] as String?,
+    lastName: data['lastName'] as String?,
+    accountStatus: data['accountStatus'] as String? ?? 'active',
+    profileCompleted: data['profileCompleted'] as bool? ?? false,
+    subscription: data['subscription'] == null
+        ? null
+        : Subscription.fromJson(data['subscription']),
+    preferences: data['preferences'] as Map<String, dynamic>?,
+    createdAt: (data['createdAt'] as Timestamp).toDate(),
+    updatedAt: (data['updatedAt'] as Timestamp).toDate(),
   );
 }

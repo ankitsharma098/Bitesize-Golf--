@@ -1,38 +1,44 @@
 import 'package:equatable/equatable.dart';
 
-import 'coach_stats_entity.dart';
-
 class Coach extends Equatable {
-  final String id; // same as user.uid
-  final String userId; // ref to users.uid
-  final String name;
+  final String id;
+  final String userId;
+  final String displayName;
+  final String? firstName;
+  final String? lastName;
   final String bio;
-  final int experience; // years – NEW
-  final String? clubId; // ref to golfClubs/{id} – NEW
+  final List<String> qualifications;
+  final int experience;
+  final List<String> specialties;
+  final String? clubId;
   final String verificationStatus;
   final String? verifiedBy;
   final DateTime? verifiedAt;
   final int maxPupils;
   final int currentPupils;
   final bool acceptingNewPupils;
-  final CoachStats stats;
+  final Map<String, dynamic>? stats;
   final DateTime createdAt;
   final DateTime updatedAt;
 
   const Coach({
     required this.id,
     required this.userId,
-    required this.name,
+    required this.displayName,
+    required this.firstName,
+    required this.lastName,
     this.bio = '',
+    this.qualifications = const [],
     this.experience = 0,
+    this.specialties = const [],
     this.clubId,
     this.verificationStatus = 'pending',
     this.verifiedBy,
     this.verifiedAt,
-    this.maxPupils = 50,
+    this.maxPupils = 20,
     this.currentPupils = 0,
     this.acceptingNewPupils = true,
-    this.stats = const CoachStats(),
+    this.stats,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -41,9 +47,13 @@ class Coach extends Equatable {
   List<Object?> get props => [
     id,
     userId,
-    name,
+    displayName,
     bio,
+    firstName,
+    lastName,
+    qualifications,
     experience,
+    specialties,
     clubId,
     verificationStatus,
     verifiedBy,
@@ -55,4 +65,13 @@ class Coach extends Equatable {
     createdAt,
     updatedAt,
   ];
+
+  bool get isVerified => verificationStatus == 'verified';
+  bool get isPending => verificationStatus == 'pending';
+  bool get isRejected => verificationStatus == 'rejected';
+  bool get canAcceptPupils =>
+      isVerified && acceptingNewPupils && currentPupils < maxPupils;
+  double get averageImprovement =>
+      stats?['averageImprovement']?.toDouble() ?? 0.0;
+  double get responseTimeHours => stats?['responseTime']?.toDouble() ?? 24.0;
 }

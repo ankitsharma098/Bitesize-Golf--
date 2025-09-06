@@ -4,10 +4,11 @@ import '../entities/user.dart';
 import '../failure.dart';
 import '../repositories/auth_repository.dart';
 
-@lazySingleton
+@injectable
 class SignInAsGuestUseCase {
   final AuthRepository repository;
-  SignInAsGuestUseCase({required this.repository});
+
+  SignInAsGuestUseCase(this.repository);
 
   Future<Either<Failure, User>> call() async {
     return repository.signInAsGuest();

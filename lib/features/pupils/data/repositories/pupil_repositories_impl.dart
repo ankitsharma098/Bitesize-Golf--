@@ -1,8 +1,8 @@
 import 'package:dartz/dartz.dart';
 import 'package:injectable/injectable.dart';
-import '../../domain/entities/pupil.dart';
-import '../../domain/repositories/pupil_repository.dart';
 import 'package:bitesize_golf/features/auth/domain/failure.dart';
+import '../../domain/entities/pupil_entity.dart';
+import '../../domain/repositoreis/pupil_repository.dart';
 import '../datasources/pupil_remote_datasource.dart';
 import '../models/pupil_model.dart';
 

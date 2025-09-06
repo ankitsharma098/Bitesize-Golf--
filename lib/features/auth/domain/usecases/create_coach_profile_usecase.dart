@@ -9,13 +9,13 @@ class CreateCoachProfileUseCase {
   final AuthRepository repository;
   CreateCoachProfileUseCase({required this.repository});
 
-  Future<Future<Either<Failure, void>>> call({
+  Future<Either<Failure, void>> call({
     required String coachId,
     required String userId,
     required String name,
-    required String bio,
-    required String clubId,
-    required int experience,
+    required String? bio,
+    required String? clubId,
+    required int? experience,
   }) async {
     return repository.createCoachProfile(
       coachId: coachId,

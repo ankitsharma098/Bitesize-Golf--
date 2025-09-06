@@ -8,7 +8,7 @@ class CreatePupilProfileUseCase {
   final AuthRepository repository;
   CreatePupilProfileUseCase({required this.repository});
 
-  Future<Future<Either<Failure, void>>> call({
+  Future<Either<Failure, void>> call({
     required String pupilId,
     required String parentId,
     required String name,

@@ -44,7 +44,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<AuthSignUpRequested>(_onSignUpRequested);
     on<AuthGuestSignInRequested>(_onGuestSignInRequested);
     on<AuthSignOutRequested>(_onSignOutRequested);
-    on<AuthUpdateProfile>(_onUpdateProfile);
+    //on<AuthUpdateProfile>(_onUpdateProfile);
     on<AuthResetPasswordRequested>(_onResetPasswordRequested);
     on<AuthEmailVerificationRequested>(_onEmailVerificationRequested);
     on<AuthCompletePupilProfileRequested>((event, emit) async {
@@ -71,9 +71,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         userId: event.userId,
         name: event.name,
         bio: event.bio,
-        qualifications: event.qualifications,
         experience: event.experience,
-        specialties: event.specialties,
         clubId: event.clubId,
       );
       res.fold(
@@ -172,26 +170,26 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     );
   }
 
-  Future<void> _onUpdateProfile(
-    AuthUpdateProfile event,
-    Emitter<AuthState> emit,
-  ) async {
-    emit(AuthLoading());
-
-    if (state is AuthAuthenticated) {
-      final currentUser = (state as AuthAuthenticated).user;
-
-      final result = await updateProfileUseCase(
-        uid: currentUser.uid,
-        profileData: event.profileData,
-      );
-
-      result.fold(
-        (failure) => emit(AuthError(failure.message)),
-        (updatedUser) => emit(AuthProfileUpdated(updatedUser)),
-      );
-    }
-  }
+  // Future<void> _onUpdateProfile(
+  //   AuthUpdateProfile event,
+  //   Emitter<AuthState> emit,
+  // ) async {
+  //   emit(AuthLoading());
+  //
+  //   if (state is AuthAuthenticated) {
+  //     final currentUser = (state as AuthAuthenticated).user;
+  //
+  //     final result = await updateProfileUseCase(
+  //       uid: currentUser.uid,
+  //       profileData: event.profileData,
+  //     );
+  //
+  //     result.fold(
+  //       (failure) => emit(AuthError(failure.message)),
+  //       (updatedUser) => emit(AuthProfileUpdated(updatedUser)),
+  //     );
+  //   }
+  // }
 
   Future<void> _onResetPasswordRequested(
     AuthResetPasswordRequested event,

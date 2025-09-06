@@ -1,5 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../domain/entities/pupil.dart';
+import '../../domain/entities/pupil_entity.dart';
 
 class PupilModel {
   final String id;

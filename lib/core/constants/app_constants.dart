@@ -60,6 +60,13 @@ const PREF_USER_PHOTO = 'userPhotoUrl';
 const PREF_USER_ROLE = 'userRole'; // guest | pupil | coach | admin
 const PREF_EMAIL_VERIFIED = 'emailVerified';
 
+// Add these to your existing constants
+const String PREF_USER_FIRST_NAME = 'user_first_name';
+const String PREF_USER_LAST_NAME = 'user_last_name';
+const String PREF_PROFILE_COMPLETED = 'profile_completed';
+const String PREF_ACCOUNT_STATUS = 'account_status';
+const String PREF_SUBSCRIPTION_AUTO_RENEW = 'subscription_auto_renew';
+
 // Add these critical flags
 const PREF_SUBSCRIPTION_STATUS = 'subscriptionStatus'; // free|trial|active
 const PREF_SUBSCRIPTION_TIER = 'subscriptionTier'; // free|basic|premium

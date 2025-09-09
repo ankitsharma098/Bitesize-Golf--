@@ -1,13 +1,13 @@
-// Updated features/auth/presentation/pages/register_page.dart
+import 'package:bitesize_golf/features/components/utils/size_config.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import '../../../../core/themes/theme_colors.dart';
 import '../../../../route/routes_names.dart';
 import '../../../components/custom_button.dart';
 import '../../../components/text_field_component.dart';
 import '../../../components/utils/custom_app_bar.dart';
 import '../../../components/utils/custom_radio.dart';
-import '../../../components/utils/size_config.dart';
 import '../bloc/auth_bloc.dart';
 import '../bloc/auth_event.dart';
 import '../bloc/auth_state.dart';
@@ -26,9 +26,25 @@ class _RegisterPageState extends State<RegisterPage> {
   final emailCtrl = TextEditingController();
   final passwordCtrl = TextEditingController();
 
-  String _selectedRole = 'pupil'; // Changed default to parent
+  String _selectedRole = 'pupil'; // Default to pupil (parent role)
   bool _agreeToTerms = false;
   bool _obscurePass = true;
+
+  @override
+  void initState() {
+    _initializeUserData();
+    super.initState();
+  }
+
+  void _initializeUserData() {
+    final authState = context.read<AuthBloc>().state;
+    if (authState is AuthProfileCompletionRequired) {
+      if (authState.user != null) {
+        firstNameCtrl.text = authState.user.firstName!;
+        lastNameCtrl.text = authState.user.lastName!;
+      }
+    }
+  }
 
   @override
   void dispose() {
@@ -69,17 +85,13 @@ class _RegisterPageState extends State<RegisterPage> {
       body: BlocConsumer<AuthBloc, AuthState>(
         listener: (context, state) {
           if (state is AuthProfileCompletionRequired) {
-            // Navigate to appropriate profile completion screen based on role
             if (state.user.role == 'pupil') {
               context.go(RouteNames.completeProfilePupil);
             } else if (state.user.role == 'coach') {
-              // Show success message for coach (profile already created, pending verification)
-
               context.go(RouteNames.completeProfileCoach);
-              // context.go(RouteNames.home);
             }
           } else if (state is AuthAuthenticated) {
-            // context.go(RouteNames.home);
+            print("Home");
           } else if (state is AuthError) {
             ScaffoldMessenger.of(
               context,
@@ -102,6 +114,7 @@ class _RegisterPageState extends State<RegisterPage> {
                     // First Name
                     CustomTextFieldFactory.name(
                       controller: firstNameCtrl,
+                      levelType: LevelType.redLevel,
                       label: 'First Name',
                       placeholder: 'Enter First Name',
                       validator: (v) =>
@@ -112,6 +125,7 @@ class _RegisterPageState extends State<RegisterPage> {
                     // Last Name
                     CustomTextFieldFactory.name(
                       controller: lastNameCtrl,
+                      levelType: LevelType.redLevel,
                       label: 'Last Name',
                       placeholder: 'Enter Last Name',
                       validator: (v) =>
@@ -122,6 +136,7 @@ class _RegisterPageState extends State<RegisterPage> {
                     // Email
                     CustomTextFieldFactory.email(
                       controller: emailCtrl,
+                      levelType: LevelType.redLevel,
                       validator: (v) {
                         final val = (v ?? '').trim();
                         if (val.isEmpty) return 'Please enter your email';
@@ -135,6 +150,7 @@ class _RegisterPageState extends State<RegisterPage> {
                     CustomTextFieldFactory.password(
                       controller: passwordCtrl,
                       obscureText: _obscurePass,
+                      levelType: LevelType.redLevel,
                       validator: (v) {
                         final val = (v ?? '').trim();
                         if (val.isEmpty) return 'Enter a password';
@@ -155,30 +171,14 @@ class _RegisterPageState extends State<RegisterPage> {
                       ),
                     ),
                     SizedBox(height: SizeConfig.scaleHeight(12)),
-
-                    Column(
-                      children: [
-                        RadioListTile<String>(
-                          title: const Text('Parent'),
-                          subtitle: const Text(
-                            'Create accounts for your children',
-                          ),
-                          value: 'pupil',
-                          groupValue: _selectedRole,
-                          onChanged: (value) =>
-                              setState(() => _selectedRole = value!),
-                        ),
-                        RadioListTile<String>(
-                          title: const Text('Coach'),
-                          subtitle: const Text(
-                            'Teach and guide junior golfers',
-                          ),
-                          value: 'coach',
-                          groupValue: _selectedRole,
-                          onChanged: (value) =>
-                              setState(() => _selectedRole = value!),
-                        ),
+                    CustomRadioGroup<String>(
+                      options: [
+                        RadioOption(value: 'pupil', label: 'Pupil'),
+                        RadioOption(value: 'coach', label: 'Coach'),
                       ],
+                      groupValue: _selectedRole,
+                      onChanged: (value) =>
+                          setState(() => _selectedRole = value!),
                     ),
                     SizedBox(height: SizeConfig.scaleHeight(24)),
 
@@ -196,24 +196,27 @@ class _RegisterPageState extends State<RegisterPage> {
                                 setState(() => _agreeToTerms = !_agreeToTerms),
                             child: const Text(
                               'I agree to the Terms and Conditions',
-                              style: TextStyle(
-                                decoration: TextDecoration.underline,
-                                color: Colors.blue,
-                              ),
+                              style: TextStyle(color: Colors.black),
                             ),
                           ),
                         ),
                       ],
                     ),
                     SizedBox(height: SizeConfig.scaleHeight(32)),
-
-                    // Register button
-                    ElevatedButton(
+                    CustomButtonFactory.primary(
+                      text: 'Register',
                       onPressed: isLoading ? null : _handleRegister,
-                      child: isLoading
-                          ? const CircularProgressIndicator()
-                          : const Text('Create Account'),
+                      isLoading: isLoading,
+                      levelType: LevelType.redLevel,
+                      size: ButtonSize.medium,
                     ),
+
+                    // CustomButtonFactory.primary(
+                    //   text: 'Register',
+                    //   onPressed: isLoading ? null : _handleRegister,
+                    //   isLoading: isLoading, // White text for contrast
+                    //   size: ButtonSize.medium, // Adjust size to match image
+                    // ),
                     SizedBox(height: SizeConfig.scaleHeight(16)),
 
                     // Login link

@@ -1,13 +1,13 @@
+// features/auth/data/models/club_model.dart
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../domain/entities/golf_club_entity.dart';
 
 class ClubModel {
   final String id;
   final String name;
   final String location;
   final String description;
-  final String? website;
   final String contactEmail;
-  final String approvalMode; // 'coach_only', 'admin_only', 'coach_or_admin'
   final bool isActive;
   final int totalCoaches;
   final int totalPupils;
@@ -19,43 +19,82 @@ class ClubModel {
     required this.name,
     required this.location,
     required this.description,
-    this.website,
     required this.contactEmail,
-    this.approvalMode = 'coach_or_admin',
-    this.isActive = true,
-    this.totalCoaches = 0,
-    this.totalPupils = 0,
+    required this.isActive,
+    required this.totalCoaches,
+    required this.totalPupils,
     required this.createdAt,
     required this.updatedAt,
   });
 
+  /* ---------- to / from entity ---------- */
+
+  Club toEntity() => Club(
+    id: id,
+    name: name,
+    location: location,
+    description: description,
+    contactEmail: contactEmail,
+    isActive: isActive,
+    totalCoaches: totalCoaches,
+    totalPupils: totalPupils,
+    createdAt: createdAt,
+    updatedAt: updatedAt,
+  );
+
+  factory ClubModel.fromEntity(Club club) => ClubModel(
+    id: club.id,
+    name: club.name,
+    location: club.location,
+    description: club.description,
+    contactEmail: club.contactEmail,
+    isActive: club.isActive,
+    totalCoaches: club.totalCoaches,
+    totalPupils: club.totalPupils,
+    createdAt: club.createdAt,
+    updatedAt: club.updatedAt,
+  );
+
+  /* ---------- to / from JSON ---------- */
+
   Map<String, dynamic> toJson() => {
-    'id': id,
     'name': name,
     'location': location,
     'description': description,
-    'website': website,
     'contactEmail': contactEmail,
-    'approvalMode': approvalMode,
     'isActive': isActive,
     'totalCoaches': totalCoaches,
     'totalPupils': totalPupils,
-    'createdAt': Timestamp.fromDate(createdAt),
-    'updatedAt': Timestamp.fromDate(updatedAt),
+    'createdAt': createdAt.toIso8601String(),
+    'updatedAt': updatedAt.toIso8601String(),
   };
 
   factory ClubModel.fromJson(Map<String, dynamic> json) => ClubModel(
-    id: json['id'],
-    name: json['name'],
-    location: json['location'],
-    description: json['description'],
-    website: json['website'],
-    contactEmail: json['contactEmail'],
-    approvalMode: json['approvalMode'] ?? 'coach_or_admin',
-    isActive: json['isActive'] ?? true,
-    totalCoaches: json['totalCoaches'] ?? 0,
-    totalPupils: json['totalPupils'] ?? 0,
-    createdAt: json['createdAt']?.toDate() ?? DateTime.now(),
-    updatedAt: json['updatedAt']?.toDate() ?? DateTime.now(),
+    id: json['id'] as String? ?? '', // Assuming id is the document ID
+    name: json['name'] as String,
+    location: json['location'] as String,
+    description: json['description'] as String,
+    contactEmail: json['contactEmail'] as String,
+    isActive: json['isActive'] as bool,
+    totalCoaches: json['totalCoaches'] as int,
+    totalPupils: json['totalPupils'] as int,
+    createdAt: DateTime.parse(json['createdAt'].toString()),
+    updatedAt: DateTime.parse(json['updatedAt'].toString()),
   );
+
+  /* ---------- from Firestore ---------- */
+
+  factory ClubModel.fromFirestore(String id, Map<String, dynamic> data) =>
+      ClubModel(
+        id: id,
+        name: data['name'] as String,
+        location: data['location'] as String,
+        description: data['description'] as String,
+        contactEmail: data['contactEmail'] as String,
+        isActive: data['isActive'] as bool,
+        totalCoaches: data['totalCoaches'] as int,
+        totalPupils: data['totalPupils'] as int,
+        createdAt: (data['createdAt'] as Timestamp).toDate(),
+        updatedAt: (data['updatedAt'] as Timestamp).toDate(),
+      );
 }

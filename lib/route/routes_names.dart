@@ -8,6 +8,7 @@ class RouteNames {
   static const forgotPassword = '/forgot-password';
   static const otpVerify = '/otp-verify';
   static const resetPassword = '/reset-password';
+  static const subscription = '/subscription';
 
   // Profile Completion
   static const completeProfile = '/complete-profile';

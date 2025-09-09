@@ -1,5 +1,3 @@
-// main.dart
-import 'package:bitesize_golf/features/components/utils/size_config.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -14,7 +12,6 @@ import 'core/themes/app_theme.dart';
 import 'core/themes/theme_provider.dart';
 import 'features/auth/presentation/bloc/auth_bloc.dart';
 import 'features/auth/presentation/bloc/auth_event.dart';
-import 'features/components/utils/loader_spinner.dart';
 import 'firebase_options.dart';
 import 'injection.dart';
 
@@ -23,7 +20,6 @@ void main() async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   await Hive.initFlutter();
   await configureDependencies();
-
   // Ensure Firebase Auth is initialized
   await FirebaseAuth.instance.authStateChanges().first;
 

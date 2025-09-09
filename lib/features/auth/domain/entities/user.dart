@@ -1,4 +1,3 @@
-import 'package:bitesize_golf/features/auth/domain/entities/subscription.dart';
 import 'package:bitesize_golf/features/auth/domain/entities/user_enums.dart';
 import 'package:equatable/equatable.dart';
 
@@ -13,7 +12,6 @@ class User extends Equatable {
   final String? lastName;
   final String accountStatus;
   final bool profileCompleted;
-  final Subscription? subscription;
   final Map<String, dynamic>? preferences;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -23,13 +21,12 @@ class User extends Equatable {
     this.email,
     this.displayName,
     this.photoURL,
-    this.role = 'parent',
+    this.role = 'pupil',
     this.emailVerified = false,
     this.firstName,
     this.lastName,
     this.accountStatus = 'active',
     this.profileCompleted = false,
-    this.subscription,
     this.preferences,
     required this.createdAt,
     required this.updatedAt,
@@ -47,7 +44,6 @@ class User extends Equatable {
     lastName,
     accountStatus,
     profileCompleted,
-    subscription,
     preferences,
     createdAt,
     updatedAt,
@@ -64,7 +60,6 @@ class User extends Equatable {
     String? lastName,
     String? accountStatus,
     bool? profileCompleted,
-    Subscription? subscription,
     Map<String, dynamic>? preferences,
     DateTime? createdAt,
     DateTime? updatedAt,
@@ -80,16 +75,14 @@ class User extends Equatable {
       lastName: lastName ?? this.lastName,
       accountStatus: accountStatus ?? this.accountStatus,
       profileCompleted: profileCompleted ?? this.profileCompleted,
-      subscription: subscription ?? this.subscription,
       preferences: preferences ?? this.preferences,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
   }
 
-  bool get isPremium => subscription?.status == SubscriptionStatus.active;
   bool get isCoach => role == 'coach';
-  bool get isParent => role == 'parent';
+  bool get isPupil => role == 'pupil';
   bool get isGuest => role == 'guest';
   bool get needsProfileCompletion => !profileCompleted && !isGuest;
 }

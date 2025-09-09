@@ -1,7 +1,7 @@
-enum UserRole { pupil, coach, admin, guest }
-
 enum AccountStatus { active, suspended, deleted }
 
-enum SubscriptionStatus { free, trial, active, expired, canceled }
+enum SubscriptionStatus { free, active, expired, cancelled, pending }
 
-enum SubscriptionTier { free, basic, premium }
+enum SubscriptionTier { free, trial, premium }
+
+enum UserRole { pupil, coach, guest, admin }

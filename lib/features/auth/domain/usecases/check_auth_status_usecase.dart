@@ -1,5 +1,7 @@
+import 'package:dartz/dartz.dart';
 import 'package:injectable/injectable.dart';
 import '../entities/user.dart';
+import '../../../../failure.dart';
 import '../repositories/auth_repository.dart';
 
 @injectable
@@ -8,8 +10,8 @@ class CheckAuthStatusUseCase {
 
   CheckAuthStatusUseCase(this.repository);
 
-  Future<User?> call() async {
-    final result = await repository.getCurrentUser();
-    return result.fold((failure) => null, (user) => user);
+  Future<Either<Failure, User?>> call() async {
+    // final result = await repository.getCurrentUser();
+    return await repository.getCurrentUser();
   }
 }

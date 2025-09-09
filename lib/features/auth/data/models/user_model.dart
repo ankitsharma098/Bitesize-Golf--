@@ -2,7 +2,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart' as fb;
 import '../../domain/entities/user.dart' as entity;
-import '../../domain/entities/subscription.dart';
 
 class UserModel {
   final String uid;
@@ -15,7 +14,6 @@ class UserModel {
   final String? lastName;
   final String accountStatus;
   final bool profileCompleted;
-  final Subscription? subscription;
   final Map<String, dynamic>? preferences;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -25,13 +23,12 @@ class UserModel {
     this.email,
     this.displayName,
     this.photoURL,
-    this.role = 'parent',
+    this.role = 'pupil',
     this.emailVerified = false,
     this.firstName,
     this.lastName,
     this.accountStatus = 'active',
     this.profileCompleted = false,
-    this.subscription,
     this.preferences,
     required this.createdAt,
     required this.updatedAt,
@@ -50,7 +47,6 @@ class UserModel {
     lastName: lastName,
     accountStatus: accountStatus,
     profileCompleted: profileCompleted,
-    subscription: subscription,
     preferences: preferences,
     createdAt: createdAt,
     updatedAt: updatedAt,
@@ -67,7 +63,6 @@ class UserModel {
     lastName: user.lastName,
     accountStatus: user.accountStatus,
     profileCompleted: user.profileCompleted,
-    subscription: user.subscription,
     preferences: user.preferences,
     createdAt: user.createdAt,
     updatedAt: user.updatedAt,
@@ -86,7 +81,6 @@ class UserModel {
     'lastName': lastName,
     'accountStatus': accountStatus,
     'profileCompleted': profileCompleted,
-    'subscription': subscription?.toJson(),
     'preferences': preferences,
     'createdAt': createdAt,
     'updatedAt': updatedAt,
@@ -97,15 +91,12 @@ class UserModel {
     email: json['email'] as String?,
     displayName: json['displayName'] as String?,
     photoURL: json['photoURL'] as String?,
-    role: json['role'] as String? ?? 'parent',
+    role: json['role'] as String? ?? 'pupil',
     emailVerified: json['emailVerified'] as bool? ?? false,
     firstName: json['firstName'] as String?,
     lastName: json['lastName'] as String?,
     accountStatus: json['accountStatus'] as String? ?? 'active',
     profileCompleted: json['profileCompleted'] as bool? ?? false,
-    subscription: json['subscription'] == null
-        ? null
-        : Subscription.fromJson(json['subscription']),
     preferences: json['preferences'] as Map<String, dynamic>?,
     createdAt: DateTime.parse(json['createdAt']),
     updatedAt: DateTime.parse(json['updatedAt']),
@@ -128,15 +119,12 @@ class UserModel {
     email: data['email'] as String?,
     displayName: data['displayName'] as String?,
     photoURL: data['photoURL'] as String?,
-    role: data['role'] as String? ?? 'parent',
+    role: data['role'] as String? ?? 'pupil',
     emailVerified: data['emailVerified'] as bool? ?? false,
     firstName: data['firstName'] as String?,
     lastName: data['lastName'] as String?,
     accountStatus: data['accountStatus'] as String? ?? 'active',
     profileCompleted: data['profileCompleted'] as bool? ?? false,
-    subscription: data['subscription'] == null
-        ? null
-        : Subscription.fromJson(data['subscription']),
     preferences: data['preferences'] as Map<String, dynamic>?,
     createdAt: (data['createdAt'] as Timestamp).toDate(),
     updatedAt: (data['updatedAt'] as Timestamp).toDate(),

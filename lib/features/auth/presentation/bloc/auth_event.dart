@@ -56,34 +56,40 @@ class AuthEmailVerificationRequested extends AuthEvent {}
 // New events for profile completion
 class AuthCompletePupilProfileRequested extends AuthEvent {
   final String pupilId;
-  final String parentId;
+  final String userId; // Changed from parentId to userId for consistency
   final String name;
   final DateTime? dateOfBirth;
   final String? handicap;
+  final String? selectedCoachId; // Added - this is the key field
   final String? selectedCoachName;
   final String? selectedClubId;
+  final String? selectedClubName; // Added for consistency
   final String? avatar;
 
   const AuthCompletePupilProfileRequested({
     required this.pupilId,
-    required this.parentId,
+    required this.userId,
     required this.name,
     this.dateOfBirth,
     this.handicap,
+    this.selectedCoachId,
     this.selectedCoachName,
     this.selectedClubId,
+    this.selectedClubName,
     this.avatar,
   });
 
   @override
   List<Object?> get props => [
     pupilId,
-    parentId,
+    userId,
     name,
     dateOfBirth,
     handicap,
+    selectedCoachId,
     selectedCoachName,
     selectedClubId,
+    selectedClubName,
     avatar,
   ];
 }
@@ -94,7 +100,11 @@ class AuthCompleteCoachProfileRequested extends AuthEvent {
   final String name;
   final String? bio;
   final int? experience;
-  final String? clubId;
+  final List<String>? qualifications;
+  final List<String>? specialties;
+  final String? selectedClubId; // Changed from clubId
+  final String? selectedClubName; // Added
+  final String? avatar;
 
   const AuthCompleteCoachProfileRequested({
     required this.coachId,
@@ -102,9 +112,24 @@ class AuthCompleteCoachProfileRequested extends AuthEvent {
     required this.name,
     this.bio,
     this.experience,
-    this.clubId,
+    this.qualifications,
+    this.specialties,
+    this.selectedClubId,
+    this.selectedClubName,
+    this.avatar,
   });
 
   @override
-  List<Object?> get props => [coachId, userId, name, bio, experience, clubId];
+  List<Object?> get props => [
+    coachId,
+    userId,
+    name,
+    bio,
+    experience,
+    qualifications,
+    specialties,
+    selectedClubId,
+    selectedClubName,
+    avatar,
+  ];
 }

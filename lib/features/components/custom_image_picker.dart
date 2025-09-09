@@ -1,11 +1,10 @@
-// features/components/utils/custom_image_picker.dart
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:bitesize_golf/core/themes/theme_colors.dart';
 import 'package:bitesize_golf/features/components/utils/size_config.dart';
 
-class CustomImagePicker extends StatelessWidget {
+class CustomImagePicker extends StatefulWidget {
   final File? image;
   final ValueChanged<File> onImage;
   final double size;
@@ -19,27 +18,94 @@ class CustomImagePicker extends StatelessWidget {
     this.levelType,
   }) : super(key: key);
 
-  Future<void> _pick() async {
+  @override
+  State<CustomImagePicker> createState() => _CustomImagePickerState();
+}
+
+class _CustomImagePickerState extends State<CustomImagePicker> {
+  Future<void> _pickImage() async {
     final picked = await ImagePicker().pickImage(source: ImageSource.gallery);
-    if (picked != null) onImage(File(picked.path));
+    if (picked != null) {
+      widget.onImage(File(picked.path));
+    }
+  }
+
+  void _removeImage() {
+    setState(() {
+      widget.onImage(File('')); // Clear the image
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    final accent = levelType?.color ?? Theme.of(context).primaryColor;
+    final accent = widget.levelType?.color ?? Theme.of(context).primaryColor;
+    final hasImage = widget.image != null && widget.image!.path.isNotEmpty;
+
     return GestureDetector(
-      onTap: _pick,
+      onTap: hasImage ? null : _pickImage, // Disable tap if image is present
       child: Container(
-        width: SizeConfig.scaleWidth(size),
-        height: SizeConfig.scaleWidth(size),
+        width: SizeConfig.scaleWidth(widget.size),
+        height: SizeConfig.scaleWidth(widget.size),
         decoration: BoxDecoration(
-          color: AppColors.grey100,
-          shape: BoxShape.circle,
-          border: Border.all(color: accent, width: 2),
+          color: Colors.white,
+          border: Border.all(color: Colors.grey.shade300, width: 1),
+          borderRadius: BorderRadius.circular(8),
         ),
-        child: image != null
-            ? ClipOval(child: Image.file(image!, fit: BoxFit.cover))
-            : Icon(Icons.camera_alt, color: AppColors.grey600),
+        child: Stack(
+          children: [
+            Center(
+              child: hasImage
+                  ? ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: Image.file(
+                        widget.image!,
+                        fit: BoxFit.cover,
+                        width: double.infinity,
+                        height: double.infinity,
+                      ),
+                    )
+                  : Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.camera_alt_outlined,
+                          size: 32,
+                          color: Colors.grey.shade400,
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Tap to upload photo',
+                          style: TextStyle(
+                            color: Colors.grey.shade600,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
+                    ),
+            ),
+            if (hasImage)
+              Positioned(
+                top: -4,
+                right: -4,
+                child: GestureDetector(
+                  onTap: _removeImage,
+                  child: Container(
+                    width: 16,
+                    height: 16,
+                    decoration: const BoxDecoration(
+                      color: Color(0xFFE53E3E),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.close,
+                      color: Colors.white,
+                      size: 10,
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }

@@ -12,10 +12,11 @@ class NavigationService {
   static void go(String path) {
     try {
       if (kDebugMode) print('NavigationService.go: Navigating to: $path');
-      if (kDebugMode)
+      if (kDebugMode) {
         print(
           'Current location: ${_router.routerDelegate.currentConfiguration.uri.path}',
         );
+      }
       _router.go(path);
       if (kDebugMode) print('Navigation successful');
     } catch (e) {
@@ -26,14 +27,16 @@ class NavigationService {
   static void push(String path) {
     try {
       if (kDebugMode) print('NavigationService.push: Navigating to: $path');
-      if (kDebugMode)
+      if (kDebugMode) {
         print(
           'Current location: ${_router.routerDelegate.currentConfiguration.uri.path}',
         );
-      if (kDebugMode)
+      }
+      if (kDebugMode) {
         print(
           'Can push: ${_router.canPop()}',
         ); // This will be true if there are routes to pop
+      }
       _router.push(path);
       if (kDebugMode) print('Push successful');
     } catch (e) {

@@ -63,7 +63,7 @@ class _LoginPageState extends State<LoginPage> {
       body: BlocConsumer<AuthBloc, AuthState>(
         listener: (context, state) {
           if (state is AuthAuthenticated) {
-            final isPupil = state.user.isParent;
+            final isPupil = state.user.isPupil;
             isPupil
                 ? context.go(RouteNames.pupilHome)
                 : context.go(RouteNames.coachHome);

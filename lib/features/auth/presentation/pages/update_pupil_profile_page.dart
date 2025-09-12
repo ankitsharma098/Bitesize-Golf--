@@ -8,20 +8,21 @@ import 'package:intl/intl.dart';
 import '../../../../core/themes/theme_colors.dart';
 import '../../../../route/navigator_service.dart';
 import '../../../../route/routes_names.dart';
-import '../../../club/domain/usecases/get_club_useCase.dart';
-import '../../../coaches/domain/entities/coach_entity.dart';
-import '../../../coaches/domain/repositories/coach_repository.dart';
+import '../../../club/data/repositories/club_repository.dart';
+
+import '../../../coaches/data/entities/coach_entity.dart';
+import '../../../coaches/data/repositories/coach_repo.dart';
 import '../../../components/custom_button.dart';
 import '../../../components/custom_image_picker.dart';
 import '../../../components/text_field_component.dart';
 import '../../../components/utils/custom_app_bar.dart';
 import '../../../components/utils/size_config.dart';
-import '../../../club/domain/entities/golf_club_entity.dart';
+import '../../../club/data/entities/golf_club_entity.dart';
 
 import '../../../../injection.dart';
-import '../bloc/auth_bloc.dart';
-import '../bloc/auth_event.dart';
-import '../bloc/auth_state.dart';
+import '../../bloc/auth_bloc.dart';
+import '../../bloc/auth_event.dart';
+import '../../bloc/auth_state.dart';
 
 class UpdatePupilProfilePage extends StatefulWidget {
   const UpdatePupilProfilePage({super.key});
@@ -60,29 +61,9 @@ class _UpdatePupilProfilePageState extends State<UpdatePupilProfilePage> {
 
   void _initializeUserData() {
     final authState = context.read<AuthBloc>().state;
-
-    if (authState is AuthAuthenticated) {
-      final user = authState.user;
-      print(
-        "UpdatePupilProfilePage - User: ${user.displayName}, ${user.email}",
-      );
-
-      // Pre-fill form with existing user data
-      if (user.displayName != null && user.displayName!.contains(' ')) {
-        final nameParts = user.displayName!.split(' ');
-        firstNameCtrl.text = nameParts.first;
-        lastNameCtrl.text = nameParts.sublist(1).join(' ');
-      } else if (user.firstName != null && user.lastName != null) {
-        firstNameCtrl.text = user.firstName!;
-        lastNameCtrl.text = user.lastName!;
-      }
-    } else if (authState is AuthProfileCompletionRequired) {
-      final user = authState.user;
-      print(
-        "UpdatePupilProfilePage - Profile completion required for: ${user.displayName}",
-      );
-
-      // Pre-fill form with existing user data
+    if (authState is AuthAuthenticated ||
+        authState is AuthProfileCompletionRequired) {
+      final user = (authState as dynamic).user;
       if (user.displayName != null && user.displayName!.contains(' ')) {
         final nameParts = user.displayName!.split(' ');
         firstNameCtrl.text = nameParts.first;
@@ -92,7 +73,6 @@ class _UpdatePupilProfilePageState extends State<UpdatePupilProfilePage> {
         lastNameCtrl.text = user.lastName!;
       }
     } else {
-      print("UpdatePupilProfilePage - No authenticated user found");
       context.go(RouteNames.welcome);
     }
   }
@@ -100,26 +80,12 @@ class _UpdatePupilProfilePageState extends State<UpdatePupilProfilePage> {
   Future<void> _loadClubs() async {
     setState(() => _isLoadingClubs = true);
     try {
-      final getClubsUseCase = getIt<GetClubsUseCase>();
-      final result = await getClubsUseCase();
-
-      result.fold(
-        (failure) {
-          print('Failed to load clubs: ${failure.message}');
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to load clubs: ${failure.message}')),
-          );
-        },
-        (clubs) {
-          print('Loaded ${clubs.length} clubs');
-          setState(() => _availableClubs = clubs);
-        },
-      );
+      final clubs = await getIt<ClubRepository>().getAllClubs();
+      setState(() => _availableClubs = clubs);
     } catch (e) {
-      print('Error loading clubs: $e');
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text('Error loading clubs: $e')));
+      ).showSnackBar(SnackBar(content: Text('Failed to load clubs: $e')));
     } finally {
       setState(() => _isLoadingClubs = false);
     }
@@ -128,15 +94,12 @@ class _UpdatePupilProfilePageState extends State<UpdatePupilProfilePage> {
   Future<void> _loadCoachesForClub(String clubId) async {
     setState(() => _isLoadingCoaches = true);
     try {
-      final coachRepository = getIt<CoachRepository>();
-      final result = await coachRepository.getCoachesByClub(clubId);
-
-      result.fold(
-        (failure) => print('Failed to load coaches: ${failure.message}'),
-        (coaches) => setState(() => _availableCoaches = coaches),
-      );
+      final coaches = await getIt<CoachRepository>().getCoachesByClub(clubId);
+      setState(() => _availableCoaches = coaches);
     } catch (e) {
-      print('Error loading coaches: $e');
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Failed to load coaches: $e')));
     } finally {
       setState(() => _isLoadingCoaches = false);
     }
@@ -180,7 +143,6 @@ class _UpdatePupilProfilePageState extends State<UpdatePupilProfilePage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Handle bar
             Center(
               child: Container(
                 width: 40,
@@ -192,7 +154,6 @@ class _UpdatePupilProfilePageState extends State<UpdatePupilProfilePage> {
               ),
             ),
             SizedBox(height: SizeConfig.scaleHeight(16)),
-
             Text(
               'Select Golf Club',
               style: GoogleFonts.inter(
@@ -201,7 +162,6 @@ class _UpdatePupilProfilePageState extends State<UpdatePupilProfilePage> {
               ),
             ),
             SizedBox(height: SizeConfig.scaleHeight(16)),
-
             if (_isLoadingClubs)
               const Center(child: CircularProgressIndicator())
             else
@@ -228,13 +188,11 @@ class _UpdatePupilProfilePageState extends State<UpdatePupilProfilePage> {
                         setState(() {
                           _selectedClubId = club.id;
                           _selectedClubName = club.name;
-                          // Reset coach selection when club changes
                           _selectedCoachId = null;
                           _selectedCoachName = null;
                           _availableCoaches = [];
                         });
                         Navigator.pop(context);
-                        // Load coaches for selected club
                         _loadCoachesForClub(club.id);
                       },
                     );
@@ -254,7 +212,6 @@ class _UpdatePupilProfilePageState extends State<UpdatePupilProfilePage> {
       );
       return;
     }
-
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -268,7 +225,6 @@ class _UpdatePupilProfilePageState extends State<UpdatePupilProfilePage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Handle bar
             Center(
               child: Container(
                 width: 40,
@@ -280,7 +236,6 @@ class _UpdatePupilProfilePageState extends State<UpdatePupilProfilePage> {
               ),
             ),
             SizedBox(height: SizeConfig.scaleHeight(16)),
-
             Text(
               'Select Coach',
               style: GoogleFonts.inter(
@@ -289,8 +244,6 @@ class _UpdatePupilProfilePageState extends State<UpdatePupilProfilePage> {
               ),
             ),
             SizedBox(height: SizeConfig.scaleHeight(16)),
-
-            // Option for no coach
             ListTile(
               title: Text(
                 'No Coach (Self-learning)',
@@ -308,9 +261,7 @@ class _UpdatePupilProfilePageState extends State<UpdatePupilProfilePage> {
                 Navigator.pop(context);
               },
             ),
-
             const Divider(),
-
             if (_isLoadingCoaches)
               const Center(child: CircularProgressIndicator())
             else if (_availableCoaches.isEmpty)
@@ -366,18 +317,14 @@ class _UpdatePupilProfilePageState extends State<UpdatePupilProfilePage> {
 
   void _handleComplete() {
     if (!_formKey.currentState!.validate()) return;
-
     final currentUser = context.read<AuthBloc>().state;
     if (currentUser is! AuthAuthenticated &&
         currentUser is! AuthProfileCompletionRequired)
       return;
-
     final user = currentUser is AuthAuthenticated
         ? currentUser.user
         : (currentUser as AuthProfileCompletionRequired).user;
-
     final pupilId = '${user.uid}_${DateTime.now().millisecondsSinceEpoch}';
-
     context.read<AuthBloc>().add(
       AuthCompletePupilProfileRequested(
         pupilId: pupilId,
@@ -403,7 +350,6 @@ class _UpdatePupilProfilePageState extends State<UpdatePupilProfilePage> {
   @override
   Widget build(BuildContext context) {
     SizeConfig.init(context);
-
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: CustomAppBar(
@@ -425,7 +371,6 @@ class _UpdatePupilProfilePageState extends State<UpdatePupilProfilePage> {
         },
         builder: (context, state) {
           final isLoading = state is AuthLoading;
-
           return SafeArea(
             child: SingleChildScrollView(
               padding: EdgeInsets.all(SizeConfig.scaleWidth(12)),
@@ -435,7 +380,6 @@ class _UpdatePupilProfilePageState extends State<UpdatePupilProfilePage> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     SizedBox(height: SizeConfig.scaleHeight(20)),
-
                     Text(
                       'Tell us a bit more about yourself to personalize your experience.',
                       style: GoogleFonts.inter(
@@ -444,8 +388,6 @@ class _UpdatePupilProfilePageState extends State<UpdatePupilProfilePage> {
                       ),
                     ),
                     SizedBox(height: SizeConfig.scaleHeight(32)),
-
-                    // Profile Photo
                     Center(
                       child: CustomImagePicker(
                         image: _profileImage,
@@ -454,8 +396,6 @@ class _UpdatePupilProfilePageState extends State<UpdatePupilProfilePage> {
                       ),
                     ),
                     SizedBox(height: SizeConfig.scaleHeight(32)),
-
-                    // First Name & Last Name Row
                     Row(
                       children: [
                         Expanded(
@@ -482,8 +422,6 @@ class _UpdatePupilProfilePageState extends State<UpdatePupilProfilePage> {
                       ],
                     ),
                     SizedBox(height: SizeConfig.scaleHeight(20)),
-
-                    // Date of Birth
                     CustomTextFieldFactory.date(
                       controller: dateOfBirthCtrl,
                       label: 'Date of Birth',
@@ -494,16 +432,13 @@ class _UpdatePupilProfilePageState extends State<UpdatePupilProfilePage> {
                           (v ?? '').trim().isEmpty ? 'Required' : null,
                     ),
                     SizedBox(height: SizeConfig.scaleHeight(20)),
-
-                    // Handicap
                     CustomTextFieldFactory.number(
                       controller: handicapCtrl,
                       label: 'Current Handicap',
                       placeholder: 'e.g. 14',
                       levelType: LevelType.redLevel,
                       validator: (v) {
-                        if ((v ?? '').trim().isEmpty)
-                          return null; // Optional field
+                        if ((v ?? '').trim().isEmpty) return null;
                         final val = int.tryParse((v ?? '').trim());
                         if (val == null || val < 0 || val > 36) {
                           return '0-36 only';
@@ -512,8 +447,6 @@ class _UpdatePupilProfilePageState extends State<UpdatePupilProfilePage> {
                       },
                     ),
                     SizedBox(height: SizeConfig.scaleHeight(20)),
-
-                    // Golf Club Selection
                     CustomTextFieldFactory.dropdown(
                       controller: TextEditingController(
                         text: _selectedClubName ?? '',
@@ -526,8 +459,6 @@ class _UpdatePupilProfilePageState extends State<UpdatePupilProfilePage> {
                           (v ?? '').trim().isEmpty ? 'Required' : null,
                     ),
                     SizedBox(height: SizeConfig.scaleHeight(20)),
-
-                    // Coach Selection
                     CustomTextFieldFactory.dropdown(
                       controller: TextEditingController(
                         text: _selectedCoachName ?? '',
@@ -542,8 +473,6 @@ class _UpdatePupilProfilePageState extends State<UpdatePupilProfilePage> {
                           : _showCoachSelection,
                     ),
                     SizedBox(height: SizeConfig.scaleHeight(40)),
-
-                    // Buttons
                     Row(
                       children: [
                         Expanded(

@@ -5,13 +5,12 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:bitesize_golf/route/app_router.dart';
-
 import 'core/connectivity check/screens/internet_overlay_screen.dart';
 import 'core/constants/app_constants.dart';
 import 'core/themes/app_theme.dart';
 import 'core/themes/theme_provider.dart';
-import 'features/auth/presentation/bloc/auth_bloc.dart';
-import 'features/auth/presentation/bloc/auth_event.dart';
+import 'features/auth/bloc/auth_bloc.dart';
+import 'features/auth/bloc/auth_event.dart';
 import 'firebase_options.dart';
 import 'injection.dart';
 

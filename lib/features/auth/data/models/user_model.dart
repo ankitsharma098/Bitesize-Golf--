@@ -1,7 +1,8 @@
-// features/auth/data/models/user_model.dart
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart' as fb;
-import '../../domain/entities/user.dart' as entity;
+
+import '../entities/user.dart' as entity;
+import '../entities/user.dart';
 
 class UserModel {
   final String uid;
@@ -36,7 +37,7 @@ class UserModel {
 
   /* ---------- to / from entity ---------- */
 
-  entity.User toEntity() => entity.User(
+  User toEntity() => User(
     uid: uid,
     email: email,
     displayName: displayName,
@@ -50,22 +51,6 @@ class UserModel {
     preferences: preferences,
     createdAt: createdAt,
     updatedAt: updatedAt,
-  );
-
-  factory UserModel.fromEntity(entity.User user) => UserModel(
-    uid: user.uid,
-    email: user.email,
-    displayName: user.displayName,
-    photoURL: user.photoURL,
-    role: user.role,
-    emailVerified: user.emailVerified,
-    firstName: user.firstName,
-    lastName: user.lastName,
-    accountStatus: user.accountStatus,
-    profileCompleted: user.profileCompleted,
-    preferences: user.preferences,
-    createdAt: user.createdAt,
-    updatedAt: user.updatedAt,
   );
 
   /* ---------- to / from JSON ---------- */

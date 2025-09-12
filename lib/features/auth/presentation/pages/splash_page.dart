@@ -4,9 +4,9 @@ import 'package:bitesize_golf/route/routes_names.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import '../bloc/auth_bloc.dart';
-import '../bloc/auth_event.dart';
-import '../bloc/auth_state.dart';
+import '../../bloc/auth_bloc.dart';
+import '../../bloc/auth_event.dart';
+import '../../bloc/auth_state.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -62,12 +62,10 @@ class _SplashScreenState extends State<SplashScreen> {
           if (state is AuthAuthenticated) {
             print("User authenticated, checking profile completion...");
             print("profileCompleted: ${state.user.profileCompleted}");
-            print(
-              "needsProfileCompletion: ${state.user.needsProfileCompletion}",
-            );
+            print("needsProfileCompletion: ${state.user.profileCompleted}");
             print("role: ${state.user.role}");
 
-            if (state.user.needsProfileCompletion) {
+            if (state.user.profileCompleted) {
               // Profile incomplete - go to completion page
               _navigateIfNotAlready(
                 state.user.isCoach
@@ -90,6 +88,9 @@ class _SplashScreenState extends State<SplashScreen> {
                   ? RouteNames.completeProfileCoach
                   : RouteNames.completeProfilePupil,
             );
+          } else if (state is AuthGuestSignedIn) {
+            print("Guest signed in, navigating to guest home");
+            _navigateIfNotAlready(RouteNames.guestHome);
           } else if (state is AuthError) {
             print("Auth error: ${state.message}");
             // On error, go to welcome page

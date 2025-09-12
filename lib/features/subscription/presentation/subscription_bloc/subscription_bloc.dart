@@ -1,43 +1,38 @@
 // features/subscription/presentation/subscription_bloc/subscription_bloc.dart
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
+import '../../data/data source/subscription_repo.dart';
 import 'subscription_event.dart';
 import 'subscription_state.dart';
-import '../../domain/usecases/load_subscription_plans.dart';
-import '../../domain/usecases/purchase_subscription.dart';
-import '../../data/model/subscription.dart';
 
 @injectable
 class SubscriptionBloc extends Bloc<SubscriptionEvent, SubscriptionState> {
-  final LoadSubscriptionPlans _loadSubscriptionPlans;
-  final PurchaseSubscription _purchaseSubscription;
+  final SubscriptionRepository repository;
 
-  SubscriptionBloc(this._loadSubscriptionPlans, this._purchaseSubscription)
-    : super(SubscriptionInitial()) {
+  SubscriptionBloc(this.repository) : super(SubscriptionInitial()) {
     on<LoadSubscriptionPlansEvent>(_onLoadSubscriptionPlans);
     on<SelectSubscriptionPlan>(_onSelectSubscriptionPlan);
     on<PurchaseSubscriptionEvent>(_onPurchaseSubscription);
+    on<CancelSubscriptionEvent>(_onCancelSubscription);
   }
 
-  void _onLoadSubscriptionPlans(
+  Future<void> _onLoadSubscriptionPlans(
     LoadSubscriptionPlansEvent event,
     Emitter<SubscriptionState> emit,
   ) async {
     emit(SubscriptionLoading());
 
-    final result = await _loadSubscriptionPlans();
-
-    result.fold(
-      (failure) => emit(SubscriptionError(failure.message)),
-      (plans) => emit(
+    try {
+      final plans = await repository.getAvailablePlans();
+      emit(
         SubscriptionPlansLoaded(
           plans: plans,
-          selectedPlan: plans.isNotEmpty
-              ? plans.first
-              : null, // Default to first plan
+          selectedPlan: plans.isNotEmpty ? plans.first : null,
         ),
-      ),
-    );
+      );
+    } catch (e) {
+      emit(SubscriptionError(e.toString()));
+    }
   }
 
   void _onSelectSubscriptionPlan(
@@ -50,7 +45,7 @@ class SubscriptionBloc extends Bloc<SubscriptionEvent, SubscriptionState> {
     }
   }
 
-  void _onPurchaseSubscription(
+  Future<void> _onPurchaseSubscription(
     PurchaseSubscriptionEvent event,
     Emitter<SubscriptionState> emit,
   ) async {
@@ -63,16 +58,29 @@ class SubscriptionBloc extends Bloc<SubscriptionEvent, SubscriptionState> {
 
     emit(SubscriptionPurchasing(currentState.selectedPlan!));
 
-    final params = PurchaseSubscriptionParams(
-      pupilId: event.pupilId,
-      selectedPlan: currentState.selectedPlan!,
-    );
+    try {
+      final subscription = await repository.purchaseSubscription(
+        pupilId: event.pupilId,
+        plan: currentState.selectedPlan!,
+      );
+      emit(SubscriptionPurchaseSuccess(subscription));
+    } catch (e) {
+      emit(SubscriptionPurchaseFailure(e.toString()));
+    }
+  }
 
-    final result = await _purchaseSubscription(params);
+  Future<void> _onCancelSubscription(
+    CancelSubscriptionEvent event,
+    Emitter<SubscriptionState> emit,
+  ) async {
+    emit(SubscriptionLoading());
 
-    result.fold(
-      (failure) => emit(SubscriptionPurchaseFailure(failure.message)),
-      (subscription) => emit(SubscriptionPurchaseSuccess(subscription)),
-    );
+    try {
+      await repository.cancelSubscription(event.pupilId);
+      // Reload plans after cancellation
+      add(LoadSubscriptionPlansEvent());
+    } catch (e) {
+      emit(SubscriptionError(e.toString()));
+    }
   }
 }

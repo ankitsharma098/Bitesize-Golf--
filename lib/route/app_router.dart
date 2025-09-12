@@ -2,8 +2,9 @@ import 'package:bitesize_golf/route/routes_names.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import '../features/auth/presentation/bloc/auth_bloc.dart';
-import '../features/auth/presentation/bloc/auth_state.dart';
+
+import '../features/auth/bloc/auth_bloc.dart';
+import '../features/auth/bloc/auth_state.dart';
 import '../features/auth/presentation/pages/update_coach_profile.dart';
 import '../features/auth/presentation/pages/update_pupil_profile_page.dart';
 import '../features/auth/presentation/pages/forgot_password.dart';
@@ -11,7 +12,6 @@ import '../features/auth/presentation/pages/login_page.dart';
 import '../features/auth/presentation/pages/register_page.dart';
 import '../features/auth/presentation/pages/splash_page.dart';
 import '../features/auth/presentation/pages/welcome_page.dart';
-import '../features/pupils modules/home/presentation/main_dashboard.dart';
 import '../features/subscription/presentation/pages/subscription_page.dart';
 import '../injection.dart';
 
@@ -84,7 +84,7 @@ class AppRouter {
       GoRoute(
         path: RouteNames.pupilHome,
         name: 'pupilHome',
-        builder: (context, state) => const MainDashboard(),
+        builder: (context, state) => const Placeholder(),
       ),
 
       GoRoute(

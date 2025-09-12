@@ -7,9 +7,9 @@ import '../../../components/custom_button.dart';
 import '../../../components/text_field_component.dart';
 import '../../../components/utils/custom_app_bar.dart';
 import '../../../components/utils/size_config.dart';
-import '../bloc/auth_bloc.dart';
-import '../bloc/auth_event.dart';
-import '../bloc/auth_state.dart';
+import '../../bloc/auth_bloc.dart';
+import '../../bloc/auth_event.dart';
+import '../../bloc/auth_state.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -69,6 +69,12 @@ class _LoginPageState extends State<LoginPage> {
                 : context.go(RouteNames.coachHome);
           } else if (state is AuthGuestSignedIn) {
             context.go(RouteNames.guestHome);
+          } else if (state is AuthProfileCompletionRequired) {
+            if (state.user.role == 'pupil') {
+              context.go(RouteNames.completeProfilePupil);
+            } else if (state.user.role == 'coach') {
+              context.go(RouteNames.completeProfileCoach);
+            }
           } else if (state is AuthError) {
             ScaffoldMessenger.of(
               context,
@@ -118,7 +124,7 @@ class _LoginPageState extends State<LoginPage> {
                               final v =
                                   value ?? ''; // null becomes empty string
                               if (v.trim().isEmpty) {
-                                return 'Please enter your email';
+                                return 'Please enter your password';
                               }
                               return null;
                             },

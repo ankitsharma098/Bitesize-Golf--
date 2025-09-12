@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart' as fb;
-import '../../domain/entities/coach_entity.dart' as entity;
+import '../../../auth/data/entities/user.dart';
+import '../entities/coach_entity.dart';
+import '../entities/coach_entity.dart' as entity;
 
 class CoachModel {
   final String id;
@@ -24,6 +25,7 @@ class CoachModel {
   final int currentPupils;
   final bool acceptingNewPupils;
   final Map<String, dynamic> stats;
+  //List<String> pupilUserIds; // ONLY the ids – max 100 kB ~ 2 000 ids
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -188,7 +190,7 @@ class CoachModel {
       CoachModel.fromJson(data);
 
   /* ---------- from Firebase Auth only ---------- */
-  factory CoachModel.fromFirebase(fb.User firebaseUser) => CoachModel(
+  factory CoachModel.fromFirebase(User firebaseUser) => CoachModel(
     id: firebaseUser.uid,
     userId: firebaseUser.uid,
     name: firebaseUser.displayName ?? '',

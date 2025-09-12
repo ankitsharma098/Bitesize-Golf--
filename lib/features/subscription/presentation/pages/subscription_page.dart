@@ -209,7 +209,7 @@ class SubscriptionScreenView extends StatelessWidget {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        plan.price,
+                        plan!.price,
                         style: const TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,

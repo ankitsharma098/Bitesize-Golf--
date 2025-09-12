@@ -8,11 +8,11 @@ import '../../../../core/themes/theme_colors.dart';
 import '../../../../injection.dart';
 import '../../../../route/navigator_service.dart';
 import '../../../../route/routes_names.dart';
-import '../../../club/domain/entities/golf_club_entity.dart';
-import '../../../club/domain/usecases/get_club_useCase.dart';
-import '../bloc/auth_bloc.dart';
-import '../bloc/auth_event.dart';
-import '../bloc/auth_state.dart';
+import '../../../club/data/entities/golf_club_entity.dart';
+import '../../../club/data/repositories/club_repository.dart';
+import '../../bloc/auth_bloc.dart';
+import '../../bloc/auth_event.dart';
+import '../../bloc/auth_state.dart';
 
 class UpdateProfileCoachPage extends StatefulWidget {
   const UpdateProfileCoachPage({super.key});
@@ -22,7 +22,7 @@ class UpdateProfileCoachPage extends StatefulWidget {
 }
 
 class _UpdateProfileCoachPageState extends State<UpdateProfileCoachPage> {
-  final GetClubsUseCase getClubsUseCase = getIt<GetClubsUseCase>();
+  final ClubRepository clubRepository = getIt<ClubRepository>();
   final _formKey = GlobalKey<FormState>();
   final firstNameCtrl = TextEditingController();
   final lastNameCtrl = TextEditingController();
@@ -42,7 +42,6 @@ class _UpdateProfileCoachPageState extends State<UpdateProfileCoachPage> {
   @override
   void initState() {
     super.initState();
-    // Pre-fill with existing data
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _initializeUserData();
     });
@@ -50,29 +49,9 @@ class _UpdateProfileCoachPageState extends State<UpdateProfileCoachPage> {
 
   void _initializeUserData() {
     final authState = context.read<AuthBloc>().state;
-
-    if (authState is AuthAuthenticated) {
-      final user = authState.user;
-      print(
-        "UpdateProfileCoachPage - User: ${user.displayName}, ${user.email}",
-      );
-
-      // Pre-fill form with existing user data
-      if (user.displayName != null && user.displayName!.contains(' ')) {
-        final nameParts = user.displayName!.split(' ');
-        firstNameCtrl.text = nameParts.first;
-        lastNameCtrl.text = nameParts.sublist(1).join(' ');
-      } else if (user.firstName != null && user.lastName != null) {
-        firstNameCtrl.text = user.firstName!;
-        lastNameCtrl.text = user.lastName!;
-      }
-    } else if (authState is AuthProfileCompletionRequired) {
-      final user = authState.user;
-      print(
-        "UpdateProfileCoachPage - Profile completion required for: ${user.displayName}",
-      );
-
-      // Pre-fill form with existing user data
+    if (authState is AuthAuthenticated ||
+        authState is AuthProfileCompletionRequired) {
+      final user = (authState as dynamic).user;
       if (user.displayName != null && user.displayName!.contains(' ')) {
         final nameParts = user.displayName!.split(' ');
         firstNameCtrl.text = nameParts.first;
@@ -82,7 +61,6 @@ class _UpdateProfileCoachPageState extends State<UpdateProfileCoachPage> {
         lastNameCtrl.text = user.lastName!;
       }
     } else {
-      print("UpdateProfileCoachPage - No authenticated user found");
       context.go(RouteNames.welcome);
     }
   }
@@ -101,21 +79,15 @@ class _UpdateProfileCoachPageState extends State<UpdateProfileCoachPage> {
   Future<void> _pickImage() async {
     final picker = ImagePicker();
     final pickedFile = await picker.pickImage(source: ImageSource.gallery);
-
     if (pickedFile != null) {
-      setState(() {
-        _profileImage = File(pickedFile.path);
-      });
+      setState(() => _profileImage = File(pickedFile.path));
     }
   }
 
   void _handleSaveProfile() {
     if (!_formKey.currentState!.validate()) return;
-
-    // Get user from current state
     final authState = context.read<AuthBloc>().state;
     String userId;
-
     if (authState is AuthAuthenticated) {
       userId = authState.user.uid;
     } else if (authState is AuthProfileCompletionRequired) {
@@ -126,7 +98,6 @@ class _UpdateProfileCoachPageState extends State<UpdateProfileCoachPage> {
       );
       return;
     }
-
     context.read<AuthBloc>().add(
       AuthCompleteCoachProfileRequested(
         coachId: userId,
@@ -140,80 +111,81 @@ class _UpdateProfileCoachPageState extends State<UpdateProfileCoachPage> {
     );
   }
 
-  void _handleSkip() {
-    context.go(RouteNames.coachHome);
-  }
+  void _handleSkip() => context.go(RouteNames.coachHome);
 
   void _selectGolfClub() async {
-    // Show loading dialog
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (_) => const Center(child: CircularProgressIndicator()),
     );
-
-    final result = await getClubsUseCase();
-
-    // Close loading dialog
-    if (mounted) Navigator.pop(context);
-
-    result.fold(
-      (failure) {
-        if (mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text(failure.message)));
-        }
-      },
-      (clubs) {
-        if (!mounted) return;
-
-        setState(() {
-          _clubs = clubs;
-        });
-
-        showModalBottomSheet(
-          context: context,
-          isScrollControlled: true,
-          builder: (_) => Container(
-            height: MediaQuery.of(context).size.height * 0.6,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Padding(
-                  padding: EdgeInsets.all(16),
-                  child: Text(
-                    'Select Golf Club or Facility',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
+    try {
+      final clubs = await clubRepository.getAllClubs();
+      if (mounted) Navigator.pop(context);
+      setState(() => _clubs = clubs);
+      if (!mounted) return;
+      showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        builder: (_) => Container(
+          height: MediaQuery.of(context).size.height * 0.6,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Padding(
+                padding: EdgeInsets.all(16),
+                child: Text(
+                  'Select Golf Club or Facility',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
-                Expanded(
-                  child: ListView.builder(
-                    itemCount: clubs.length,
-                    itemBuilder: (context, index) {
-                      final club = clubs[index];
-                      return ListTile(
-                        title: Text(club.name),
-                        subtitle: Text(club.location),
-                        onTap: () {
-                          setState(() {
-                            _selectedClub = club;
-                            _selectedGolfClubId = club.id;
-                            _selectedGolfClubName = club.name;
-                            golfClubCtrl.text = club.name;
-                          });
-                          Navigator.pop(context);
-                        },
-                      );
-                    },
-                  ),
+              ),
+              Expanded(
+                child: ListView.builder(
+                  itemCount: clubs.length,
+                  itemBuilder: (context, index) {
+                    final club = clubs[index];
+                    return ListTile(
+                      title: Text(club.name),
+                      subtitle: Text(club.location),
+                      onTap: () {
+                        setState(() {
+                          _selectedClub = club;
+                          _selectedGolfClubId = club.id;
+                          _selectedGolfClubName = club.name;
+                          golfClubCtrl.text = club.name;
+                        });
+                        Navigator.pop(context);
+                      },
+                    );
+                  },
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
-        );
-      },
-    );
+        ),
+      );
+    } catch (e) {
+      if (mounted) Navigator.pop(context);
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to load clubs: $e')));
+      }
+    }
+  }
+
+  void _addCertification() {
+    final text = certificationsCtrl.text.trim();
+    if (text.isNotEmpty) {
+      setState(() {
+        _certifications.add(text);
+        certificationsCtrl.clear();
+      });
+    }
+  }
+
+  void _removeCertification(int index) {
+    setState(() => _certifications.removeAt(index));
   }
 
   @override
@@ -249,7 +221,6 @@ class _UpdateProfileCoachPageState extends State<UpdateProfileCoachPage> {
         },
         builder: (context, state) {
           final isLoading = state is AuthLoading;
-
           return SingleChildScrollView(
             padding: const EdgeInsets.all(16),
             child: Form(
@@ -257,14 +228,11 @@ class _UpdateProfileCoachPageState extends State<UpdateProfileCoachPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Header text
                   const Text(
                     'Set up your coach account to start managing pupils modules and sessions.',
                     style: TextStyle(fontSize: 16, color: Colors.black87),
                   ),
                   const SizedBox(height: 24),
-
-                  // First Name
                   const Text(
                     'First Name',
                     style: TextStyle(
@@ -301,8 +269,6 @@ class _UpdateProfileCoachPageState extends State<UpdateProfileCoachPage> {
                     },
                   ),
                   const SizedBox(height: 16),
-
-                  // Last Name
                   const Text(
                     'Last Name',
                     style: TextStyle(
@@ -339,8 +305,6 @@ class _UpdateProfileCoachPageState extends State<UpdateProfileCoachPage> {
                     },
                   ),
                   const SizedBox(height: 16),
-
-                  // Experience
                   const Text(
                     'Years of Experience',
                     style: TextStyle(
@@ -382,8 +346,6 @@ class _UpdateProfileCoachPageState extends State<UpdateProfileCoachPage> {
                     },
                   ),
                   const SizedBox(height: 16),
-
-                  // Golf Club or Facility
                   const Text(
                     'Golf Club or Facility',
                     style: TextStyle(
@@ -429,8 +391,6 @@ class _UpdateProfileCoachPageState extends State<UpdateProfileCoachPage> {
                     ),
                   ),
                   const SizedBox(height: 16),
-
-                  // Bio (Optional)
                   const Text(
                     'Bio (Optional)',
                     style: TextStyle(
@@ -463,8 +423,6 @@ class _UpdateProfileCoachPageState extends State<UpdateProfileCoachPage> {
                     ),
                   ),
                   const SizedBox(height: 16),
-
-                  // Certifications
                   const Text(
                     'Certifications (Optional)',
                     style: TextStyle(
@@ -473,29 +431,58 @@ class _UpdateProfileCoachPageState extends State<UpdateProfileCoachPage> {
                       color: Colors.black87,
                     ),
                   ),
-
                   const SizedBox(height: 8),
-
-                  // Display certifications
-                  if (_certifications.isNotEmpty)
-                    Wrap(
-                      spacing: 8,
-                      children: _certifications
-                          .map(
-                            (cert) => Chip(
-                              label: Text(cert),
-                              onDeleted: () {
-                                setState(() {
-                                  _certifications.remove(cert);
-                                });
-                              },
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextFormField(
+                          controller: certificationsCtrl,
+                          decoration: InputDecoration(
+                            hintText: 'e.g., PGA Certified',
+                            filled: true,
+                            fillColor: Colors.white,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: BorderSide(
+                                color: Colors.grey.shade300,
+                              ),
                             ),
-                          )
-                          .toList(),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: BorderSide(
+                                color: Colors.grey.shade300,
+                              ),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: const BorderSide(
+                                color: Color(0xFFE53E3E),
+                              ),
+                            ),
+                          ),
+                          onFieldSubmitted: (_) => _addCertification(),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      IconButton(
+                        icon: const Icon(Icons.add, color: Color(0xFFE53E3E)),
+                        onPressed: _addCertification,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    children: List.generate(
+                      _certifications.length,
+                      (index) => Chip(
+                        label: Text(_certifications[index]),
+                        backgroundColor: Colors.grey.shade200,
+                        onDeleted: () => _removeCertification(index),
+                      ),
                     ),
+                  ),
                   const SizedBox(height: 16),
-
-                  // Profile Photo
                   const Text(
                     'Profile Photo (Optional)',
                     style: TextStyle(
@@ -544,8 +531,6 @@ class _UpdateProfileCoachPageState extends State<UpdateProfileCoachPage> {
                     ),
                   ),
                   const SizedBox(height: 32),
-
-                  // Save and Continue Button
                   SizedBox(
                     width: double.infinity,
                     height: 50,
@@ -578,8 +563,6 @@ class _UpdateProfileCoachPageState extends State<UpdateProfileCoachPage> {
                     ),
                   ),
                   const SizedBox(height: 16),
-
-                  // Skip for now button
                   Center(
                     child: TextButton(
                       onPressed: isLoading ? null : _handleSkip,

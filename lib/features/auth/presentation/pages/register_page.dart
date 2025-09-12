@@ -8,9 +8,9 @@ import '../../../components/custom_button.dart';
 import '../../../components/text_field_component.dart';
 import '../../../components/utils/custom_app_bar.dart';
 import '../../../components/utils/custom_radio.dart';
-import '../bloc/auth_bloc.dart';
-import '../bloc/auth_event.dart';
-import '../bloc/auth_state.dart';
+import '../../bloc/auth_bloc.dart';
+import '../../bloc/auth_event.dart';
+import '../../bloc/auth_state.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -39,7 +39,7 @@ class _RegisterPageState extends State<RegisterPage> {
   void _initializeUserData() {
     final authState = context.read<AuthBloc>().state;
     if (authState is AuthProfileCompletionRequired) {
-      if (authState.user != null) {
+      if (authState.user.firstName != null && authState.user.lastName != null) {
         firstNameCtrl.text = authState.user.firstName!;
         lastNameCtrl.text = authState.user.lastName!;
       }
@@ -76,7 +76,7 @@ class _RegisterPageState extends State<RegisterPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.scaffoldBgColor,
       appBar: CustomAppBar(
         title: 'Create Your Account',
         centerTitle: false,
@@ -91,7 +91,11 @@ class _RegisterPageState extends State<RegisterPage> {
               context.go(RouteNames.completeProfileCoach);
             }
           } else if (state is AuthAuthenticated) {
-            print("Home");
+            // Navigate to appropriate home based on role
+            final isPupil = state.user.isPupil;
+            isPupil
+                ? context.go(RouteNames.pupilHome)
+                : context.go(RouteNames.coachHome);
           } else if (state is AuthError) {
             ScaffoldMessenger.of(
               context,
@@ -211,12 +215,6 @@ class _RegisterPageState extends State<RegisterPage> {
                       size: ButtonSize.medium,
                     ),
 
-                    // CustomButtonFactory.primary(
-                    //   text: 'Register',
-                    //   onPressed: isLoading ? null : _handleRegister,
-                    //   isLoading: isLoading, // White text for contrast
-                    //   size: ButtonSize.medium, // Adjust size to match image
-                    // ),
                     SizedBox(height: SizeConfig.scaleHeight(16)),
 
                     // Login link

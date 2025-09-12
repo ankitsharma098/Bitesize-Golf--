@@ -1,15 +1,19 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:bitesize_golf/features/subscription/data/model/subscription.dart'
+    hide SubscriptionStatus;
 import 'package:equatable/equatable.dart';
-import '../../../../subscription/data/model/subscription.dart';
-import 'level_progress.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../../../auth/data/entities/user_enums.dart';
+import '../models/level_progress.dart';
 
-class PupilModel extends Equatable {
+class Pupil extends Equatable {
   final String id;
   final String userId;
   final String name;
   final DateTime? dateOfBirth;
   final String? avatar;
   final String? handicap;
+
+  // Coach selection/assignment fields
   final String? selectedCoachId;
   final String? selectedCoachName;
   final String? selectedClubId;
@@ -19,11 +23,11 @@ class PupilModel extends Equatable {
   final DateTime? coachAssignedAt;
   final String? assignmentStatus;
 
-  // Progress tracking
+  // Updated progress tracking with typed structure
   final int currentLevel;
   final List<int> unlockedLevels;
   final int totalXP;
-  final Map<int, LevelProgress> levelProgress;
+  final Map<int, LevelProgress> levelProgress; // Typed level progress
   final int totalLessonsCompleted;
   final int totalQuizzesCompleted;
   final int totalChallengesCompleted;
@@ -36,7 +40,7 @@ class PupilModel extends Equatable {
   final DateTime createdAt;
   final DateTime updatedAt;
 
-  const PupilModel({
+  const Pupil({
     required this.id,
     required this.userId,
     required this.name,
@@ -67,53 +71,40 @@ class PupilModel extends Equatable {
     required this.updatedAt,
   });
 
-  // Factory constructor for new pupils
-  factory PupilModel.create({
-    required String id,
-    required String userId,
-    required String name,
-    String? avatar,
-  }) {
-    final now = DateTime.now();
-    return PupilModel(
-      id: id,
-      userId: userId,
-      name: name,
-      avatar: avatar,
-      assignmentStatus: 'none',
-      currentLevel: 1,
-      unlockedLevels: const [1],
-      totalXP: 0,
-      levelProgress: _defaultLevelProgress(),
-      totalLessonsCompleted: 0,
-      totalQuizzesCompleted: 0,
-      totalChallengesCompleted: 0,
-      averageQuizScore: 0.0,
-      streakDays: 0,
-      lastActivityDate: now,
-      badges: const [],
-      subscription: null,
-      createdAt: now,
-      updatedAt: now,
-    );
-  }
+  @override
+  List<Object?> get props => [
+    id,
+    userId,
+    name,
+    dateOfBirth,
+    avatar,
+    handicap,
+    selectedCoachId,
+    selectedCoachName,
+    selectedClubId,
+    selectedClubName,
+    assignedCoachId,
+    assignedCoachName,
+    coachAssignedAt,
+    assignmentStatus,
+    currentLevel,
+    unlockedLevels,
+    totalXP,
+    levelProgress,
+    totalLessonsCompleted,
+    totalQuizzesCompleted,
+    totalChallengesCompleted,
+    averageQuizScore,
+    streakDays,
+    lastActivityDate,
+    badges,
+    subscription,
+    createdAt,
+    updatedAt,
+  ];
 
-  // Default level progress
-  static Map<int, LevelProgress> _defaultLevelProgress() {
-    return {
-      1: LevelProgress(
-        booksCompleted: 0,
-        quizzesCompleted: 0,
-        challengesDone: 0,
-        gamesDone: 0,
-        averageScore: 0.0,
-        isCompleted: false,
-        lastActivity: DateTime.now(),
-      ),
-    };
-  }
+  /* ---------- Computed Properties ---------- */
 
-  // Computed Properties
   int? get age => dateOfBirth != null
       ? DateTime.now().difference(dateOfBirth!).inDays ~/ 365
       : null;
@@ -128,22 +119,28 @@ class PupilModel extends Equatable {
 
   bool get isAssignedToCoach => assignmentStatus == 'assigned';
 
-  bool get isPremium => subscription?.isActive == true;
+  // Subscription properties
+  bool get isPremium => subscription?.status == SubscriptionStatus.active;
 
-  // Level Progress Methods
+  /* ---------- Level Progress Methods ---------- */
+
+  // Get progress for a specific level
   LevelProgress? getProgressForLevel(int levelNumber) {
     return levelProgress[levelNumber];
   }
 
+  // Check if a level is completed
   bool isLevelCompleted(int levelNumber) {
     final progress = levelProgress[levelNumber];
     return progress?.isCompleted ?? false;
   }
 
+  // Check if a level is unlocked
   bool isLevelUnlocked(int levelNumber) {
     return unlockedLevels.contains(levelNumber);
   }
 
+  // Get total completed activities across all levels
   int get totalActivitiesCompleted {
     return levelProgress.values.fold(
       0,
@@ -156,6 +153,7 @@ class PupilModel extends Equatable {
     );
   }
 
+  // Get completion percentage for current level
   double getLevelCompletionPercentage(
     int levelNumber, {
     required int requiredBooks,
@@ -176,6 +174,7 @@ class PupilModel extends Equatable {
     return (totalCompleted / totalRequired).clamp(0.0, 1.0);
   }
 
+  // Check if level requirements are met
   bool hasMetLevelRequirements(
     int levelNumber, {
     required int requiredBooks,
@@ -192,37 +191,23 @@ class PupilModel extends Equatable {
         progress.averageScore >= passingScore;
   }
 
-  PupilModel updateLevelProgress(int levelNumber, LevelProgress progress) {
-    final updatedLevelProgress = Map<int, LevelProgress>.from(levelProgress);
-    updatedLevelProgress[levelNumber] = progress;
+  // Get the last activity date across all levels
+  DateTime get mostRecentActivity {
+    if (levelProgress.isEmpty) return lastActivityDate;
 
-    return copyWith(
-      levelProgress: updatedLevelProgress,
-      lastActivityDate: DateTime.now(),
-      updatedAt: DateTime.now(),
-    );
+    DateTime latest = lastActivityDate;
+    for (final progress in levelProgress.values) {
+      if (progress.lastActivity.isAfter(latest)) {
+        latest = progress.lastActivity;
+      }
+    }
+    return latest;
   }
 
-  // JSON Serialization
-  Map<String, dynamic> toJson() => {
-    'id': id,
-    'userId': userId,
-    'name': name,
-    'dateOfBirth': dateOfBirth != null
-        ? Timestamp.fromDate(dateOfBirth!)
-        : null,
-    'avatar': avatar,
-    'handicap': handicap,
-    'selectedCoachId': selectedCoachId,
-    'selectedCoachName': selectedCoachName,
-    'selectedClubId': selectedClubId,
-    'selectedClubName': selectedClubName,
-    'assignedCoachId': assignedCoachId,
-    'assignedCoachName': assignedCoachName,
-    'coachAssignedAt': coachAssignedAt != null
-        ? Timestamp.fromDate(coachAssignedAt!)
-        : null,
-    'assignmentStatus': assignmentStatus,
+  /* ---------- Backward Compatibility ---------- */
+
+  // For backward compatibility with existing code that expects Map<String, dynamic>
+  Map<String, dynamic> get progress => {
     'currentLevel': currentLevel,
     'unlockedLevels': unlockedLevels,
     'totalXP': totalXP,
@@ -234,78 +219,12 @@ class PupilModel extends Equatable {
     'totalChallengesCompleted': totalChallengesCompleted,
     'averageQuizScore': averageQuizScore,
     'streakDays': streakDays,
-    'lastActivityDate': Timestamp.fromDate(lastActivityDate),
-    'badges': badges,
-    'subscription': subscription?.toJson(),
-    'createdAt': Timestamp.fromDate(createdAt),
-    'updatedAt': Timestamp.fromDate(updatedAt),
+    'lastActivityDate': lastActivityDate,
   };
 
-  factory PupilModel.fromJson(Map<String, dynamic> json) {
-    return PupilModel(
-      id: json['id'] as String? ?? '',
-      userId: (json['userId'] ?? json['parentId']) as String? ?? '',
-      name: json['name'] as String? ?? '',
-      dateOfBirth: (json['dateOfBirth'] as Timestamp?)?.toDate(),
-      avatar: json['avatar'] as String?,
-      handicap: json['handicap'] as String?,
-      selectedCoachId: json['selectedCoachId'] as String?,
-      selectedCoachName: json['selectedCoachName'] as String?,
-      selectedClubId: json['selectedClubId'] as String?,
-      selectedClubName: json['selectedClubName'] as String?,
-      assignedCoachId:
-          (json['assignedCoachId'] ?? json['assignedCoach']) as String?,
-      assignedCoachName: json['assignedCoachName'] as String?,
-      coachAssignedAt: (json['coachAssignedAt'] as Timestamp?)?.toDate(),
-      assignmentStatus: json['assignmentStatus'] as String? ?? 'none',
-      currentLevel: json['currentLevel'] ?? 1,
-      unlockedLevels: List<int>.from(json['unlockedLevels'] ?? [1]),
-      totalXP: json['totalXP'] ?? 0,
-      levelProgress: _parseLevelProgress(json['levelProgress']),
-      totalLessonsCompleted: json['totalLessonsCompleted'] ?? 0,
-      totalQuizzesCompleted: json['totalQuizzesCompleted'] ?? 0,
-      totalChallengesCompleted: json['totalChallengesCompleted'] ?? 0,
-      averageQuizScore: (json['averageQuizScore'] ?? 0.0).toDouble(),
-      streakDays: json['streakDays'] ?? 0,
-      lastActivityDate:
-          (json['lastActivityDate'] as Timestamp?)?.toDate() ?? DateTime.now(),
-      badges: List<String>.from(json['badges'] ?? []),
-      subscription: json['subscription'] != null
-          ? Subscription.fromJson(json['subscription'])
-          : null,
-      createdAt: (json['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
-      updatedAt: (json['updatedAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
-    );
-  }
+  /* ---------- Copy With Method ---------- */
 
-  // Parse level progress from JSON
-  static Map<int, LevelProgress> _parseLevelProgress(
-    dynamic levelProgressData,
-  ) {
-    if (levelProgressData == null) return _defaultLevelProgress();
-
-    final Map<int, LevelProgress> result = {};
-    final Map<String, dynamic> progressMap = Map<String, dynamic>.from(
-      levelProgressData,
-    );
-
-    progressMap.forEach((key, value) {
-      final levelNumber = int.tryParse(key);
-      if (levelNumber != null && value is Map<String, dynamic>) {
-        result[levelNumber] = LevelProgress.fromJson(value);
-      }
-    });
-
-    // Ensure level 1 is always present
-    if (!result.containsKey(1)) {
-      result[1] = _defaultLevelProgress()[1]!;
-    }
-
-    return result;
-  }
-
-  // CopyWith method
-  PupilModel copyWith({
+  Pupil copyWith({
     String? id,
     String? userId,
     String? name,
@@ -335,7 +254,7 @@ class PupilModel extends Equatable {
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
-    return PupilModel(
+    return Pupil(
       id: id ?? this.id,
       userId: userId ?? this.userId,
       name: name ?? this.name,
@@ -370,39 +289,18 @@ class PupilModel extends Equatable {
     );
   }
 
-  @override
-  List<Object?> get props => [
-    id,
-    userId,
-    name,
-    dateOfBirth,
-    avatar,
-    handicap,
-    selectedCoachId,
-    selectedCoachName,
-    selectedClubId,
-    selectedClubName,
-    assignedCoachId,
-    assignedCoachName,
-    coachAssignedAt,
-    assignmentStatus,
-    currentLevel,
-    unlockedLevels,
-    totalXP,
-    levelProgress,
-    totalLessonsCompleted,
-    totalQuizzesCompleted,
-    totalChallengesCompleted,
-    averageQuizScore,
-    streakDays,
-    lastActivityDate,
-    badges,
-    subscription,
-    createdAt,
-    updatedAt,
-  ];
-
-  @override
-  String toString() =>
-      'PupilModel(id: $id, name: $name, userId: $userId, currentLevel: $currentLevel)';
+  /* ---------- Default Progress Factory ---------- */
+  static Map<int, LevelProgress> defaultLevelProgress() {
+    return {
+      1: LevelProgress(
+        booksCompleted: 0,
+        quizzesCompleted: 0,
+        challengesDone: 0,
+        gamesDone: 0,
+        averageScore: 0.0,
+        isCompleted: false,
+        lastActivity: DateTime.now(),
+      ),
+    };
+  }
 }

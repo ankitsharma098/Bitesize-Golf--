@@ -1,6 +1,7 @@
 // features/auth/data/models/club_model.dart
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../domain/entities/golf_club_entity.dart';
+
+import '../entities/golf_club_entity.dart';
 
 class ClubModel {
   final String id;

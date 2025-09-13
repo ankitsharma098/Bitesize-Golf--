@@ -9,16 +9,14 @@ import '../../../../core/themes/theme_colors.dart';
 import '../../../../route/navigator_service.dart';
 import '../../../../route/routes_names.dart';
 import '../../../club/data/repositories/club_repository.dart';
-
 import '../../../coaches/data/entities/coach_entity.dart';
 import '../../../coaches/data/repositories/coach_repo.dart';
 import '../../../components/custom_button.dart';
 import '../../../components/custom_image_picker.dart';
+import '../../../components/custom_scaffold.dart';
 import '../../../components/text_field_component.dart';
-import '../../../components/utils/custom_app_bar.dart';
 import '../../../components/utils/size_config.dart';
 import '../../../club/data/entities/golf_club_entity.dart';
-
 import '../../../../injection.dart';
 import '../../bloc/auth_bloc.dart';
 import '../../bloc/auth_event.dart';
@@ -349,157 +347,150 @@ class _UpdatePupilProfilePageState extends State<UpdatePupilProfilePage> {
 
   @override
   Widget build(BuildContext context) {
-    SizeConfig.init(context);
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: CustomAppBar(
-        title: 'Create Your Profile',
-        centerTitle: false,
-        showBackButton: true,
-      ),
-      body: BlocConsumer<AuthBloc, AuthState>(
-        listener: (context, state) {
-          if (state is AuthAuthenticated) {
-            NavigationService.push(
-              '${RouteNames.subscription}?pupilId=${state.user.uid}',
-            );
-          } else if (state is AuthError) {
-            ScaffoldMessenger.of(
-              context,
-            ).showSnackBar(SnackBar(content: Text(state.message)));
-          }
-        },
-        builder: (context, state) {
-          final isLoading = state is AuthLoading;
-          return SafeArea(
-            child: SingleChildScrollView(
-              padding: EdgeInsets.all(SizeConfig.scaleWidth(12)),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    SizedBox(height: SizeConfig.scaleHeight(20)),
-                    Text(
-                      'Tell us a bit more about yourself to personalize your experience.',
-                      style: GoogleFonts.inter(
-                        fontSize: SizeConfig.scaleWidth(16),
-                        color: AppColors.grey600,
-                      ),
-                    ),
-                    SizedBox(height: SizeConfig.scaleHeight(32)),
-                    Center(
-                      child: CustomImagePicker(
-                        image: _profileImage,
-                        onImage: (f) => setState(() => _profileImage = f),
-                        levelType: LevelType.redLevel,
-                      ),
-                    ),
-                    SizedBox(height: SizeConfig.scaleHeight(32)),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: CustomTextFieldFactory.name(
-                            controller: firstNameCtrl,
-                            label: 'First Name',
-                            placeholder: 'Enter First Name',
-                            levelType: LevelType.redLevel,
-                            validator: (v) =>
-                                (v ?? '').trim().isEmpty ? 'Required' : null,
-                          ),
-                        ),
-                        SizedBox(width: SizeConfig.scaleWidth(12)),
-                        Expanded(
-                          child: CustomTextFieldFactory.name(
-                            controller: lastNameCtrl,
-                            label: 'Last Name',
-                            placeholder: 'Enter Last Name',
-                            levelType: LevelType.redLevel,
-                            validator: (v) =>
-                                (v ?? '').trim().isEmpty ? 'Required' : null,
-                          ),
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: SizeConfig.scaleHeight(20)),
-                    CustomTextFieldFactory.date(
-                      controller: dateOfBirthCtrl,
-                      label: 'Date of Birth',
-                      placeholder: 'DD/MM/YYYY',
-                      levelType: LevelType.redLevel,
-                      onTap: _selectDate,
-                      validator: (v) =>
-                          (v ?? '').trim().isEmpty ? 'Required' : null,
-                    ),
-                    SizedBox(height: SizeConfig.scaleHeight(20)),
-                    CustomTextFieldFactory.number(
-                      controller: handicapCtrl,
-                      label: 'Current Handicap',
-                      placeholder: 'e.g. 14',
-                      levelType: LevelType.redLevel,
-                      validator: (v) {
-                        if ((v ?? '').trim().isEmpty) return null;
-                        final val = int.tryParse((v ?? '').trim());
-                        if (val == null || val < 0 || val > 36) {
-                          return '0-36 only';
-                        }
-                        return null;
-                      },
-                    ),
-                    SizedBox(height: SizeConfig.scaleHeight(20)),
-                    CustomTextFieldFactory.dropdown(
-                      controller: TextEditingController(
-                        text: _selectedClubName ?? '',
-                      ),
-                      label: 'Primary Golf Club',
-                      placeholder: 'Select Golf Club or Facility',
-                      levelType: LevelType.redLevel,
-                      onTap: _showClubSelection,
-                      validator: (v) =>
-                          (v ?? '').trim().isEmpty ? 'Required' : null,
-                    ),
-                    SizedBox(height: SizeConfig.scaleHeight(20)),
-                    CustomTextFieldFactory.dropdown(
-                      controller: TextEditingController(
-                        text: _selectedCoachName ?? '',
-                      ),
-                      label: 'Coach (Optional)',
-                      placeholder: _selectedClubId == null
-                          ? 'Select a club first'
-                          : 'Select Coach',
-                      levelType: LevelType.redLevel,
-                      onTap: _selectedClubId == null
-                          ? null
-                          : _showCoachSelection,
-                    ),
-                    SizedBox(height: SizeConfig.scaleHeight(40)),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: CustomButtonFactory.outline(
-                            text: 'Skip for now',
-                            onPressed: isLoading ? null : _skip,
-                            levelType: LevelType.redLevel,
-                          ),
-                        ),
-                        SizedBox(width: SizeConfig.scaleWidth(12)),
-                        Expanded(
-                          child: CustomButtonFactory.primary(
-                            text: 'Save and Continue',
-                            onPressed: isLoading ? null : _handleComplete,
-                            levelType: LevelType.redLevel,
-                            isLoading: isLoading,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
+    return BlocConsumer<AuthBloc, AuthState>(
+      listener: (context, state) {
+        if (state is AuthAuthenticated) {
+          NavigationService.push(
+            '${RouteNames.subscription}?pupilId=${state.user.uid}',
           );
-        },
-      ),
+        } else if (state is AuthError) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(state.message)));
+        }
+      },
+      builder: (context, state) {
+        final isLoading = state is AuthLoading;
+
+        return AppScaffold.form(
+          title: 'Complete Your Profile',
+          showBackButton: true,
+          scrollable: true,
+          body: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                SizedBox(height: SizeConfig.scaleHeight(20)),
+                Text(
+                  'Tell us a bit more about yourself to personalize your experience.',
+                  style: GoogleFonts.inter(
+                    fontSize: SizeConfig.scaleWidth(16),
+                    color: AppColors.grey600,
+                  ),
+                ),
+                SizedBox(height: SizeConfig.scaleHeight(32)),
+                CustomTextFieldFactory.name(
+                  controller: firstNameCtrl,
+                  label: 'First Name',
+                  placeholder: 'Enter First Name',
+                  levelType: LevelType.redLevel,
+                  validator: (v) =>
+                      (v ?? '').trim().isEmpty ? 'Required' : null,
+                ),
+                SizedBox(height: SizeConfig.scaleHeight(20)),
+                CustomTextFieldFactory.name(
+                  controller: lastNameCtrl,
+                  label: 'Last Name',
+                  placeholder: 'Enter Last Name',
+                  levelType: LevelType.redLevel,
+                  validator: (v) =>
+                      (v ?? '').trim().isEmpty ? 'Required' : null,
+                ),
+                SizedBox(height: SizeConfig.scaleHeight(20)),
+                CustomTextFieldFactory.date(
+                  controller: dateOfBirthCtrl,
+                  label: 'Date of Birth',
+                  placeholder: 'DD/MM/YYYY',
+                  levelType: LevelType.redLevel,
+                  onTap: _selectDate,
+                  validator: (v) =>
+                      (v ?? '').trim().isEmpty ? 'Required' : null,
+                ),
+                SizedBox(height: SizeConfig.scaleHeight(20)),
+                CustomTextFieldFactory.number(
+                  controller: handicapCtrl,
+                  label: 'Handicap',
+                  placeholder: 'Enter Handicap(e.g. 14)',
+                  levelType: LevelType.redLevel,
+                  validator: (v) {
+                    if ((v ?? '').trim().isEmpty) return null;
+                    final val = int.tryParse((v ?? '').trim());
+                    return val == null || val < 0 || val > 36
+                        ? '0-36 only'
+                        : null;
+                  },
+                ),
+                SizedBox(height: SizeConfig.scaleHeight(20)),
+                CustomTextFieldFactory.dropdown(
+                  controller: TextEditingController(
+                    text: _selectedClubName ?? '',
+                  ),
+                  label: 'Golf Club or Facility',
+                  placeholder: 'Select Golf Club or Facility',
+                  levelType: LevelType.redLevel,
+                  onTap: _showClubSelection,
+                  validator: (v) =>
+                      (v ?? '').trim().isEmpty ? 'Required' : null,
+                ),
+                SizedBox(height: SizeConfig.scaleHeight(20)),
+                CustomTextFieldFactory.dropdown(
+                  controller: TextEditingController(
+                    text: _selectedCoachName ?? '',
+                  ),
+                  label: 'Coach Name',
+                  placeholder: _selectedClubId == null
+                      ? 'Select a club first'
+                      : 'Select Coach',
+                  levelType: LevelType.redLevel,
+                  onTap: _selectedClubId == null ? null : _showCoachSelection,
+                ),
+                SizedBox(height: SizeConfig.scaleHeight(20)),
+                SizedBox(
+                  width: 900, // Increased width for a wider cuboid shape
+                  height: 120, // Keeping the height as is
+                  child: Column(
+                    crossAxisAlignment:
+                        CrossAxisAlignment.start, // Align to start (left)
+                    children: [
+                      Text(
+                        'Profile Photo',
+                        style: GoogleFonts.inter(
+                          fontSize: SizeConfig.scaleWidth(16),
+                          color: AppColors.grey700,
+                        ),
+                      ),
+                      SizedBox(height: SizeConfig.scaleHeight(8)),
+                      Expanded(
+                        // Use Expanded to fill remaining height
+                        child: CustomImagePicker(
+                          image: _profileImage,
+                          size: 200, // Adjust size to fit within height
+                          onImage: (f) => setState(() => _profileImage = f),
+                          levelType: LevelType.redLevel,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(height: SizeConfig.scaleHeight(40)),
+                CustomButtonFactory.primary(
+                  text: 'Save and Continue',
+                  onPressed: isLoading ? null : _handleComplete,
+                  levelType: LevelType.redLevel,
+                  isLoading: isLoading,
+                ),
+                SizedBox(height: SizeConfig.scaleHeight(8)),
+                CustomButtonFactory.text(
+                  text: 'Skip for now',
+                  onPressed: isLoading ? null : _skip,
+                  levelType: LevelType.redLevel,
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }

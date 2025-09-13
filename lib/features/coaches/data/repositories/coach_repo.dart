@@ -1,7 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:injectable/injectable.dart';
 import '../entities/coach_entity.dart';
 import '../models/coach_model.dart';
 
+@LazySingleton()
 class CoachRepository {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 

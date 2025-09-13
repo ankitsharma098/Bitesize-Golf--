@@ -241,6 +241,30 @@ extension CustomButtonFactory on CustomButton {
     );
   }
 
+  static CustomButton faded({
+    required String text,
+    required VoidCallback? onPressed,
+    LevelType? levelType,
+    bool isLoading = false,
+    ButtonSize size = ButtonSize.medium,
+    IconData? icon,
+    double? width,
+  }) {
+    return CustomButton(
+      text: text,
+      onPressed: onPressed,
+      levelType: levelType,
+      isLoading: isLoading,
+      size: size,
+      customTextColor: levelType?.color,
+      variant: ButtonVariant.filled, // Use filled variant with light color
+      icon: icon,
+      width: width,
+      customColor:
+          levelType?.lightColor ?? AppColors.grey600, // Dynamic faded color
+    );
+  }
+
   static CustomButton outline({
     required String text,
     required VoidCallback? onPressed,

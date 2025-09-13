@@ -1,8 +1,10 @@
 import 'package:firebase_auth/firebase_auth.dart' as fb;
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:injectable/injectable.dart';
 import '../entities/user.dart';
 import '../models/user_model.dart';
 
+@LazySingleton()
 class AuthRepository {
   final fb.FirebaseAuth _firebaseAuth = fb.FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -19,6 +21,8 @@ class AuthRepository {
       if (firebaseUser == null) return null;
 
       final userDoc = await _users.doc(firebaseUser.uid).get();
+
+      print("User Doc ----${userDoc}");
       if (!userDoc.exists) return null;
 
       return UserModel.fromFirestore(

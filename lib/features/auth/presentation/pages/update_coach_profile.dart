@@ -1,7 +1,7 @@
-// features/auth/presentation/pages/complete_profile_coach_page.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import '../../../../core/themes/theme_colors.dart';
@@ -10,6 +10,11 @@ import '../../../../route/navigator_service.dart';
 import '../../../../route/routes_names.dart';
 import '../../../club/data/entities/golf_club_entity.dart';
 import '../../../club/data/repositories/club_repository.dart';
+import '../../../components/custom_image_picker.dart';
+import '../../../components/custom_scaffold.dart';
+import '../../../components/utils/size_config.dart';
+import '../../../components/custom_button.dart';
+import '../../../components/text_field_component.dart';
 import '../../bloc/auth_bloc.dart';
 import '../../bloc/auth_event.dart';
 import '../../bloc/auth_state.dart';
@@ -35,7 +40,6 @@ class _UpdateProfileCoachPageState extends State<UpdateProfileCoachPage> {
   String? _selectedGolfClubId;
   String? _selectedGolfClubName;
   List<String> _certifications = [];
-
   List<Club> _clubs = [];
   Club? _selectedClub;
 
@@ -190,398 +194,149 @@ class _UpdateProfileCoachPageState extends State<UpdateProfileCoachPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.scaffoldBgColor,
-      appBar: AppBar(
-        backgroundColor: const Color(0xFFE53E3E),
-        foregroundColor: Colors.white,
-        title: const Text(
-          'Complete Your Profile',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 18,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
-        ),
-        elevation: 0,
-      ),
-      body: BlocConsumer<AuthBloc, AuthState>(
-        listener: (context, state) {
-          if (state is AuthAuthenticated) {
-            NavigationService.push(RouteNames.letStart);
-          } else if (state is AuthError) {
-            ScaffoldMessenger.of(
-              context,
-            ).showSnackBar(SnackBar(content: Text(state.message)));
-          }
-        },
-        builder: (context, state) {
-          final isLoading = state is AuthLoading;
-          return SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Set up your coach account to start managing pupils modules and sessions.',
-                    style: TextStyle(fontSize: 16, color: Colors.black87),
+    return BlocConsumer<AuthBloc, AuthState>(
+      listener: (context, state) {
+        if (state is AuthAuthenticated) {
+          NavigationService.push('${RouteNames.letsStart}?isPupil=false');
+          //NavigationService.push(RouteNames.splash);
+        } else if (state is AuthError) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(state.message)));
+        }
+      },
+      builder: (context, state) {
+        final isLoading = state is AuthLoading;
+
+        // MUCH CLEANER - Using AppScaffold.form() with scrollable
+        return AppScaffold.form(
+          title: 'Complete Your Profile',
+          showBackButton: true,
+          levelType: LevelType.redLevel,
+          scrollable: true,
+          body: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Set up your coach account to start managing pupils modules and sessions.',
+                  style: TextStyle(fontSize: 16, color: Colors.black87),
+                ),
+                SizedBox(height: SizeConfig.scaleHeight(24)),
+
+                // First Name
+                CustomTextFieldFactory.name(
+                  controller: firstNameCtrl,
+                  label: 'First Name',
+                  placeholder: 'Emma',
+                  levelType: LevelType.redLevel,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter your first name';
+                    }
+                    return null;
+                  },
+                ),
+                SizedBox(height: SizeConfig.scaleHeight(16)),
+
+                // Last Name
+                CustomTextFieldFactory.name(
+                  controller: lastNameCtrl,
+                  label: 'Last Name',
+                  placeholder: 'Wilson',
+                  levelType: LevelType.redLevel,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter your last name';
+                    }
+                    return null;
+                  },
+                ),
+                SizedBox(height: SizeConfig.scaleHeight(16)),
+
+                // Experience
+                CustomTextFieldFactory.number(
+                  controller: experienceCtrl,
+                  label: 'Experience',
+                  placeholder: 'Enter your Experience',
+                  levelType: LevelType.redLevel,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter your years of experience';
+                    }
+                    final years = int.tryParse(value);
+                    if (years == null || years < 0) {
+                      return 'Please enter a valid number';
+                    }
+                    return null;
+                  },
+                ),
+                SizedBox(height: SizeConfig.scaleHeight(16)),
+
+                // Golf Club Selection
+                CustomTextFieldFactory.dropdown(
+                  controller: TextEditingController(
+                    text: _selectedGolfClubName ?? '',
                   ),
-                  const SizedBox(height: 24),
-                  const Text(
-                    'First Name',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.black87,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  TextFormField(
-                    controller: firstNameCtrl,
-                    decoration: InputDecoration(
-                      hintText: 'Emma',
-                      filled: true,
-                      fillColor: Colors.white,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: BorderSide(color: Colors.grey.shade300),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: BorderSide(color: Colors.grey.shade300),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: const BorderSide(color: Color(0xFFE53E3E)),
-                      ),
-                    ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter your first name';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                  const Text(
-                    'Last Name',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.black87,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  TextFormField(
-                    controller: lastNameCtrl,
-                    decoration: InputDecoration(
-                      hintText: 'Wilson',
-                      filled: true,
-                      fillColor: Colors.white,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: BorderSide(color: Colors.grey.shade300),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: BorderSide(color: Colors.grey.shade300),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: const BorderSide(color: Color(0xFFE53E3E)),
-                      ),
-                    ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter your last name';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                  const Text(
-                    'Years of Experience',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.black87,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  TextFormField(
-                    controller: experienceCtrl,
-                    keyboardType: TextInputType.number,
-                    decoration: InputDecoration(
-                      hintText: 'e.g., 5',
-                      filled: true,
-                      fillColor: Colors.white,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: BorderSide(color: Colors.grey.shade300),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: BorderSide(color: Colors.grey.shade300),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: const BorderSide(color: Color(0xFFE53E3E)),
-                      ),
-                    ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter your years of experience';
-                      }
-                      final years = int.tryParse(value);
-                      if (years == null || years < 0) {
-                        return 'Please enter a valid number';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                  const Text(
-                    'Golf Club or Facility',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.black87,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  InkWell(
-                    onTap: _selectGolfClub,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 16,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        border: Border.all(color: Colors.grey.shade300),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Expanded(
-                            child: Text(
-                              _selectedGolfClubName ??
-                                  'Select Golf Club or Facility',
-                              style: TextStyle(
-                                color: _selectedGolfClubName != null
-                                    ? Colors.black87
-                                    : Colors.grey.shade500,
-                                fontSize: 16,
-                              ),
-                            ),
-                          ),
-                          Icon(
-                            Icons.keyboard_arrow_down,
-                            color: Colors.grey.shade500,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  const Text(
-                    'Bio (Optional)',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.black87,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  TextFormField(
-                    controller: bioCtrl,
-                    maxLines: 4,
-                    maxLength: 500,
-                    decoration: InputDecoration(
-                      hintText: 'Tell us about your coaching experience...',
-                      filled: true,
-                      fillColor: Colors.white,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: BorderSide(color: Colors.grey.shade300),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: BorderSide(color: Colors.grey.shade300),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: const BorderSide(color: Color(0xFFE53E3E)),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  const Text(
-                    'Certifications (Optional)',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.black87,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
+                  label: 'Golf Club or Facility',
+                  placeholder: 'Select Golf Club or Facility',
+                  levelType: LevelType.redLevel,
+                  onTap: _selectGolfClub,
+                ),
+                SizedBox(height: SizeConfig.scaleHeight(16)),
+
+                // Profile Photo
+                SizedBox(
+                  width: 900, // Increased width for a wider cuboid shape
+                  height: 120, // Keeping the height as is
+                  child: Column(
+                    crossAxisAlignment:
+                        CrossAxisAlignment.start, // Align to start (left)
                     children: [
-                      Expanded(
-                        child: TextFormField(
-                          controller: certificationsCtrl,
-                          decoration: InputDecoration(
-                            hintText: 'e.g., PGA Certified',
-                            filled: true,
-                            fillColor: Colors.white,
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                              borderSide: BorderSide(
-                                color: Colors.grey.shade300,
-                              ),
-                            ),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                              borderSide: BorderSide(
-                                color: Colors.grey.shade300,
-                              ),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                              borderSide: const BorderSide(
-                                color: Color(0xFFE53E3E),
-                              ),
-                            ),
-                          ),
-                          onFieldSubmitted: (_) => _addCertification(),
+                      Text(
+                        'Profile Photo',
+                        style: GoogleFonts.inter(
+                          fontSize: SizeConfig.scaleWidth(16),
+                          color: AppColors.grey700,
                         ),
                       ),
-                      const SizedBox(width: 8),
-                      IconButton(
-                        icon: const Icon(Icons.add, color: Color(0xFFE53E3E)),
-                        onPressed: _addCertification,
+                      SizedBox(height: SizeConfig.scaleHeight(8)),
+                      Expanded(
+                        // Use Expanded to fill remaining height
+                        child: CustomImagePicker(
+                          image: _profileImage,
+                          size: 200, // Adjust size to fit within height
+                          onImage: (f) => setState(() => _profileImage = f),
+                          levelType: LevelType.redLevel,
+                        ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
-                    children: List.generate(
-                      _certifications.length,
-                      (index) => Chip(
-                        label: Text(_certifications[index]),
-                        backgroundColor: Colors.grey.shade200,
-                        onDeleted: () => _removeCertification(index),
-                      ),
-                    ),
+                ),
+
+                SizedBox(height: SizeConfig.scaleHeight(32)),
+
+                // Buttons
+                CustomButtonFactory.primary(
+                  text: 'Save and Continue',
+                  onPressed: isLoading ? null : _handleSaveProfile,
+                  levelType: LevelType.redLevel,
+                  isLoading: isLoading,
+                ),
+                SizedBox(height: SizeConfig.scaleHeight(16)),
+                Center(
+                  child: CustomButtonFactory.text(
+                    text: 'Skip for now',
+                    onPressed: isLoading ? null : _handleSkip,
+                    levelType: LevelType.redLevel,
                   ),
-                  const SizedBox(height: 16),
-                  const Text(
-                    'Profile Photo (Optional)',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.black87,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  GestureDetector(
-                    onTap: _pickImage,
-                    child: Container(
-                      height: 120,
-                      width: double.infinity,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        border: Border.all(color: Colors.grey.shade300),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: _profileImage != null
-                          ? ClipRRect(
-                              borderRadius: BorderRadius.circular(8),
-                              child: Image.file(
-                                _profileImage!,
-                                fit: BoxFit.cover,
-                              ),
-                            )
-                          : Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  Icons.camera_alt_outlined,
-                                  size: 32,
-                                  color: Colors.grey.shade400,
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  'Tap to upload photo',
-                                  style: TextStyle(
-                                    color: Colors.grey.shade600,
-                                    fontSize: 14,
-                                  ),
-                                ),
-                              ],
-                            ),
-                    ),
-                  ),
-                  const SizedBox(height: 32),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 50,
-                    child: ElevatedButton(
-                      onPressed: isLoading ? null : _handleSaveProfile,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFE53E3E),
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        elevation: 0,
-                      ),
-                      child: isLoading
-                          ? const SizedBox(
-                              height: 20,
-                              width: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Colors.white,
-                              ),
-                            )
-                          : const Text(
-                              'Save and Continue',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Center(
-                    child: TextButton(
-                      onPressed: isLoading ? null : _handleSkip,
-                      child: const Text(
-                        'Skip for now',
-                        style: TextStyle(
-                          color: Color(0xFFE53E3E),
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
-          );
-        },
-      ),
+          ),
+        );
+      },
     );
   }
 }

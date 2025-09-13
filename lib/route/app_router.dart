@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import '../features/auth/bloc/auth_bloc.dart';
 import '../features/auth/bloc/auth_state.dart';
+import '../features/auth/presentation/pages/LetsStart_page.dart';
 import '../features/auth/presentation/pages/update_coach_profile.dart';
 import '../features/auth/presentation/pages/update_pupil_profile_page.dart';
 import '../features/auth/presentation/pages/forgot_password.dart';
@@ -17,13 +18,13 @@ import '../injection.dart';
 
 class AppRouter {
   static final GoRouter router = GoRouter(
-    initialLocation: RouteNames.letStart,
+    initialLocation: RouteNames.splash,
     debugLogDiagnostics: true, // Enable for debugging
     routes: [
       // Auth routes - always accessible
       GoRoute(
-        path: RouteNames.letStart,
-        name: 'letStart',
+        path: RouteNames.splash,
+        name: 'splash',
         builder: (context, state) => const SplashScreen(),
       ),
 
@@ -31,6 +32,15 @@ class AppRouter {
         path: RouteNames.welcome,
         name: 'welcome',
         builder: (context, state) => const WelcomePage(),
+      ),
+      GoRoute(
+        path: RouteNames.letsStart,
+        name: 'letsStart',
+        builder: (context, state) {
+          final isPupilParam = state.uri.queryParameters['isPupil'];
+          final isPupil = isPupilParam == 'true' || isPupilParam == null;
+          return LetsStart(isPupil: isPupil);
+        },
       ),
       GoRoute(
         path: '/subscription', // keep the same path
@@ -111,7 +121,7 @@ class AppRouter {
             ),
             const SizedBox(height: 16),
             ElevatedButton(
-              onPressed: () => context.go(RouteNames.letStart),
+              onPressed: () => context.go(RouteNames.splash),
               child: const Text('Go Home'),
             ),
           ],
@@ -127,7 +137,7 @@ class AppRouter {
 
     // Define routes that are always accessible
     final publicRoutes = [
-      RouteNames.letStart,
+      RouteNames.splash,
       RouteNames.welcome,
       RouteNames.login,
       RouteNames.register,
@@ -159,7 +169,7 @@ class AppRouter {
     } catch (e) {
       print("Error in redirect: $e");
       // If there's an error accessing the auth bloc, go to start
-      return RouteNames.letStart;
+      return RouteNames.splash;
     }
 
     return null;

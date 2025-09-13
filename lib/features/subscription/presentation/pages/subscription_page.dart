@@ -1,4 +1,5 @@
 // Updated Subscription Screen with new event names
+import 'package:bitesize_golf/features/components/custom_button.dart';
 import 'package:bitesize_golf/injection.dart';
 import 'package:bitesize_golf/route/navigator_service.dart';
 import 'package:bitesize_golf/route/routes_names.dart';
@@ -6,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 
+import '../../../../core/themes/theme_colors.dart';
 import '../subscription_bloc/subscription_bloc.dart';
 import '../subscription_bloc/subscription_event.dart';
 import '../subscription_bloc/subscription_state.dart';
@@ -62,7 +64,8 @@ class SubscriptionScreenView extends StatelessWidget {
               ),
             );
             // Navigate back or to main screen
-            NavigationService.push(RouteNames.letStart);
+            NavigationService.push('${RouteNames.letsStart}?isPupil=true');
+            // NavigationService.push(RouteNames.letsStart);
           } else if (state is SubscriptionPurchaseFailure) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
@@ -144,6 +147,7 @@ class SubscriptionScreenView extends StatelessWidget {
                                 const SizedBox(height: 30),
                                 _buildFeatureList(),
                                 const Spacer(), // pushes button to bottom when room exists
+
                                 _buildContinueButton(context, state),
                               ],
                             ),
@@ -331,9 +335,14 @@ class SubscriptionScreenView extends StatelessWidget {
     bool canPurchase =
         state is SubscriptionPlansLoaded && state.selectedPlan != null;
 
-    return Container(
+    return SizedBox(
       width: double.infinity,
-      child: ElevatedButton(
+      child: CustomButtonFactory.primary(
+        text: isLoading
+            ? 'Processing...'
+            : (canPurchase
+                  ? 'Continue with ${state.selectedPlan!.title}'
+                  : 'Continue'),
         onPressed: isLoading || !canPurchase
             ? null
             : () {
@@ -350,36 +359,8 @@ class SubscriptionScreenView extends StatelessWidget {
                   );
                 }
               },
-        style: ElevatedButton.styleFrom(
-          backgroundColor: isLoading ? Colors.grey : Colors.red,
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        ),
-        child: isLoading
-            ? const Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                    ),
-                  ),
-                  SizedBox(width: 12),
-                  Text(
-                    'Processing...',
-                    style: TextStyle(fontSize: 18, color: Colors.white),
-                  ),
-                ],
-              )
-            : Text(
-                canPurchase && state is SubscriptionPlansLoaded
-                    ? 'Continue with ${state.selectedPlan!.title}'
-                    : 'Continue',
-                style: const TextStyle(fontSize: 18, color: Colors.white),
-              ),
+        levelType: LevelType.redLevel, // Match the red theme from your design
+        isLoading: isLoading,
       ),
     );
   }

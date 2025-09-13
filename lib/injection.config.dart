@@ -11,8 +11,13 @@
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 import 'package:bitesize_golf/core/di/dependency_injection.dart' as _i371;
 import 'package:bitesize_golf/core/storage/hive_storage_services.dart' as _i700;
+import 'package:bitesize_golf/features/auth/bloc/auth_bloc.dart' as _i348;
+import 'package:bitesize_golf/features/auth/data/repositories/auth_repo.dart'
+    as _i941;
 import 'package:bitesize_golf/features/club/data/repositories/club_repository.dart'
     as _i652;
+import 'package:bitesize_golf/features/coaches/data/repositories/coach_repo.dart'
+    as _i604;
 import 'package:bitesize_golf/features/pupils%20modules/pupil/data/repositories/pupil_repo.dart'
     as _i906;
 import 'package:bitesize_golf/features/subscription/data/data%20source/subscription_repo.dart'
@@ -41,6 +46,8 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i59.FirebaseAuth>(() => registerModule.firebaseAuth);
     gh.lazySingleton<_i974.FirebaseFirestore>(() => registerModule.firestore);
     gh.lazySingleton<_i398.FirebaseAnalytics>(() => registerModule.analytics);
+    gh.lazySingleton<_i941.AuthRepository>(() => _i941.AuthRepository());
+    gh.lazySingleton<_i604.CoachRepository>(() => _i604.CoachRepository());
     gh.lazySingleton<_i700.HiveStorageService>(
       () => _i700.HiveStorageServiceImpl(),
     );
@@ -55,6 +62,9 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.factory<_i531.SubscriptionBloc>(
       () => _i531.SubscriptionBloc(gh<_i395.SubscriptionRepository>()),
+    );
+    gh.factory<_i348.AuthBloc>(
+      () => _i348.AuthBloc(repo: gh<_i941.AuthRepository>()),
     );
     return this;
   }

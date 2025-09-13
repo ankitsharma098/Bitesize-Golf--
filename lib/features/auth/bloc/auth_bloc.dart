@@ -1,9 +1,11 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:injectable/injectable.dart';
 import '../data/models/user_model.dart';
 import '../data/repositories/auth_repo.dart';
 import 'auth_event.dart';
 import 'auth_state.dart';
 
+@injectable
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final AuthRepository _repo;
   AuthBloc({required AuthRepository repo})
@@ -34,6 +36,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       await Future.delayed(const Duration(milliseconds: 800));
       final user = await _repo.getCurrentUser();
       if (user == null) return emit(const AuthUnauthenticated());
+      print("User ---------> ${user.profileCompleted}");
       emit(
         user.profileCompleted
             ? AuthAuthenticated(user)

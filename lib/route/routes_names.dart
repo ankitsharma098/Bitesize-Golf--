@@ -1,10 +1,11 @@
 // lib/route/app_routes.dart
 class RouteNames {
   // Welcome & Auth
-  static const letStart = '/letStart';
+  static const splash = '/splash';
   static const welcome = '/welcome';
   static const login = '/login';
   static const register = '/register';
+  static const letsStart = '/letsStart';
   static const forgotPassword = '/forgot-password';
   static const otpVerify = '/otp-verify';
   static const resetPassword = '/reset-password';

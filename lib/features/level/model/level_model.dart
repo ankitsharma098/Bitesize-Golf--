@@ -102,18 +102,53 @@ class LevelModel extends Equatable {
     'updatedAt': Timestamp.fromDate(updatedAt),
   };
 
+  // Helper method to safely parse DateTime from various formats
+  static DateTime _parseDateTime(dynamic dateValue) {
+    if (dateValue == null) {
+      return DateTime.now();
+    }
+
+    if (dateValue is Timestamp) {
+      return dateValue.toDate();
+    }
+
+    if (dateValue is String) {
+      try {
+        // Handle ISO 8601 strings (like from toIso8601String())
+        return DateTime.parse(dateValue);
+      } catch (e) {
+        print('Error parsing date string: $dateValue, error: $e');
+        return DateTime.now();
+      }
+    }
+
+    if (dateValue is int) {
+      // Assuming it's milliseconds since epoch
+      return DateTime.fromMillisecondsSinceEpoch(dateValue);
+    }
+
+    print('Unexpected date type: ${dateValue.runtimeType}, value: $dateValue');
+    return DateTime.now();
+  }
+
   factory LevelModel.fromJson(Map<String, dynamic> json) {
-    return LevelModel(
-      levelNumber: json['levelNumber'] as int,
-      name: json['name'] as String,
-      pupilDescription: json['pupilDescription'] as String,
-      coachDescription: json['coachDescription'] as String,
-      accessTier: json['accessTier'] as String,
-      prerequisite: json['prerequisite'] as String?,
-      isActive: json['isActive'] as bool,
-      isPublished: json['isPublished'] as bool,
-      createdAt: (json['createdAt'] as Timestamp).toDate(),
-      updatedAt: (json['updatedAt'] as Timestamp).toDate(),
-    );
+    try {
+      return LevelModel(
+        levelNumber: json['levelNumber'] as int,
+        name: json['name'] as String,
+        pupilDescription: json['pupilDescription'] as String,
+        coachDescription: json['coachDescription'] as String,
+        accessTier: json['accessTier'] as String,
+        prerequisite: json['prerequisite'] as String?,
+        isActive: json['isActive'] as bool? ?? true,
+        isPublished: json['isPublished'] as bool? ?? true,
+        createdAt: _parseDateTime(json['createdAt']),
+        updatedAt: _parseDateTime(json['updatedAt']),
+      );
+    } catch (e) {
+      print('Error parsing LevelModel from JSON: $json');
+      print('Error details: $e');
+      rethrow;
+    }
   }
 }

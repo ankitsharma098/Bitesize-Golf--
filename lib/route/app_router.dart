@@ -1,5 +1,4 @@
 import 'package:bitesize_golf/route/routes_names.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -13,6 +12,7 @@ import '../features/auth/presentation/pages/login_page.dart';
 import '../features/auth/presentation/pages/register_page.dart';
 import '../features/auth/presentation/pages/splash_page.dart';
 import '../features/auth/presentation/pages/welcome_page.dart';
+import '../features/pupils modules/home/presentation/main_wrapper.dart';
 import '../features/subscription/presentation/pages/subscription_page.dart';
 import '../injection.dart';
 
@@ -94,7 +94,7 @@ class AppRouter {
       GoRoute(
         path: RouteNames.pupilHome,
         name: 'pupilHome',
-        builder: (context, state) => const Placeholder(),
+        builder: (context, state) => const MainWrapperScreen(),
       ),
 
       GoRoute(

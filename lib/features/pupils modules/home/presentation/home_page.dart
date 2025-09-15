@@ -2,15 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/themes/theme_colors.dart';
+import '../../../components/current_level_card.dart';
 import '../../../components/custom_scaffold.dart';
-import '../../../components/level_card.dart';
 import '../../../components/utils/size_config.dart';
-import '../bloc/dashboard_bloc.dart';
-import '../bloc/dashboard_event.dart';
-import '../bloc/dashboard_state.dart';
+import '../home bloc/home_bloc.dart';
+import '../home bloc/home_event.dart';
+import '../home bloc/home_state.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({Key? key}) : super(key: key);
+  const HomeScreen({super.key});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -20,35 +20,55 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    context.read<DashboardBloc>().add(const LoadDashboardData());
+    // Add null check and context availability check
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && context.mounted) {
+        context.read<HomeBloc>().add(const LoadHomeData());
+      }
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    return CustomScaffold(
-      title: 'Home',
-      screenType: ScreenType.content,
+    return AppScaffold.withCustomAppBar(
+      customPadding: EdgeInsets.all(5),
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(30), // Custom height
+        child: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          title: Text(
+            'Home',
+            style: TextStyle(
+              color: AppColors.grey900,
+              fontSize: SizeConfig.scaleText(25),
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ),
+      ),
+      //  title: 'Home',
       scrollable: true,
-      body: BlocBuilder<DashboardBloc, DashboardState>(
+      // appBarType: AppBarType.custom, // or AppBarType.none for no app bar
+      // levelType: LevelType.redLevel, // Dynamic based on user level
+      body: BlocBuilder<HomeBloc, HomeState>(
         builder: (context, state) {
-          if (state is DashboardLoading) {
+          if (state is HomeLoading) {
             return _buildLoadingState();
           }
-
-          if (state is DashboardError) {
+          if (state is HomeError) {
             return _buildErrorState(state.message);
           }
-
-          if (state is DashboardLoaded) {
+          if (state is HomeLoaded) {
             return _buildHomeContent(state);
           }
-
           return _buildInitialState();
         },
       ),
     );
   }
 
+  // ... rest of the HomeScreen methods remain the same
   Widget _buildLoadingState() {
     return Center(
       child: Column(
@@ -58,13 +78,7 @@ class _HomeScreenState extends State<HomeScreen> {
             valueColor: AlwaysStoppedAnimation<Color>(AppColors.greenDark),
           ),
           SizedBox(height: SizeConfig.scaleHeight(16)),
-          Text(
-            'Loading your progress...',
-            style: TextStyle(
-              // fontSize: SizeConfig.scaleFont(16),
-              color: AppColors.grey600,
-            ),
-          ),
+          Text('Loading levels...', style: TextStyle(color: AppColors.grey600)),
         ],
       ),
     );
@@ -82,9 +96,8 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           SizedBox(height: SizeConfig.scaleHeight(16)),
           Text(
-            'Oops! Something went wrong',
+            'Unable to load levels',
             style: TextStyle(
-              //fontSize: SizeConfig.scaleFont(18),
               fontWeight: FontWeight.w600,
               color: AppColors.grey900,
             ),
@@ -93,16 +106,11 @@ class _HomeScreenState extends State<HomeScreen> {
           Text(
             message,
             textAlign: TextAlign.center,
-            style: TextStyle(
-              // fontSize: SizeConfig.scaleFont(14),
-              color: AppColors.grey600,
-            ),
+            style: TextStyle(color: AppColors.grey600),
           ),
           SizedBox(height: SizeConfig.scaleHeight(24)),
           ElevatedButton(
-            onPressed: () {
-              context.read<DashboardBloc>().add(const RefreshDashboard());
-            },
+            onPressed: () => context.read<HomeBloc>().add(const RefreshHome()),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.greenDark,
               padding: EdgeInsets.symmetric(
@@ -113,13 +121,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 borderRadius: BorderRadius.circular(SizeConfig.scaleWidth(8)),
               ),
             ),
-            child: Text(
-              'Try Again',
-              style: TextStyle(
-                //   fontSize: SizeConfig.scaleFont(16),
-                color: Colors.white,
-              ),
-            ),
+            child: Text('Try Again', style: TextStyle(color: Colors.white)),
           ),
         ],
       ),
@@ -129,213 +131,37 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildInitialState() {
     return Center(
       child: Text(
-        'Welcome! Loading your golf journey...',
-        style: TextStyle(
-          // fontSize: SizeConfig.scaleFont(16),
-          color: AppColors.grey600,
-        ),
+        'Loading levels...',
+        style: TextStyle(color: AppColors.grey600),
       ),
     );
   }
 
-  Widget _buildHomeContent(DashboardLoaded state) {
-    final levels = state.levels.take(4).toList(); // Show first 4 levels
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Welcome Section
-        _buildWelcomeSection(state.pupil.name),
-        SizedBox(height: SizeConfig.scaleHeight(24)),
-
-        // Progress Overview
-        _buildProgressOverview(state.pupil),
-        SizedBox(height: SizeConfig.scaleHeight(24)),
-
-        // Levels Section
-        Text(
-          'Your Levels',
-          style: TextStyle(
-            //fontSize: SizeConfig.scaleFont(20),
-            fontWeight: FontWeight.w600,
-            color: AppColors.grey900,
-          ),
-        ),
-        SizedBox(height: SizeConfig.scaleHeight(16)),
-
-        // Level Cards
-        ...levels.map(
-          (level) => LevelCard(
-            level: level,
-            pupil: state.pupil,
-            onTap: () => _navigateToLevel(level.levelNumber),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildWelcomeSection(String name) {
-    return Container(
-      padding: EdgeInsets.all(SizeConfig.scaleWidth(20)),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(SizeConfig.scaleWidth(16)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Welcome back,',
-                  style: TextStyle(
-                    // fontSize: SizeConfig.scaleFont(16),
-                    color: AppColors.grey600,
-                  ),
-                ),
-                SizedBox(height: SizeConfig.scaleHeight(4)),
-                Text(
-                  name,
-                  style: TextStyle(
-                    //fontSize: SizeConfig.scaleFont(24),
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.grey900,
-                  ),
-                ),
-                SizedBox(height: SizeConfig.scaleHeight(8)),
-                Text(
-                  "Let's continue your golf journey!",
-                  style: TextStyle(
-                    //  fontSize: SizeConfig.scaleFont(14),
-                    color: AppColors.grey600,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Icon(
-            Icons.sports_golf,
-            size: SizeConfig.scaleWidth(48),
-            color: AppColors.greenDark,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildProgressOverview(dynamic pupil) {
-    return Container(
-      padding: EdgeInsets.all(SizeConfig.scaleWidth(20)),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(SizeConfig.scaleWidth(16)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Your Progress',
-            style: TextStyle(
-              //fontSize: SizeConfig.scaleFont(18),
-              fontWeight: FontWeight.w600,
-              color: AppColors.grey900,
-            ),
-          ),
-          SizedBox(height: SizeConfig.scaleHeight(16)),
-          Row(
-            children: [
-              Expanded(
-                child: _buildStatCard(
-                  'Current Level',
-                  pupil.currentLevel.toString(),
-                  Icons.flag,
-                  AppColors.greenDark,
-                ),
-              ),
-              SizedBox(width: SizeConfig.scaleWidth(12)),
-              Expanded(
-                child: _buildStatCard(
-                  'Total XP',
-                  pupil.totalXP.toString(),
-                  Icons.star,
-                  AppColors.warning,
-                ),
-              ),
-              SizedBox(width: SizeConfig.scaleWidth(12)),
-              Expanded(
-                child: _buildStatCard(
-                  'Streak',
-                  '${pupil.streakDays} days',
-                  Icons.local_fire_department,
-                  AppColors.error,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStatCard(
-    String label,
-    String value,
-    IconData icon,
-    Color color,
-  ) {
-    return Container(
-      padding: EdgeInsets.all(SizeConfig.scaleWidth(12)),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(SizeConfig.scaleWidth(12)),
-      ),
+  Widget _buildHomeContent(HomeLoaded state) {
+    return Padding(
+      padding: EdgeInsets.all(SizeConfig.scaleWidth(5)),
       child: Column(
         children: [
-          Icon(icon, color: color, size: SizeConfig.scaleWidth(24)),
-          SizedBox(height: SizeConfig.scaleHeight(8)),
-          Text(
-            value,
-            style: TextStyle(
-              //  fontSize: SizeConfig.scaleFont(16),
-              fontWeight: FontWeight.w700,
-              color: AppColors.grey900,
-            ),
-          ),
-          SizedBox(height: SizeConfig.scaleHeight(2)),
-          Text(
-            label,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              // fontSize: SizeConfig.scaleFont(12),
-              color: AppColors.grey600,
-            ),
-          ),
+          ...state.levels.map((level) {
+            bool isUnlocked =
+                state.pupil.unlockedLevels.contains(level.levelNumber) ||
+                level.levelNumber <= state.pupil.currentLevel;
+            bool isCompleted = level.levelNumber < state.pupil.currentLevel;
+            return CustomLevelCard(
+              levelName: level.name,
+              levelNumber: level.levelNumber,
+              isUnlocked: isUnlocked,
+              isCompleted: isCompleted,
+              onTap: () => _navigateToLevel(level.levelNumber),
+            );
+          }),
+          SizedBox(height: SizeConfig.scaleHeight(100)),
         ],
       ),
     );
   }
 
   void _navigateToLevel(int levelNumber) {
-    // Navigate to level details screen
-    context.read<DashboardBloc>().add(NavigateToLevel(levelNumber));
-
-    // TODO: Implement navigation to level screen
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text('Navigating to Level $levelNumber'),

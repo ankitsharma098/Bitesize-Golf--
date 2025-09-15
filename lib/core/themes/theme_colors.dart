@@ -62,7 +62,7 @@ class AppColors {
   );
 
   static const LinearGradient yellowGradient = LinearGradient(
-    colors: [Color(0xFFFFF200), Color(0xFFEEE200)], // Two colors
+    colors: [Color(0xFFFFDA00), Color(0xFFFFBB00)], // Two colors
     // begin: Alignment.topLeft,
     // end: Alignment.bottomRight,
   );

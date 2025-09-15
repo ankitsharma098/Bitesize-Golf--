@@ -1,59 +1,56 @@
 import 'dart:async';
-
 import 'package:bloc/bloc.dart';
 import 'package:injectable/injectable.dart';
-import 'package:meta/meta.dart';
-
 import '../../../auth/data/repositories/auth_repo.dart';
 import '../../../level/entity/level_entity.dart';
 import '../../pupil/data/models/pupil_model.dart';
 import '../data/dashboard_repo.dart';
-import 'dashboard_event.dart';
-import 'dashboard_state.dart';
+import 'home_event.dart';
+import 'home_state.dart';
 
 @injectable
-class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
+class HomeBloc extends Bloc<HomeEvent, HomeState> {
   final DashboardRepository _dashboardRepository;
   final AuthRepository _authRepository;
 
   StreamSubscription<PupilModel?>? _pupilSubscription;
   StreamSubscription<List<Level>>? _levelsSubscription;
 
-  DashboardBloc(this._dashboardRepository, this._authRepository)
-    : super(const DashboardInitial()) {
-    on<LoadDashboardData>(_onLoadDashboardData);
-    on<RefreshDashboard>(_onRefreshDashboard);
+  HomeBloc(this._dashboardRepository, this._authRepository)
+    : super(const HomeInitial()) {
+    on<LoadHomeData>(_onLoadHomeData);
+    on<RefreshHome>(_onRefreshHome);
     on<NavigateToLevel>(_onNavigateToLevel);
+    on<_HomeDataUpdated>(_onHomeDataUpdated);
   }
 
-  Future<void> _onLoadDashboardData(
-    LoadDashboardData event,
-    Emitter<DashboardState> emit,
+  Future<void> _onLoadHomeData(
+    LoadHomeData event,
+    Emitter<HomeState> emit,
   ) async {
     try {
-      emit(const DashboardLoading());
+      emit(const HomeLoading());
 
       final currentUser = await _authRepository.getCurrentUser();
       if (currentUser == null) {
-        emit(const DashboardError('User not found'));
+        emit(const HomeError('User not found'));
         return;
       }
 
-      // Start listening to real-time updates
-      await _startListeningToUpdates(currentUser.uid, emit);
+      await _startListeningToUpdates(currentUser.uid);
     } catch (e) {
-      emit(DashboardError('Failed to load dashboard: $e'));
+      emit(HomeError('Failed to load home: $e'));
     }
   }
 
-  Future<void> _onRefreshDashboard(
-    RefreshDashboard event,
-    Emitter<DashboardState> emit,
+  Future<void> _onRefreshHome(
+    RefreshHome event,
+    Emitter<HomeState> emit,
   ) async {
     try {
       final currentUser = await _authRepository.getCurrentUser();
       if (currentUser == null) {
-        emit(const DashboardError('User not found'));
+        emit(const HomeError('User not found'));
         return;
       }
 
@@ -61,35 +58,31 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
       final levels = await _dashboardRepository.getAllLevels();
 
       if (pupil != null) {
-        emit(DashboardLoaded(pupil: pupil, levels: levels));
+        emit(HomeLoaded(pupil: pupil, levels: levels));
       } else {
-        emit(const DashboardError('Pupil data not found'));
+        emit(const HomeError('Pupil data not found'));
       }
     } catch (e) {
-      emit(DashboardError('Failed to refresh dashboard: $e'));
+      emit(HomeError('Failed to refresh home: $e'));
     }
   }
 
-  Future<void> _onNavigateToLevel(
-    NavigateToLevel event,
-    Emitter<DashboardState> emit,
-  ) async {
-    // Handle level navigation logic here
-    // This could trigger navigation or level-specific actions
+  void _onNavigateToLevel(NavigateToLevel event, Emitter<HomeState> emit) {
+    // Navigation logic will be handled by the UI layer
+    // This could emit a navigation state or trigger a callback
   }
 
-  Future<void> _startListeningToUpdates(
-    String userId,
-    Emitter<DashboardState> emit,
-  ) async {
-    // Cancel existing subscriptions
+  void _onHomeDataUpdated(_HomeDataUpdated event, Emitter<HomeState> emit) {
+    emit(HomeLoaded(pupil: event.pupil, levels: event.levels));
+  }
+
+  Future<void> _startListeningToUpdates(String userId) async {
     await _pupilSubscription?.cancel();
     await _levelsSubscription?.cancel();
 
     PupilModel? currentPupil;
     List<Level> currentLevels = [];
 
-    // Listen to pupil data changes
     _pupilSubscription = _dashboardRepository
         .getPupilDataStream(userId)
         .listen(
@@ -97,25 +90,24 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
             if (pupil != null) {
               currentPupil = pupil;
               if (currentLevels.isNotEmpty) {
-                emit(DashboardLoaded(pupil: pupil, levels: currentLevels));
+                add(_HomeDataUpdated(pupil: pupil, levels: currentLevels));
               }
             }
           },
           onError: (error) {
-            emit(DashboardError('Failed to load pupil data: $error'));
+            add(_HomeError('Failed to load pupil data: $error'));
           },
         );
 
-    // Listen to levels changes
     _levelsSubscription = _dashboardRepository.getLevelsStream().listen(
       (levels) {
         currentLevels = levels;
         if (currentPupil != null) {
-          emit(DashboardLoaded(pupil: currentPupil!, levels: levels));
+          add(_HomeDataUpdated(pupil: currentPupil!, levels: levels));
         }
       },
       onError: (error) {
-        emit(DashboardError('Failed to load levels: $error'));
+        add(_HomeError('Failed to load levels: $error'));
       },
     );
   }
@@ -126,4 +118,17 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
     _levelsSubscription?.cancel();
     return super.close();
   }
+}
+
+class _HomeDataUpdated extends HomeEvent {
+  final PupilModel pupil;
+  final List<Level> levels;
+
+  const _HomeDataUpdated({required this.pupil, required this.levels});
+}
+
+class _HomeError extends HomeEvent {
+  final String message;
+
+  const _HomeError(this.message);
 }

@@ -172,11 +172,12 @@ Future<void> main() async {
 
   //await createRedLevelLesson(firestore);
 
-  //await createLevelsInFirestore(firestore);
+  await createLevelsInFirestore(firestore);
 }
 
 List<Map<String, dynamic>> generateLevels() {
-  final now = DateTime.now().toIso8601String();
+  // Use Timestamp instead of ISO string for better Firestore compatibility
+  final now = Timestamp.now();
 
   return [
     {

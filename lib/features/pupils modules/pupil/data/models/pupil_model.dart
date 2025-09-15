@@ -241,12 +241,13 @@ class PupilModel extends Equatable {
     'updatedAt': Timestamp.fromDate(updatedAt),
   };
 
+  // Updated fromJson method with proper date parsing
   factory PupilModel.fromJson(Map<String, dynamic> json) {
     return PupilModel(
       id: json['id'] as String? ?? '',
       userId: (json['userId'] ?? json['parentId']) as String? ?? '',
       name: json['name'] as String? ?? '',
-      dateOfBirth: (json['dateOfBirth'] as Timestamp?)?.toDate(),
+      dateOfBirth: _parseDateTime(json['dateOfBirth']),
       avatar: json['avatar'] as String?,
       handicap: json['handicap'] as String?,
       selectedCoachId: json['selectedCoachId'] as String?,
@@ -256,7 +257,7 @@ class PupilModel extends Equatable {
       assignedCoachId:
           (json['assignedCoachId'] ?? json['assignedCoach']) as String?,
       assignedCoachName: json['assignedCoachName'] as String?,
-      coachAssignedAt: (json['coachAssignedAt'] as Timestamp?)?.toDate(),
+      coachAssignedAt: _parseDateTime(json['coachAssignedAt']),
       assignmentStatus: json['assignmentStatus'] as String? ?? 'none',
       currentLevel: json['currentLevel'] ?? 1,
       unlockedLevels: List<int>.from(json['unlockedLevels'] ?? [1]),
@@ -268,14 +269,46 @@ class PupilModel extends Equatable {
       averageQuizScore: (json['averageQuizScore'] ?? 0.0).toDouble(),
       streakDays: json['streakDays'] ?? 0,
       lastActivityDate:
-          (json['lastActivityDate'] as Timestamp?)?.toDate() ?? DateTime.now(),
+          _parseDateTime(json['lastActivityDate']) ?? DateTime.now(),
       badges: List<String>.from(json['badges'] ?? []),
       subscription: json['subscription'] != null
           ? Subscription.fromJson(json['subscription'])
           : null,
-      createdAt: (json['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
-      updatedAt: (json['updatedAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      createdAt: _parseDateTime(json['createdAt']) ?? DateTime.now(),
+      updatedAt: _parseDateTime(json['updatedAt']) ?? DateTime.now(),
     );
+  }
+
+  // Helper method to parse different date formats
+  static DateTime? _parseDateTime(dynamic dateValue) {
+    if (dateValue == null) return null;
+
+    try {
+      // If it's already a Timestamp (from Firestore)
+      if (dateValue is Timestamp) {
+        return dateValue.toDate();
+      }
+
+      // If it's a string (ISO 8601 format)
+      if (dateValue is String) {
+        return DateTime.parse(dateValue);
+      }
+
+      // If it's already a DateTime
+      if (dateValue is DateTime) {
+        return dateValue;
+      }
+
+      // If it's milliseconds since epoch
+      if (dateValue is int) {
+        return DateTime.fromMillisecondsSinceEpoch(dateValue);
+      }
+    } catch (e) {
+      print('Error parsing date: $dateValue - $e');
+      return null;
+    }
+
+    return null;
   }
 
   // Parse level progress from JSON

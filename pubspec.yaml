@@ -92,6 +92,8 @@ flutter:
     - assets/welcome_balls/
     - assets/logo/
     - assets/images/
+    - assets/bird/
+    - assets/lock/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

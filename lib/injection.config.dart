@@ -18,8 +18,12 @@ import 'package:bitesize_golf/features/club/data/repositories/club_repository.da
     as _i652;
 import 'package:bitesize_golf/features/coaches/data/repositories/coach_repo.dart'
     as _i604;
-import 'package:bitesize_golf/features/pupils%20modules/pupil/data/repositories/pupil_repo.dart'
-    as _i906;
+import 'package:bitesize_golf/features/pupils%20modules/home/data/dashboard_repo.dart'
+    as _i840;
+import 'package:bitesize_golf/features/pupils%20modules/home/home%20bloc/home_bloc.dart'
+    as _i579;
+import 'package:bitesize_golf/features/pupils%20modules/profile/profile%20bloc/profile_bloc.dart'
+    as _i104;
 import 'package:bitesize_golf/features/subscription/data/data%20source/subscription_repo.dart'
     as _i395;
 import 'package:bitesize_golf/features/subscription/presentation/subscription_bloc/subscription_bloc.dart'
@@ -48,6 +52,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i398.FirebaseAnalytics>(() => registerModule.analytics);
     gh.lazySingleton<_i941.AuthRepository>(() => _i941.AuthRepository());
     gh.lazySingleton<_i604.CoachRepository>(() => _i604.CoachRepository());
+    gh.lazySingleton<_i840.DashboardRepository>(
+      () => _i840.DashboardRepository(),
+    );
     gh.lazySingleton<_i700.HiveStorageService>(
       () => _i700.HiveStorageServiceImpl(),
     );
@@ -57,8 +64,17 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i395.SubscriptionRepository>(
       () => _i395.SubscriptionRepository(gh<_i974.FirebaseFirestore>()),
     );
-    gh.lazySingleton<_i906.PupilRepository>(
-      () => _i906.PupilRepository(gh<_i974.FirebaseFirestore>()),
+    gh.factory<_i579.HomeBloc>(
+      () => _i579.HomeBloc(
+        gh<_i840.DashboardRepository>(),
+        gh<_i941.AuthRepository>(),
+      ),
+    );
+    gh.factory<_i104.ProfileBloc>(
+      () => _i104.ProfileBloc(
+        gh<_i840.DashboardRepository>(),
+        gh<_i941.AuthRepository>(),
+      ),
     );
     gh.factory<_i531.SubscriptionBloc>(
       () => _i531.SubscriptionBloc(gh<_i395.SubscriptionRepository>()),

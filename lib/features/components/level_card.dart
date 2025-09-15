@@ -1,198 +1,180 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-
 import '../../../core/themes/theme_colors.dart';
+import '../../../features/components/utils/size_config.dart';
+import '../level/entity/level_entity.dart';
+import '../pupils modules/pupil/data/models/pupil_model.dart';
 
 class LevelCard extends StatelessWidget {
-  final LevelType levelType;
-  final String title;
-  final String subtitle;
-  final Widget? trailing;
-  final VoidCallback? onTap;
-  final bool isCompleted;
-  final IconData? leadingIcon;
+  final Level level;
+  final PupilModel pupil;
+  final VoidCallback onTap;
 
   const LevelCard({
     Key? key,
-    required this.levelType,
-    required this.title,
-    required this.subtitle,
-    this.trailing,
-    this.onTap,
-    this.isCompleted = false,
-    this.leadingIcon,
+    required this.level,
+    required this.pupil,
+    required this.onTap,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    final levelType = _getLevelType(level.levelNumber);
+    final isUnlocked = pupil.isLevelUnlocked(level.levelNumber);
+    final isCompleted = pupil.isLevelCompleted(level.levelNumber);
+
     return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: isCompleted ? levelType.color : AppColors.grey300,
-          width: isCompleted ? 2 : 1,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(12),
-          child: Padding(
-            padding: EdgeInsets.all(16),
-            child: Row(
-              children: [
-                if (leadingIcon != null)
-                  Container(
-                    width: 48,
-                    height: 48,
-                    decoration: BoxDecoration(
-                      color: levelType.lightColor,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Icon(leadingIcon, color: levelType.color, size: 24),
-                  ),
-                if (leadingIcon != null) SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+      margin: EdgeInsets.only(bottom: SizeConfig.scaleHeight(16)),
+      child: Stack(
+        children: [
+          Container(
+            decoration: BoxDecoration(
+              gradient: levelType.gradient,
+              borderRadius: BorderRadius.circular(SizeConfig.scaleWidth(16)),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 8,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Container(
+              padding: EdgeInsets.all(SizeConfig.scaleWidth(20)),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
                     children: [
-                      Text(
-                        title,
-                        style: GoogleFonts.inter(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.grey900,
+                      if (isCompleted)
+                        Icon(
+                          Icons.check_circle,
+                          color: Colors.white,
+                          size: SizeConfig.scaleWidth(24),
+                        )
+                      else if (isUnlocked)
+                        Icon(
+                          Icons.play_circle_outline,
+                          color: Colors.white,
+                          size: SizeConfig.scaleWidth(24),
+                        )
+                      else
+                        Icon(
+                          Icons.lock,
+                          color: Colors.white,
+                          size: SizeConfig.scaleWidth(24),
                         ),
-                      ),
-                      SizedBox(height: 4),
-                      Text(
-                        subtitle,
-                        style: GoogleFonts.inter(
-                          fontSize: 14,
-                          color: AppColors.grey600,
+                      SizedBox(width: SizeConfig.scaleWidth(8)),
+                      Expanded(
+                        child: Text(
+                          level.name,
+                          style: TextStyle(
+                            // fontSize: SizeConfig.scaleFont(18),
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                          ),
                         ),
                       ),
                     ],
                   ),
-                ),
-                if (trailing != null) trailing!,
-                if (isCompleted)
-                  Icon(Icons.check_circle, color: levelType.color, size: 24),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class StatusCard extends StatelessWidget {
-  final String title;
-  final String? subtitle;
-  final StatusType statusType;
-  final IconData? icon;
-  final VoidCallback? onTap;
-  final Widget? trailing;
-
-  const StatusCard({
-    Key? key,
-    required this.title,
-    this.subtitle,
-    required this.statusType,
-    this.icon,
-    this.onTap,
-    this.trailing,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: statusType.backgroundColor,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: statusType.color, width: 1),
-      ),
-      child: InkWell(
-        onTap: onTap,
-        child: Row(
-          children: [
-            if (icon != null) ...[
-              Icon(icon, color: statusType.color, size: 20),
-              SizedBox(width: 8),
-            ],
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: GoogleFonts.inter(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: statusType.textColor,
-                    ),
-                  ),
-                  if (subtitle != null) ...[
-                    SizedBox(height: 2),
-                    Text(
-                      subtitle!,
-                      style: GoogleFonts.inter(
-                        fontSize: 12,
-                        color: statusType.textColor.withOpacity(0.8),
+                  SizedBox(height: SizeConfig.scaleHeight(16)),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(
+                        SizeConfig.scaleWidth(12),
                       ),
                     ),
-                  ],
+                    padding: EdgeInsets.all(SizeConfig.scaleWidth(16)),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            children: [
+                              CircleAvatar(
+                                radius: SizeConfig.scaleWidth(24),
+                                backgroundColor: AppColors.grey200,
+                                child: Icon(
+                                  Icons.sports_golf,
+                                  color: AppColors.grey700,
+                                  size: SizeConfig.scaleWidth(24),
+                                ),
+                              ),
+                              SizedBox(height: SizeConfig.scaleHeight(8)),
+                              Text(
+                                'Go to Level',
+                                style: TextStyle(
+                                  //fontSize: SizeConfig.scaleFont(14),
+                                  fontWeight: FontWeight.w500,
+                                  color: AppColors.grey700,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ],
               ),
             ),
-            if (trailing != null) trailing!,
-          ],
-        ),
+          ),
+          // Lock overlay for locked levels
+          if (!isUnlocked && level.levelNumber > 1)
+            Positioned(
+              top: SizeConfig.scaleHeight(16),
+              right: SizeConfig.scaleWidth(16),
+              child: Container(
+                padding: EdgeInsets.all(SizeConfig.scaleWidth(8)),
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.lock,
+                  color: AppColors.grey600,
+                  size: SizeConfig.scaleWidth(20),
+                ),
+              ),
+            ),
+          // Tap area
+          Positioned.fill(
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: isUnlocked ? onTap : null,
+                borderRadius: BorderRadius.circular(SizeConfig.scaleWidth(16)),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
-}
 
-enum StatusType {
-  done(
-    color: AppColors.success,
-    backgroundColor: Color(0xFFEDF7ED),
-    textColor: Color(0xFF1B5E20),
-  ),
-  notPassed(
-    color: AppColors.error,
-    backgroundColor: Color(0xFFFDEDED),
-    textColor: Color(0xFFC62828),
-  ),
-  inProgress(
-    color: AppColors.warning,
-    backgroundColor: Color(0xFFFFF4E6),
-    textColor: Color(0xFFE65100),
-  ),
-  resetSelections(
-    color: AppColors.error,
-    backgroundColor: Color(0xFFFDEDED),
-    textColor: Color(0xFFC62828),
-  );
-
-  const StatusType({
-    required this.color,
-    required this.backgroundColor,
-    required this.textColor,
-  });
-
-  final Color color;
-  final Color backgroundColor;
-  final Color textColor;
+  LevelType _getLevelType(int levelNumber) {
+    switch (levelNumber) {
+      case 1:
+        return LevelType.redLevel;
+      case 2:
+        return LevelType.orangeLevel;
+      case 3:
+        return LevelType.yellowLevel;
+      case 4:
+        return LevelType.greenLevel;
+      case 5:
+        return LevelType.blueLevel;
+      case 6:
+        return LevelType.indigoLevel;
+      case 7:
+        return LevelType.violetLevel;
+      case 8:
+        return LevelType.coralLevel;
+      case 9:
+        return LevelType.silverLevel;
+      case 10:
+        return LevelType.goldLevel;
+      default:
+        return LevelType.redLevel;
+    }
+  }
 }

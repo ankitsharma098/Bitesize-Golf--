@@ -170,7 +170,312 @@ Future<void> main() async {
 
   // print('🎉 All pending requests approved!');
 
-  await createRedLevelLesson(firestore);
+  //await createRedLevelLesson(firestore);
+
+  //await createLevelsInFirestore(firestore);
+}
+
+List<Map<String, dynamic>> generateLevels() {
+  final now = DateTime.now().toIso8601String();
+
+  return [
+    {
+      "levelNumber": 1,
+      "name": "Red Level 1",
+      "pupilDescription": """
+        <p>This is where the journey begins!</p>
+        <p>Red Level 1 offers a basic introduction to golf, focusing on the key fundamentals.</p>
+        <p>You'll explore topics like:</p>
+        <ul>
+          <li>Aim</li>
+          <li>Hold</li>
+          <li>Dress code</li>
+          <li>Identifying your ball</li>
+          <li>Different shots</li>
+          <li>Pace of play</li>
+          <li>Taking care of the course</li>
+          <li>Playing the ball as it lies</li>
+          <li>...and much more!</li>
+        </ul>
+      """,
+      "coachDescription": """
+        <p>This is where your pupils begin their journey.</p>
+        <p>Red Level 1 introduces them to the basics of golf — from setup and swing to dress code and respect on the course.</p>
+        <p>As their coach, you can monitor their progress, assign sessions, and support their development every step of the way.</p>
+      """,
+      "accessTier": "free",
+      "prerequisite": null,
+      "isActive": true,
+      "isPublished": true,
+      "createdAt": now,
+      "updatedAt": now,
+    },
+    {
+      "levelNumber": 2,
+      "name": "Orange Level 2",
+      "pupilDescription": """
+        <p>This is where your pupils begin their journey.</p>
+        <p>Orange Level 2 introduces them to the basics of golf — from setup and swing to dress code and respect on the course.</p>
+        <p>As their coach, you can monitor their progress, assign sessions, and support their development every step of the way.</p>
+      """,
+      "coachDescription": """
+        <p>This is where the journey begins!</p>
+        <p>Orange Level 2 offers a basic introduction to golf, focusing on the key fundamentals.</p>
+        <p>You'll explore topics like:</p>
+        <ul>
+          <li>Aim</li>
+          <li>Hold</li>
+          <li>Dress code</li>
+          <li>Identifying your ball</li>
+          <li>Different shots</li>
+          <li>Pace of play</li>
+          <li>Taking care of the course</li>
+          <li>Playing the ball as it lies</li>
+          <li>...and much more!</li>
+        </ul>
+      """,
+      "accessTier": "premium",
+      "prerequisite": "Red Level 1",
+      "isActive": true,
+      "isPublished": true,
+      "createdAt": now,
+      "updatedAt": now,
+    },
+    {
+      "levelNumber": 3,
+      "name": "Yellow Level 3",
+      "pupilDescription": """
+        <p>Another step towards your golfing goals!</p>
+        <p>Yellow Level 3 offers new characters and subjects to help you develop your game further and reach new heights.</p>
+        <p>You'll explore topics like:</p>
+        <ul>
+          <li>Building a solid stance</li>
+          <li>How to address the ball with your woods</li>
+          <li>Looking at some clubhouse rules</li>
+          <li>Rule book meanings and definitions</li>
+          <li>Improving your pitching</li>
+          <li>What to do on the first tee</li>
+          <li>Various challenges for you to try</li>
+          <li>Improving bunker play</li>
+          <li>...and much more!</li>
+        </ul>
+      """,
+      "coachDescription": """
+        <p>This is where your pupils begin their journey.</p>
+        <p>Yellow Level 3 introduces them to the basics of golf — from setup and swing to dress code and respect on the course.</p>
+        <p>As their coach, you can monitor their progress, assign sessions, and support their development every step of the way.</p>
+      """,
+      "accessTier": "premium",
+      "prerequisite": "Orange Level 2",
+      "isActive": true,
+      "isPublished": true,
+      "createdAt": now,
+      "updatedAt": now,
+    },
+    {
+      "levelNumber": 4,
+      "name": "Green Level 4",
+      "pupilDescription": """
+        <p>It's time to take your skills to the course.</p>
+        <p>Green Level 4 goes deeper into your golf swing, continuing to help you improve on your way to golfing success:</p>
+        <ul>
+          <li>Focus on your posture with irons</li>
+          <li>Learn about the first 4 rules of the game</li>
+          <li>What is good sportsmanship</li>
+          <li>Build your rhythm</li>
+          <li>Play shots with your eyes closed</li>
+          <li>The importance of local rules</li>
+          <li>What's a handicap, how do you get one?</li>
+          <li>Who plays next?</li>
+          <li>...and much more!</li>
+        </ul>
+      """,
+      "coachDescription": """
+        <p>This is where your pupils begin their journey.</p>
+        <p>Green Level 4 introduces them to the basics of golf — from setup and swing to dress code and respect on the course.</p>
+        <p>As their coach, you can monitor their progress, assign sessions, and support their development every step of the way.</p>
+      """,
+      "accessTier": "premium",
+      "prerequisite": "Yellow Level 3",
+      "isActive": true,
+      "isPublished": true,
+      "createdAt": now,
+      "updatedAt": now,
+    },
+    {
+      "levelNumber": 5,
+      "name": "Blue Level 5",
+      "pupilDescription": """
+        <p>This is where your pupils begin their journey.</p>
+        <p>Blue Level 5 introduces them to the basics of golf — from setup and swing to dress code and respect on the course.</p>
+        <p>As their coach, you can monitor their progress, assign sessions, and support their development every step of the way.</p>
+      """,
+      "coachDescription": """
+        <p>Your game starts to go skyward from now on, so let's get going!</p>
+        <p>Blue Level 5 goes farther and deeper into improving your game and making low scores on the course, we'll look at:</p>
+        <ul>
+          <li>Various holds on the club</li>
+          <li>Keeping your drives straight and swinging smoothly</li>
+          <li>Rules 4, 5 & 6</li>
+          <li>What is sportsmanship?</li>
+          <li>Picking your landing spots</li>
+          <li>More drills and skills</li>
+          <li>Being your own referee</li>
+          <li>...and much more!</li>
+        </ul>
+      """,
+      "accessTier": "premium",
+      "prerequisite": "Green Level 4",
+      "isActive": true,
+      "isPublished": true,
+      "createdAt": now,
+      "updatedAt": now,
+    },
+    {
+      "levelNumber": 6,
+      "name": "Indigo Level 6",
+      "pupilDescription": """
+        <p>Congratulations getting to this level, you're quite a player and your skills are developing nicely. Get ready for more tips, drills and skills and important info to help you get to the next level. You'll learn about:</p>
+        <ul>
+          <li>Distance control and consistency</li>
+          <li>Decisions that make champions</li>
+          <li>Taking responsibility</li>
+          <li>Imagination around the greens</li>
+          <li>Golfology and jargon</li>
+          <li>How to read the greens</li>
+          <li>The scorecard in detail</li>
+          <li>...and much more!</li>
+        </ul>
+      """,
+      "coachDescription": """
+        <p>Level 6 means your pupils should be regular 18 hole golfers and enjoying playing in competitions. The challenges will stretch their talents further and set them on a course for higher standards within the game.</p>
+        <p>As their coach, you can monitor their progress, assign sessions, and support their development every step of the way.</p>
+      """,
+      "accessTier": "premium",
+      "prerequisite": "Blue Level 5",
+      "isActive": true,
+      "isPublished": true,
+      "createdAt": now,
+      "updatedAt": now,
+    },
+    {
+      "levelNumber": 7,
+      "name": "Violet Level 7",
+      "pupilDescription": """
+        <p>The start of the advanced levels and you're going to gain so much valuable knowledge that could take years to acquire. These top levels are designed to get you championship ready, you'll learn about:</p>
+        <ul>
+          <li>Shaping your shots</li>
+          <li>Creating power in your swing</li>
+          <li>How you learn</li>
+          <li>Making decisions</li>
+          <li>Fitness topics</li>
+          <li>Rules 9 & 13</li>
+          <li>Putt like the pros</li>
+          <li>...and much more!</li>
+        </ul>
+      """,
+      "coachDescription": """
+        <p>This is where your pupils begin their journey.</p>
+        <p>Violet Level 7 introduces them to the basics of golf — from setup and swing to dress code and respect on the course.</p>
+        <p>As their coach, you can monitor their progress, assign sessions, and support their development every step of the way.</p>
+      """,
+      "accessTier": "premium",
+      "prerequisite": "Indigo Level 6",
+      "isActive": true,
+      "isPublished": true,
+      "createdAt": now,
+      "updatedAt": now,
+    },
+    {
+      "levelNumber": 8,
+      "name": "Coral Level 8",
+      "pupilDescription": """
+        <p>Coral is the second section of the elite levels and here you'll learn vital content on all the aspects of game needed to reach the highest levels of performance.</p>
+        <p>Topics include:</p>
+        <ul>
+          <li>Using stat sheets</li>
+          <li>Positive feedback for golf</li>
+          <li>What are spread patterns</li>
+          <li>Self talk</li>
+          <li>Stretching</li>
+          <li>The lob shot</li>
+          <li>Creating anchors</li>
+          <li>...and much more!</li>
+        </ul>
+      """,
+      "coachDescription": """
+        <p>This is where your pupils begin their journey.</p>
+        <p>Coral Level 8 introduces them to the basics of golf — from setup and swing to dress code and respect on the course.</p>
+        <p>As their coach, you can monitor their progress, assign sessions, and support their development every step of the way.</p>
+      """,
+      "accessTier": "premium",
+      "prerequisite": "Violet Level 7",
+      "isActive": true,
+      "isPublished": true,
+      "createdAt": now,
+      "updatedAt": now,
+    },
+    {
+      "levelNumber": 9,
+      "name": "Silver Level 9",
+      "pupilDescription": """
+        <p>Well done on making it to the Silver Level, that's a fantastic achievement and you should be feeling really proud of yourself. In this level you'll explore topics like:</p>
+        <ul>
+          <li>How to play various different lies</li>
+          <li>Goal setting</li>
+          <li>Energy and diet</li>
+          <li>What to do if you lose your ball</li>
+          <li>Healthy eating</li>
+          <li>The food pyramid</li>
+          <li>Attitude and aptitude</li>
+          <li>Reading greens like the pros</li>
+          <li>...and much more!</li>
+        </ul>
+      """,
+      "coachDescription": """
+        <p>Silver Level 9 is aimed at young players capable of making birdies and playing to a handicap of approximately 12 or less.</p>
+        <p>As their coach, you can monitor their progress, assign sessions, and support their development every step of the way.</p>
+      """,
+      "accessTier": "premium",
+      "prerequisite": "Coral Level 8",
+      "isActive": true,
+      "isPublished": true,
+      "createdAt": now,
+      "updatedAt": now,
+    },
+    {
+      "levelNumber": 10,
+      "name": "Gold Level 10",
+      "pupilDescription": """
+        <p>You may well have noticed there is no quiz in the Gold book. This is because you've been tested enough, you know so much and the honest reason is, there wasn't enough space left to do the quiz. You have the app though so for you to complete everything, here are your final questions and the last stage to reaching your golden goal.</p>
+      """,
+      "coachDescription": """
+        <p>This is where your pupils begin their journey.</p>
+        <p>Gold Level 10 introduces them to the basics of golf — from setup and swing to dress code and respect on the course.</p>
+        <p>As their coach, you can monitor their progress, assign sessions, and support their development every step of the way.</p>
+      """,
+      "accessTier": "premium",
+      "prerequisite": "Silver Level 9",
+      "isActive": true,
+      "isPublished": true,
+      "createdAt": now,
+      "updatedAt": now,
+    },
+  ];
+}
+
+Future<void> createLevelsInFirestore(FirebaseFirestore firestore) async {
+  List<Map<String, dynamic>> levels = generateLevels();
+  final batch = firestore.batch();
+
+  for (var level in levels) {
+    final levelRef = firestore
+        .collection('levels')
+        .doc('level_${level['levelNumber']}');
+    batch.set(levelRef, level);
+  }
+
+  await batch.commit();
 }
 
 /* ------------------------------------------------------------------ */

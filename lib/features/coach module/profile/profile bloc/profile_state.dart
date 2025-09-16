@@ -1,26 +1,24 @@
-import '../../../level/entity/level_entity.dart';
-import '../../pupil/data/models/pupil_model.dart';
+import 'package:bitesize_golf/features/coaches/data/models/coach_model.dart';
 
-abstract class ProfileState {
-  const ProfileState();
+abstract class CoachProfileState {
+  const CoachProfileState();
 }
 
-class ProfileInitial extends ProfileState {
+class ProfileInitial extends CoachProfileState {
   const ProfileInitial();
 }
 
-class ProfileLoading extends ProfileState {
+class ProfileLoading extends CoachProfileState {
   const ProfileLoading();
 }
 
-class ProfileLoaded extends ProfileState {
-  final PupilModel pupil;
-  final Level currentLevel;
+class ProfileLoaded extends CoachProfileState {
+  final CoachModel coach;
 
-  const ProfileLoaded({required this.pupil, required this.currentLevel});
+  const ProfileLoaded({required this.coach});
 }
 
-class ProfileError extends ProfileState {
+class ProfileError extends CoachProfileState {
   final String message;
 
   const ProfileError(this.message);

@@ -1,3 +1,4 @@
+import 'package:bitesize_golf/features/coach%20module/profile/data/pupil_profile_repo.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:provider/provider.dart';
@@ -10,18 +11,18 @@ import '../../custom bottom navigation/bloc/custom_bottom_navigation_state.dart'
 import '../../custom bottom navigation/presentation/custom_bottom_navigation.dart';
 import '../../profile/presentation/profile_page.dart';
 import '../../profile/profile bloc/profile_bloc.dart';
-import '../data/dashboard_repo.dart';
+import '../data/home_level_repo.dart';
 import '../home bloc/home_bloc.dart';
 import 'home_page.dart';
 
-class MainWrapperScreen extends StatefulWidget {
-  const MainWrapperScreen({Key? key}) : super(key: key);
+class CoachMainWrapperScreen extends StatefulWidget {
+  const CoachMainWrapperScreen({Key? key}) : super(key: key);
 
   @override
-  State<MainWrapperScreen> createState() => _MainWrapperScreenState();
+  State<CoachMainWrapperScreen> createState() => _CoachMainWrapperScreenState();
 }
 
-class _MainWrapperScreenState extends State<MainWrapperScreen> {
+class _CoachMainWrapperScreenState extends State<CoachMainWrapperScreen> {
   late PageController _pageController;
 
   @override
@@ -49,21 +50,23 @@ class _MainWrapperScreenState extends State<MainWrapperScreen> {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        Provider<DashboardRepository>(create: (_) => DashboardRepository()),
+        Provider<CoachProfilePageRepo>(create: (_) => CoachProfilePageRepo()),
+        Provider<LevelRepository>(create: (_) => LevelRepository()),
         Provider<AuthRepository>(create: (_) => AuthRepository()),
       ],
       child: MultiBlocProvider(
         providers: [
           BlocProvider<BottomNavBloc>(create: (_) => BottomNavBloc()),
-          BlocProvider<HomeBloc>(
-            create: (context) => HomeBloc(
-              context.read<DashboardRepository>(),
+          BlocProvider<CoachHomeBloc>(
+            create: (context) => CoachHomeBloc(
+              context.read<CoachProfilePageRepo>(),
+              context.read<LevelRepository>(),
               context.read<AuthRepository>(),
             ),
           ),
-          BlocProvider<ProfileBloc>(
-            create: (context) => ProfileBloc(
-              context.read<DashboardRepository>(),
+          BlocProvider<CoachProfileBloc>(
+            create: (context) => CoachProfileBloc(
+              context.read<CoachProfilePageRepo>(),
               context.read<AuthRepository>(),
             ),
           ),
@@ -83,11 +86,11 @@ class _MainWrapperScreenState extends State<MainWrapperScreen> {
                       );
                     },
                     children: const [
-                      HomeScreen(),
+                      CoachHomeScreen(),
                       PlaceholderScreen(title: 'Schedule'),
                       PlaceholderScreen(title: 'Progress'),
                       PlaceholderScreen(title: 'Awards'),
-                      ProfileScreen(),
+                      CoachProfileScreen(),
                     ],
                   ),
                   bottomNavigationBar: CustomBottomNavBar(

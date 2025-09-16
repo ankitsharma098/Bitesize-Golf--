@@ -1,23 +1,28 @@
 import 'dart:async';
+import 'package:bitesize_golf/features/coaches/data/models/coach_model.dart';
+import 'package:bitesize_golf/features/level/entity/level_entity.dart';
 import 'package:bloc/bloc.dart';
 import 'package:injectable/injectable.dart';
 import '../../../auth/data/repositories/auth_repo.dart';
-import '../../../level/entity/level_entity.dart';
-import '../../pupil/data/models/pupil_model.dart';
-import '../data/dashboard_repo.dart';
+import '../../profile/data/pupil_profile_repo.dart';
+import '../data/home_level_repo.dart';
 import 'home_event.dart';
 import 'home_state.dart';
 
 @injectable
-class HomeBloc extends Bloc<HomeEvent, HomeState> {
-  final DashboardRepository _dashboardRepository;
+class CoachHomeBloc extends Bloc<CoachHomeEvent, CoachHomeState> {
+  final CoachProfilePageRepo _coachDashboardRepository;
+  final LevelRepository _levelRepository;
   final AuthRepository _authRepository;
 
-  StreamSubscription<PupilModel?>? _pupilSubscription;
+  StreamSubscription<CoachModel?>? _coachSubscription;
   StreamSubscription<List<Level>>? _levelsSubscription;
 
-  HomeBloc(this._dashboardRepository, this._authRepository)
-    : super(const HomeInitial()) {
+  CoachHomeBloc(
+    this._coachDashboardRepository,
+    this._levelRepository,
+    this._authRepository,
+  ) : super(const HomeInitial()) {
     on<LoadHomeData>(_onLoadHomeData);
     on<RefreshHome>(_onRefreshHome);
     on<NavigateToLevel>(_onNavigateToLevel);
@@ -26,7 +31,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
 
   Future<void> _onLoadHomeData(
     LoadHomeData event,
-    Emitter<HomeState> emit,
+    Emitter<CoachHomeState> emit,
   ) async {
     try {
       emit(const HomeLoading());
@@ -45,7 +50,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
 
   Future<void> _onRefreshHome(
     RefreshHome event,
-    Emitter<HomeState> emit,
+    Emitter<CoachHomeState> emit,
   ) async {
     try {
       final currentUser = await _authRepository.getCurrentUser();
@@ -54,56 +59,67 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
         return;
       }
 
-      final pupil = await _dashboardRepository.getPupilData(currentUser.uid);
-      final levels = await _dashboardRepository.getAllLevels();
+      final coach = await _coachDashboardRepository.getCoachData(
+        currentUser.uid,
+      );
+      final levels = await _levelRepository.getAllLevels();
 
-      if (pupil != null) {
-        emit(HomeLoaded(pupil: pupil, levels: levels));
+      if (coach != null) {
+        emit(HomeLoaded(coach: coach, levels: levels));
       } else {
-        emit(const HomeError('Pupil data not found'));
+        emit(const HomeError('Coach data not found'));
       }
     } catch (e) {
       emit(HomeError('Failed to refresh home: $e'));
     }
   }
 
-  void _onNavigateToLevel(NavigateToLevel event, Emitter<HomeState> emit) {
+  void _onNavigateToLevel(NavigateToLevel event, Emitter<CoachHomeState> emit) {
     // Navigation logic will be handled by the UI layer
     // This could emit a navigation state or trigger a callback
+    // ScaffoldMessenger.of(emit as BuildContext).showSnackBar(
+    //   SnackBar(
+    //     content: Text('Navigating to Level ${event.levelNumber}'),
+    //     backgroundColor: AppColors.greenDark,
+    //   ),
+    // );
   }
 
-  void _onHomeDataUpdated(_HomeDataUpdated event, Emitter<HomeState> emit) {
-    emit(HomeLoaded(pupil: event.pupil, levels: event.levels));
+  void _onHomeDataUpdated(
+    _HomeDataUpdated event,
+    Emitter<CoachHomeState> emit,
+  ) {
+    emit(HomeLoaded(coach: event.coach, levels: event.levels));
   }
 
   Future<void> _startListeningToUpdates(String userId) async {
-    await _pupilSubscription?.cancel();
+    await _coachSubscription?.cancel();
     await _levelsSubscription?.cancel();
 
-    PupilModel? currentPupil;
+    CoachModel? currentCoach;
     List<Level> currentLevels = [];
 
-    _pupilSubscription = _dashboardRepository
-        .getPupilDataStream(userId)
+    _coachSubscription = _coachDashboardRepository
+        .getCoachesDataStream(userId)
         .listen(
-          (pupil) {
-            if (pupil != null) {
-              currentPupil = pupil;
+          (coach) {
+            if (coach != null) {
+              currentCoach = coach;
               if (currentLevels.isNotEmpty) {
-                add(_HomeDataUpdated(pupil: pupil, levels: currentLevels));
+                add(_HomeDataUpdated(coach: coach, levels: currentLevels));
               }
             }
           },
           onError: (error) {
-            add(_HomeError('Failed to load pupil data: $error'));
+            add(_HomeError('Failed to load coach data: $error'));
           },
         );
 
-    _levelsSubscription = _dashboardRepository.getLevelsStream().listen(
+    _levelsSubscription = _levelRepository.getLevelsStream().listen(
       (levels) {
         currentLevels = levels;
-        if (currentPupil != null) {
-          add(_HomeDataUpdated(pupil: currentPupil!, levels: levels));
+        if (currentCoach != null) {
+          add(_HomeDataUpdated(coach: currentCoach!, levels: levels));
         }
       },
       onError: (error) {
@@ -114,21 +130,21 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
 
   @override
   Future<void> close() {
-    _pupilSubscription?.cancel();
+    _coachSubscription?.cancel();
     _levelsSubscription?.cancel();
     return super.close();
   }
 }
 
-class _HomeDataUpdated extends HomeEvent {
-  final PupilModel pupil;
+class _HomeDataUpdated extends CoachHomeEvent {
+  final CoachModel coach;
   final List<Level> levels;
 
-  const _HomeDataUpdated({required this.pupil, required this.levels});
+  _HomeDataUpdated({required this.coach, required this.levels});
 }
 
-class _HomeError extends HomeEvent {
+class _HomeError extends CoachHomeEvent {
   final String message;
 
-  const _HomeError(this.message);
+  _HomeError(this.message);
 }

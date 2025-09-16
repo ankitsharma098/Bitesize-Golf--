@@ -1,183 +1,146 @@
+import 'package:bitesize_golf/core/themes/theme_colors.dart';
+import 'package:bitesize_golf/features/components/utils/size_config.dart';
 import 'package:flutter/material.dart';
+import 'package:bitesize_golf/core/themes/level_utils.dart';
 
-import '../../core/themes/theme_colors.dart';
+import '../../core/themes/asset_custom.dart';
+import 'ball_image.dart'; // Assuming BallImage is defined
 
-class CustomLevelCard extends StatelessWidget {
+class CurrentLevelCard extends StatelessWidget {
   final String levelName;
   final int levelNumber;
-  final bool isUnlocked;
-  final bool isCompleted;
-  final VoidCallback onTap;
+  final LevelType levelType;
+  final VoidCallback onMoreInfoTap;
+  final VoidCallback onLevelTap;
 
-  const CustomLevelCard({
+  const CurrentLevelCard({
     super.key,
     required this.levelName,
     required this.levelNumber,
-    required this.isUnlocked,
-    required this.isCompleted,
-    required this.onTap,
+    required this.levelType,
+    required this.onMoreInfoTap,
+    required this.onLevelTap,
   });
-
-  LinearGradient _getGradient() {
-    switch (levelNumber) {
-      case 1:
-        return LevelType.redLevel.gradient;
-      case 2:
-        return LevelType.orangeLevel.gradient;
-      case 3:
-        return LevelType.yellowLevel.gradient;
-      case 4:
-        return LevelType.greenLevel.gradient;
-      case 5:
-        return LevelType.blueLevel.gradient;
-      case 6:
-        return LevelType.indigoLevel.gradient;
-      case 7:
-        return LevelType.violetLevel.gradient;
-      case 8:
-        return LevelType.coralLevel.gradient;
-      case 9:
-        return LevelType.silverLevel.gradient;
-      case 10:
-        return LevelType.goldLevel.gradient;
-      default:
-        return LevelType.redLevel.gradient; // Default to red gradient
-    }
-  }
-
-  Color _getLightColor() {
-    switch (levelNumber) {
-      case 1:
-        return LevelType.redLevel.lightColor;
-      case 2:
-        return LevelType.orangeLevel.lightColor;
-      case 3:
-        return LevelType.yellowLevel.lightColor;
-      case 4:
-        return LevelType.greenLevel.lightColor;
-      case 5:
-        return LevelType.blueLevel.lightColor;
-      case 6:
-        return LevelType.indigoLevel.lightColor;
-      case 7:
-        return LevelType.violetLevel.lightColor;
-      case 8:
-        return LevelType.coralLevel.lightColor;
-      case 9:
-        return LevelType.silverLevel.lightColor;
-      case 10:
-        return LevelType.goldLevel.lightColor;
-      default:
-        return LevelType.redLevel.lightColor; // Default to red light color
-    }
-  }
-
-  String getSwingAsset() {
-    switch (levelNumber) {
-      case 1:
-        return 'assets/swing_balls_1/Level=red.png';
-      case 2:
-        return 'assets/swing_balls_1/Level=orange.png';
-      case 3:
-        return 'assets/swing_balls_1/Level=Yellow.png';
-      case 4:
-        return 'assets/swing_balls_1/Level=Green.png';
-      case 5:
-        return 'assets/swing_balls_1/Level=Blue.png';
-      case 6:
-        return 'assets/swing_balls_1/Level=Indigo.png';
-      case 7:
-        return 'assets/swing_balls_1/Level=Violet.png';
-      case 8:
-        return 'assets/swing_balls_1/Level=Coral.png';
-      case 9:
-        return 'assets/swing_balls_1/Level=Silver.png';
-      case 10:
-        return 'assets/swing_balls_1/Level=Gold.png';
-      default:
-        return 'assets/swing_balls_1/Level=red.png'; // Default to red light color
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
+    final LinearGradient levelGradient = LevelUtils.getLevelGradient(
+      levelNumber,
+    );
+    // Extract the first color from the gradient as the base color
+    final Color baseColor = levelGradient.colors.first;
+    // Create a lighter version by blending with white (e.g., 70% white, 30% base color)
+    final Color lighterColor = Color.lerp(baseColor, AppColors.white, 0.7)!;
+
+    final Color moreLighterColor = Color.lerp(baseColor, AppColors.white, 0.9)!;
+
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
+      margin: EdgeInsets.symmetric(horizontal: SizeConfig.scaleWidth(20)),
       decoration: BoxDecoration(
-        gradient: _getGradient(),
-        borderRadius: BorderRadius.circular(16),
+        gradient: levelGradient,
+        borderRadius: BorderRadius.circular(SizeConfig.scaleWidth(16)),
       ),
       child: Padding(
-        padding: const EdgeInsets.only(
-          left: 15,
-          right: 15,
-          top: 15,
-          bottom: 15,
-        ),
+        padding: EdgeInsets.all(SizeConfig.scaleWidth(8)),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Stack(
+            Row(
               children: [
-                Row(
-                  children: [
-                    // Icon(Icons.check, color: Colors.white, size: 24),
-                    Image.asset("assets/bird/bird.png", width: 40, height: 40),
-                    const SizedBox(width: 8),
-                    Text(
-                      levelName,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 18,
-                      ),
-                    ),
-                  ],
+                Image.asset(
+                  "assets/bird/bird.png",
+                  width: 45,
+                  height: 45,
+                  color: AppColors.white,
                 ),
-                if (!isUnlocked)
-                  Positioned(
-                    top: 0,
-                    right: 2,
-                    child: Image.asset(
-                      "assets/lock/lock.png",
-                      width: 35,
-                      height: 35,
-                    ),
+                SizedBox(width: SizeConfig.scaleWidth(8)),
+                Text(
+                  levelName,
+                  style: TextStyle(
+                    color: AppColors.white,
+                    fontSize: SizeConfig.scaleText(18),
+                    fontWeight: FontWeight.w600,
                   ),
+                ),
               ],
             ),
-            const SizedBox(height: 16),
-            GestureDetector(
-              onTap: isUnlocked ? onTap : null,
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                decoration: BoxDecoration(
-                  color: _getLightColor(),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    // Icon placeholder - to be managed by you
-                    Image.asset(
-                      getSwingAsset(),
-                      width: 34,
-                      height: 32,
-                    ), // Space for your icon
-                    Text(
-                      'Go to Level',
-                      style: TextStyle(
-                        color: Colors.black, // Use gradient start color
-                        fontWeight: FontWeight.w500,
-                        fontSize: 16,
+            SizedBox(height: SizeConfig.scaleHeight(8)),
+            Row(
+              children: [
+                Expanded(
+                  child: GestureDetector(
+                    onTap: onMoreInfoTap,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color:
+                            lighterColor, // Use the lighter version of the base color
+                        borderRadius: BorderRadius.circular(
+                          SizeConfig.scaleWidth(12),
+                        ),
+                      ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          BallImage(
+                            ballType: BallType.know,
+                            levelType: levelType,
+                            height: 55,
+                            width: 55,
+                          ),
+                          Text(
+                            'More Information',
+                            style: TextStyle(
+                              color: AppColors.grey900,
+                              fontSize: SizeConfig.scaleText(12),
+                              fontWeight: FontWeight.w600,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                          SizedBox(height: SizeConfig.scaleHeight(8)),
+                        ],
                       ),
                     ),
-                  ],
+                  ),
                 ),
-              ),
+                SizedBox(width: SizeConfig.scaleWidth(12)),
+                Expanded(
+                  child: GestureDetector(
+                    onTap: onLevelTap,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color:
+                            moreLighterColor, // Use the lighter version of the base color
+                        borderRadius: BorderRadius.circular(
+                          SizeConfig.scaleWidth(12),
+                        ),
+                      ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          BallImage(
+                            ballType: BallType.swingOne,
+                            levelType: levelType,
+                            height: 55,
+                            width: 55,
+                          ),
+                          Text(
+                            'Go to Level',
+                            style: TextStyle(
+                              color: AppColors.grey900,
+                              fontSize: SizeConfig.scaleText(12),
+                              fontWeight: FontWeight.w600,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                          SizedBox(height: SizeConfig.scaleHeight(8)),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ],
         ),

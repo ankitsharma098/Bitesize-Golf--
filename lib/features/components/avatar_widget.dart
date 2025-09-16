@@ -31,7 +31,10 @@ class AvatarWidget extends StatelessWidget {
         ),
         child: ClipOval(
           child: Image(
-            image: NetworkImage(avatarUrl ?? 'https://via.placeholder.com/150'),
+            image: NetworkImage(
+              avatarUrl ??
+                  'https://static.vecteezy.com/system/resources/thumbnails/020/911/730/small/profile-icon-avatar-icon-user-icon-person-icon-free-png.png',
+            ),
             fit: BoxFit.cover,
           ),
         ),

@@ -1,26 +1,26 @@
+import '../../../coaches/data/models/coach_model.dart';
 import '../../../level/entity/level_entity.dart';
-import '../../pupil/data/models/pupil_model.dart';
 
-abstract class HomeState {
-  const HomeState();
+abstract class CoachHomeState {
+  const CoachHomeState();
 }
 
-class HomeInitial extends HomeState {
+class HomeInitial extends CoachHomeState {
   const HomeInitial();
 }
 
-class HomeLoading extends HomeState {
+class HomeLoading extends CoachHomeState {
   const HomeLoading();
 }
 
-class HomeLoaded extends HomeState {
-  final PupilModel pupil;
+class HomeLoaded extends CoachHomeState {
+  final CoachModel coach;
   final List<Level> levels;
 
-  const HomeLoaded({required this.pupil, required this.levels});
+  const HomeLoaded({required this.coach, required this.levels});
 }
 
-class HomeError extends HomeState {
+class HomeError extends CoachHomeState {
   final String message;
 
   const HomeError(this.message);

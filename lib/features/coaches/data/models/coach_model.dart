@@ -7,6 +7,7 @@ class CoachModel {
   final String id;
   final String userId;
   final String name;
+  final String? avatarUrl; // NEW: Download URL from Firebase Storage
   final String bio;
   final List<String> qualifications;
   final int experience;
@@ -33,6 +34,7 @@ class CoachModel {
     required this.id,
     required this.userId,
     required this.name,
+    this.avatarUrl, // NEW: Optional, defaults to null
     this.bio = '',
     this.qualifications = const [],
     this.experience = 0,
@@ -80,6 +82,7 @@ class CoachModel {
     id: id,
     userId: userId,
     name: name,
+    avatarUrl: avatarUrl, // NEW
     bio: bio,
     qualifications: qualifications,
     experience: experience,
@@ -106,6 +109,7 @@ class CoachModel {
     id: coach.id,
     userId: coach.userId,
     name: coach.name,
+    avatarUrl: coach.avatarUrl, // NEW
     bio: coach.bio,
     qualifications: coach.qualifications,
     experience: coach.experience,
@@ -134,6 +138,7 @@ class CoachModel {
     'id': id,
     'userId': userId,
     'name': name,
+    'avatarUrl': avatarUrl, // NEW: Stored as string (URL)
     'bio': bio,
     'qualifications': qualifications,
     'experience': experience,
@@ -162,6 +167,7 @@ class CoachModel {
     id: json['id'] as String? ?? '',
     userId: json['userId'] as String? ?? '',
     name: json['name'] as String? ?? '',
+    avatarUrl: json['avatarUrl'] as String?, // NEW: Loaded as string
     bio: json['bio'] as String? ?? '',
     qualifications: List<String>.from(json['qualifications'] ?? []),
     experience: json['experience'] as int? ?? 0,
@@ -194,6 +200,8 @@ class CoachModel {
     id: firebaseUser.uid,
     userId: firebaseUser.uid,
     name: firebaseUser.displayName ?? '',
+    avatarUrl:
+        firebaseUser.photoURL, // NEW: Pre-populate from Auth if available
     createdAt: DateTime.now(),
     updatedAt: DateTime.now(),
   );
@@ -221,11 +229,16 @@ class CoachModel {
       (stats['averageImprovement'] ?? 0.0).toDouble();
   double get responseTimeHours => (stats['responseTime'] ?? 24.0).toDouble();
 
+  // NEW: Avatar-related getters
+  bool get hasAvatar => avatarUrl != null && avatarUrl!.isNotEmpty;
+  String get avatarUrlWithFallback => avatarUrl ?? ''; // Or use a default URL
+
   // Copy with method
   CoachModel copyWith({
     String? id,
     String? userId,
     String? name,
+    String? avatarUrl, // NEW: Added
     String? bio,
     List<String>? qualifications,
     int? experience,
@@ -251,6 +264,7 @@ class CoachModel {
       id: id ?? this.id,
       userId: userId ?? this.userId,
       name: name ?? this.name,
+      avatarUrl: avatarUrl ?? this.avatarUrl, // NEW
       bio: bio ?? this.bio,
       qualifications: qualifications ?? this.qualifications,
       experience: experience ?? this.experience,

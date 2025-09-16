@@ -1,22 +1,20 @@
 import 'dart:async';
-import 'package:bitesize_golf/features/pupils%20modules/profile/profile%20bloc/profile_event.dart';
-import 'package:bitesize_golf/features/pupils%20modules/profile/profile%20bloc/profile_state.dart';
+import 'package:bitesize_golf/features/coach%20module/profile/profile%20bloc/profile_event.dart';
+import 'package:bitesize_golf/features/coach%20module/profile/profile%20bloc/profile_state.dart';
+import 'package:bitesize_golf/features/coaches/data/models/coach_model.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
-
 import '../../../auth/data/repositories/auth_repo.dart';
-import '../../../level/entity/level_entity.dart';
-import '../../home/data/dashboard_repo.dart';
-import '../../pupil/data/models/pupil_model.dart';
+import '../data/pupil_profile_repo.dart';
 
 @injectable
-class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
-  final DashboardRepository _dashboardRepository;
+class CoachProfileBloc extends Bloc<CoachProfileEvent, CoachProfileState> {
+  final CoachProfilePageRepo _dashboardRepository;
   final AuthRepository _authRepository;
 
-  StreamSubscription<PupilModel?>? _pupilSubscription;
+  StreamSubscription<CoachModel?>? _coachSubscription;
 
-  ProfileBloc(this._dashboardRepository, this._authRepository)
+  CoachProfileBloc(this._dashboardRepository, this._authRepository)
     : super(const ProfileInitial()) {
     on<LoadProfileData>(_onLoadProfileData);
     on<RefreshProfile>(_onRefreshProfile);
@@ -26,7 +24,7 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
 
   Future<void> _onLoadProfileData(
     LoadProfileData event,
-    Emitter<ProfileState> emit,
+    Emitter<CoachProfileState> emit,
   ) async {
     try {
       emit(const ProfileLoading());
@@ -45,7 +43,7 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
 
   Future<void> _onRefreshProfile(
     RefreshProfile event,
-    Emitter<ProfileState> emit,
+    Emitter<CoachProfileState> emit,
   ) async {
     try {
       final currentUser = await _authRepository.getCurrentUser();
@@ -54,17 +52,9 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
         return;
       }
 
-      final pupil = await _dashboardRepository.getPupilData(currentUser.uid);
-      final levels = await _dashboardRepository.getAllLevels();
-
-      if (pupil != null) {
-        // Find current level
-        final currentLevel = levels.firstWhere(
-          (level) => level.levelNumber == pupil.currentLevel,
-          orElse: () => levels.first,
-        );
-
-        emit(ProfileLoaded(pupil: pupil, currentLevel: currentLevel));
+      final coach = await _dashboardRepository.getCoachData(currentUser.uid);
+      if (coach != null) {
+        emit(ProfileLoaded(coach: coach));
       } else {
         emit(const ProfileError('Profile data not found'));
       }
@@ -75,7 +65,7 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
 
   Future<void> _onUpdateProfile(
     UpdateProfile event,
-    Emitter<ProfileState> emit,
+    Emitter<CoachProfileState> emit,
   ) async {
     try {
       final currentUser = await _authRepository.getCurrentUser();
@@ -84,9 +74,9 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
         return;
       }
 
-      await _dashboardRepository.updatePupilProgress(
+      await _dashboardRepository.updateCoachesProgress(
         currentUser.uid,
-        event.updatedPupil,
+        event.updatedCoach,
       );
 
       // The stream will automatically update the UI
@@ -97,32 +87,20 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
 
   void _onProfileDataUpdated(
     _ProfileDataUpdated event,
-    Emitter<ProfileState> emit,
+    Emitter<CoachProfileState> emit,
   ) {
-    emit(ProfileLoaded(pupil: event.pupil, currentLevel: event.currentLevel));
+    emit(ProfileLoaded(coach: event.coach));
   }
 
   Future<void> _startListeningToUpdates(String userId) async {
-    await _pupilSubscription?.cancel();
+    await _coachSubscription?.cancel();
 
-    _pupilSubscription = _dashboardRepository
-        .getPupilDataStream(userId)
+    _coachSubscription = _dashboardRepository
+        .getCoachesDataStream(userId)
         .listen(
-          (pupil) async {
-            if (pupil != null) {
-              try {
-                final levels = await _dashboardRepository.getAllLevels();
-                final currentLevel = levels.firstWhere(
-                  (level) => level.levelNumber == pupil.currentLevel,
-                  orElse: () => levels.first,
-                );
-
-                add(
-                  _ProfileDataUpdated(pupil: pupil, currentLevel: currentLevel),
-                );
-              } catch (e) {
-                add(_ProfileError('Failed to load level data: $e'));
-              }
+          (coach) {
+            if (coach != null) {
+              add(_ProfileDataUpdated(coach: coach));
             }
           },
           onError: (error) {
@@ -133,19 +111,18 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
 
   @override
   Future<void> close() {
-    _pupilSubscription?.cancel();
+    _coachSubscription?.cancel();
     return super.close();
   }
 }
 
-class _ProfileDataUpdated extends ProfileEvent {
-  final PupilModel pupil;
-  final Level currentLevel;
+class _ProfileDataUpdated extends CoachProfileEvent {
+  final CoachModel coach;
 
-  const _ProfileDataUpdated({required this.pupil, required this.currentLevel});
+  const _ProfileDataUpdated({required this.coach});
 }
 
-class _ProfileError extends ProfileEvent {
+class _ProfileError extends CoachProfileEvent {
   final String message;
 
   const _ProfileError(this.message);

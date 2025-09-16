@@ -4,6 +4,7 @@ class Coach extends Equatable {
   final String id; // Coach document ID (auto-generated)
   final String userId; // Reference to Users collection
   final String name;
+  final String? avatarUrl; // NEW: Download URL from Firebase Storage
   final String bio;
   final List<String> qualifications;
   final int experience;
@@ -39,6 +40,7 @@ class Coach extends Equatable {
     required this.id,
     required this.userId,
     required this.name,
+    this.avatarUrl, // NEW: Optional, defaults to null
     this.bio = '',
     this.qualifications = const [],
     this.experience = 0,
@@ -66,6 +68,7 @@ class Coach extends Equatable {
     id,
     userId,
     name,
+    avatarUrl, // NEW: Added to props
     bio,
     qualifications,
     experience,
@@ -92,6 +95,10 @@ class Coach extends Equatable {
   bool get isVerified => verificationStatus == 'verified';
   bool get isPending => verificationStatus == 'pending';
   bool get isRejected => verificationStatus == 'rejected';
+
+  // NEW: Avatar-related getters
+  bool get hasAvatar => avatarUrl != null && avatarUrl!.isNotEmpty;
+  String get avatarUrlWithFallback => avatarUrl ?? ''; // Or use a default URL
 
   // Club assignment getters
   bool get hasAssignedClub =>
@@ -128,6 +135,7 @@ class Coach extends Equatable {
     String? id,
     String? userId,
     String? name,
+    String? avatarUrl, // NEW: Added
     String? bio,
     List<String>? qualifications,
     int? experience,
@@ -153,6 +161,7 @@ class Coach extends Equatable {
       id: id ?? this.id,
       userId: userId ?? this.userId,
       name: name ?? this.name,
+      avatarUrl: avatarUrl ?? this.avatarUrl, // NEW
       bio: bio ?? this.bio,
       qualifications: qualifications ?? this.qualifications,
       experience: experience ?? this.experience,

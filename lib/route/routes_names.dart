@@ -19,6 +19,8 @@ class RouteNames {
   // Main App (Role-based)
   static const mainScreen = '/main';
   static const coachHome = '/coach/home';
+  static const createSession = '/create-session';
+
   static const pupilHome = '/pupil/home';
   static const guestHome = '/guest/home';
 

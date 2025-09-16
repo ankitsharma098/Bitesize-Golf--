@@ -1,0 +1,211 @@
+import 'package:bitesize_golf/features/coach%20module/schedul%20session/bloc/session_scheduled_event.dart';
+import 'package:bitesize_golf/features/coach%20module/schedul%20session/bloc/session_scheduled_state.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+
+import '../data/entity/session_schedule_entity.dart';
+import '../data/repo/scheduled_session_repo.dart';
+
+class CreateScheduleBloc
+    extends Bloc<CreateScheduleEvent, CreateScheduleState> {
+  final ScheduleRepository _repository;
+
+  CreateScheduleBloc({required ScheduleRepository repository})
+    : _repository = repository,
+      super(CreateScheduleInitial()) {
+    on<LoadPupils>(_onLoadPupils);
+    on<SelectPupil>(_onSelectPupil);
+    on<DeselectPupil>(_onDeselectPupil);
+    on<ToggleSelectAllPupils>(_onToggleSelectAllPupils);
+    on<UpdateSessionDate>(_onUpdateSessionDate);
+    on<UpdateSessionTime>(_onUpdateSessionTime);
+    on<CreateScheduleSubmit>(_onCreateScheduleSubmit);
+    on<ResetForm>(_onResetForm);
+  }
+
+  Future<void> _onLoadPupils(
+    LoadPupils event,
+    Emitter<CreateScheduleState> emit,
+  ) async {
+    emit(CreateScheduleLoading());
+    try {
+      final pupils = await _repository.getPupilsByCoachAndLevel(
+        coachId: event.coachId,
+        levelNumber: event.levelNumber,
+      );
+
+      final sessions = _generateDefaultSessions();
+
+      emit(
+        CreateScheduleLoaded(
+          allPupils: pupils,
+          selectedPupilIds: const [],
+          sessions: sessions,
+          isSelectAllChecked: false,
+        ),
+      );
+    } catch (e) {
+      emit(CreateScheduleError(e.toString()));
+    }
+  }
+
+  void _onSelectPupil(SelectPupil event, Emitter<CreateScheduleState> emit) {
+    if (state is CreateScheduleLoaded) {
+      final currentState = state as CreateScheduleLoaded;
+      final updatedSelectedIds = List<String>.from(
+        currentState.selectedPupilIds,
+      )..add(event.pupilId);
+
+      final isSelectAllChecked =
+          updatedSelectedIds.length == currentState.allPupils.length;
+
+      emit(
+        currentState.copyWith(
+          selectedPupilIds: updatedSelectedIds,
+          isSelectAllChecked: isSelectAllChecked,
+        ),
+      );
+    }
+  }
+
+  void _onDeselectPupil(
+    DeselectPupil event,
+    Emitter<CreateScheduleState> emit,
+  ) {
+    if (state is CreateScheduleLoaded) {
+      final currentState = state as CreateScheduleLoaded;
+      final updatedSelectedIds = List<String>.from(
+        currentState.selectedPupilIds,
+      )..remove(event.pupilId);
+
+      emit(
+        currentState.copyWith(
+          selectedPupilIds: updatedSelectedIds,
+          isSelectAllChecked: false,
+        ),
+      );
+    }
+  }
+
+  void _onToggleSelectAllPupils(
+    ToggleSelectAllPupils event,
+    Emitter<CreateScheduleState> emit,
+  ) {
+    if (state is CreateScheduleLoaded) {
+      final currentState = state as CreateScheduleLoaded;
+
+      if (currentState.isSelectAllChecked) {
+        // Deselect all
+        emit(
+          currentState.copyWith(
+            selectedPupilIds: const [],
+            isSelectAllChecked: false,
+          ),
+        );
+      } else {
+        // Select all
+        final allPupilIds = currentState.allPupils.map((p) => p.id).toList();
+        emit(
+          currentState.copyWith(
+            selectedPupilIds: allPupilIds,
+            isSelectAllChecked: true,
+          ),
+        );
+      }
+    }
+  }
+
+  void _onUpdateSessionDate(
+    UpdateSessionDate event,
+    Emitter<CreateScheduleState> emit,
+  ) {
+    if (state is CreateScheduleLoaded) {
+      final currentState = state as CreateScheduleLoaded;
+      final updatedSessions = List<Session>.from(currentState.sessions);
+
+      if (event.sessionIndex < updatedSessions.length) {
+        updatedSessions[event.sessionIndex] =
+            updatedSessions[event.sessionIndex].copyWith(date: event.date);
+
+        emit(currentState.copyWith(sessions: updatedSessions));
+      }
+    }
+  }
+
+  void _onUpdateSessionTime(
+    UpdateSessionTime event,
+    Emitter<CreateScheduleState> emit,
+  ) {
+    if (state is CreateScheduleLoaded) {
+      final currentState = state as CreateScheduleLoaded;
+      final updatedSessions = List<Session>.from(currentState.sessions);
+
+      if (event.sessionIndex < updatedSessions.length) {
+        updatedSessions[event.sessionIndex] =
+            updatedSessions[event.sessionIndex].copyWith(time: event.time);
+
+        emit(currentState.copyWith(sessions: updatedSessions));
+      }
+    }
+  }
+
+  Future<void> _onCreateScheduleSubmit(
+    CreateScheduleSubmit event,
+    Emitter<CreateScheduleState> emit,
+  ) async {
+    if (state is CreateScheduleLoaded) {
+      final currentState = state as CreateScheduleLoaded;
+
+      if (!currentState.canSubmit) {
+        emit(const CreateScheduleError('Please complete all required fields'));
+        return;
+      }
+
+      emit(CreateScheduleLoading());
+
+      try {
+        final schedule = Schedule(
+          id: '', // Will be generated by Firestore
+          coachId: event.coachId,
+          clubId: event.clubId,
+          levelNumber: event.levelNumber,
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+          status: ScheduleStatus.draft,
+          pupilIds: currentState.selectedPupilIds,
+          sessions: currentState.sessions,
+          notes: event.notes,
+        );
+
+        final scheduleId = await _repository.createSchedule(schedule);
+        emit(CreateScheduleSuccess(scheduleId));
+      } catch (e) {
+        emit(CreateScheduleError(e.toString()));
+      }
+    }
+  }
+
+  void _onResetForm(ResetForm event, Emitter<CreateScheduleState> emit) {
+    emit(CreateScheduleInitial());
+  }
+
+  List<Session> _generateDefaultSessions() {
+    final now = DateTime.now();
+    return [
+      for (int i = 1; i <= 6; i++)
+        Session(
+          sessionNumber: i,
+          date: now.add(Duration(days: i * 7)), // Weekly sessions
+          time: '10:00',
+          status: SessionStatus.scheduled,
+        ),
+      // Next Level Start session
+      Session(
+        sessionNumber: 7,
+        date: now.add(const Duration(days: 49)), // 7 weeks later
+        time: '10:00',
+        status: SessionStatus.scheduled,
+        isLevelTransition: true,
+      ),
+    ];
+  }
+}

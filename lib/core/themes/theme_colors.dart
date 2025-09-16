@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 class AppColors {
   static const Color scaffoldBgColor = Color(0xFFEDEDED);
 
+  static const Color profilePopupColor = Color(0xFFF5F5F5);
+
   // Grey Scale
   static const Color grey900 = Color(0xFF1F1F1F);
   static const Color grey800 = Color(0xFF404141);
@@ -51,8 +53,8 @@ class AppColors {
 
   static const LinearGradient redGradient = LinearGradient(
     colors: [Color(0xFFFF1F27), Color(0xFFE1020A)], // Two colors
-    // begin: Alignment.topLeft,
-    // end: Alignment.bottomRight,
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
   );
 
   static const LinearGradient orangeGradient = LinearGradient(

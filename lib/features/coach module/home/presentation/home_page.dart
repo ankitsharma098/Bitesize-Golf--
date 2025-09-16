@@ -1,29 +1,30 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/themes/level_utils.dart';
 import '../../../../core/themes/theme_colors.dart';
-import '../../../components/current_level_card.dart';
+import '../../../components/current_level_card.dart'; // New import
 import '../../../components/custom_scaffold.dart';
 import '../../../components/utils/size_config.dart';
 import '../home bloc/home_bloc.dart';
 import '../home bloc/home_event.dart';
 import '../home bloc/home_state.dart';
 
-class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+class CoachHomeScreen extends StatefulWidget {
+  const CoachHomeScreen({super.key});
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  State<CoachHomeScreen> createState() => _CoachHomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _CoachHomeScreenState extends State<CoachHomeScreen> {
   @override
   void initState() {
     super.initState();
     // Add null check and context availability check
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted && context.mounted) {
-        context.read<HomeBloc>().add(const LoadHomeData());
+        context.read<CoachHomeBloc>().add(LoadHomeData());
       }
     });
   }
@@ -31,7 +32,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return AppScaffold.withCustomAppBar(
-      customPadding: EdgeInsets.all(5),
+      customPadding: EdgeInsets.all(0),
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(30), // Custom height
         child: AppBar(
@@ -47,11 +48,8 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
       ),
-      //  title: 'Home',
       scrollable: true,
-      // appBarType: AppBarType.custom, // or AppBarType.none for no app bar
-      // levelType: LevelType.redLevel, // Dynamic based on user level
-      body: BlocBuilder<HomeBloc, HomeState>(
+      body: BlocBuilder<CoachHomeBloc, CoachHomeState>(
         builder: (context, state) {
           if (state is HomeLoading) {
             return _buildLoadingState();
@@ -68,7 +66,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // ... rest of the HomeScreen methods remain the same
   Widget _buildLoadingState() {
     return Center(
       child: Column(
@@ -110,7 +107,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           SizedBox(height: SizeConfig.scaleHeight(24)),
           ElevatedButton(
-            onPressed: () => context.read<HomeBloc>().add(const RefreshHome()),
+            onPressed: () => context.read<CoachHomeBloc>().add(RefreshHome()),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.greenDark,
               padding: EdgeInsets.symmetric(
@@ -139,24 +136,41 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildHomeContent(HomeLoaded state) {
     return Padding(
-      padding: EdgeInsets.all(SizeConfig.scaleWidth(5)),
-      child: Column(
-        children: [
-          ...state.levels.map((level) {
-            bool isUnlocked =
-                state.pupil.unlockedLevels.contains(level.levelNumber) ||
-                level.levelNumber <= state.pupil.currentLevel;
-            bool isCompleted = level.levelNumber < state.pupil.currentLevel;
-            return CustomLevelCard(
+      padding: EdgeInsets.all(SizeConfig.scaleWidth(0)),
+      child: ListView.builder(
+        padding: EdgeInsets.symmetric(
+          vertical: SizeConfig.scaleHeight(10),
+        ), // Vertical padding for the list
+        itemCount: state.levels.length,
+        shrinkWrap: true,
+        physics: NeverScrollableScrollPhysics(),
+        itemBuilder: (context, index) {
+          final level = state.levels[index];
+          final levelType = LevelUtils.getLevelTypeFromNumber(
+            level.levelNumber,
+          );
+          return Padding(
+            padding: EdgeInsets.only(
+              bottom: SizeConfig.scaleHeight(15),
+            ), // Space between cards
+            child: CurrentLevelCard(
               levelName: level.name,
               levelNumber: level.levelNumber,
-              isUnlocked: isUnlocked,
-              isCompleted: isCompleted,
-              onTap: () => _navigateToLevel(level.levelNumber),
-            );
-          }),
-          SizedBox(height: SizeConfig.scaleHeight(100)),
-        ],
+              levelType: levelType,
+              onMoreInfoTap: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      'More Information for Level ${level.levelNumber}',
+                    ),
+                    backgroundColor: AppColors.greenDark,
+                  ),
+                );
+              },
+              onLevelTap: () => _navigateToLevel(level.levelNumber),
+            ),
+          );
+        },
       ),
     );
   }

@@ -1,33 +1,19 @@
-import '../../../level/entity/level_entity.dart';
-import '../../pupil/data/models/pupil_model.dart';
+import 'package:bitesize_golf/features/coaches/data/models/coach_model.dart';
 
-abstract class ProfileEvent {
-  const ProfileEvent();
+abstract class CoachProfileEvent {
+  const CoachProfileEvent();
 }
 
-class LoadProfileData extends ProfileEvent {
+class LoadProfileData extends CoachProfileEvent {
   const LoadProfileData();
 }
 
-class RefreshProfile extends ProfileEvent {
+class RefreshProfile extends CoachProfileEvent {
   const RefreshProfile();
 }
 
-class UpdateProfile extends ProfileEvent {
-  final PupilModel updatedPupil;
+class UpdateProfile extends CoachProfileEvent {
+  final CoachModel updatedCoach;
 
-  const UpdateProfile(this.updatedPupil);
-}
-
-class _ProfileDataUpdated extends ProfileEvent {
-  final PupilModel pupil;
-  final Level currentLevel;
-
-  const _ProfileDataUpdated({required this.pupil, required this.currentLevel});
-}
-
-class _ProfileError extends ProfileEvent {
-  final String message;
-
-  const _ProfileError(this.message);
+  const UpdateProfile(this.updatedCoach);
 }

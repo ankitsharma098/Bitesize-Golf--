@@ -1,33 +1,27 @@
+import '../../../coaches/data/models/coach_model.dart';
 import '../../../level/entity/level_entity.dart';
-import '../../pupil/data/models/pupil_model.dart';
 
-abstract class HomeEvent {
-  const HomeEvent();
-}
+abstract class CoachHomeEvent {}
 
-class LoadHomeData extends HomeEvent {
-  const LoadHomeData();
-}
+class LoadHomeData extends CoachHomeEvent {}
 
-class RefreshHome extends HomeEvent {
-  const RefreshHome();
-}
+class RefreshHome extends CoachHomeEvent {}
 
-class NavigateToLevel extends HomeEvent {
+class NavigateToLevel extends CoachHomeEvent {
   final int levelNumber;
 
-  const NavigateToLevel(this.levelNumber);
+  NavigateToLevel(this.levelNumber);
 }
 
-class _HomeDataUpdated extends HomeEvent {
-  final PupilModel pupil;
+class _HomeDataUpdated extends CoachHomeEvent {
+  final CoachModel coach;
   final List<Level> levels;
 
-  const _HomeDataUpdated({required this.pupil, required this.levels});
+  _HomeDataUpdated({required this.coach, required this.levels});
 }
 
-class _HomeError extends HomeEvent {
+class _HomeError extends CoachHomeEvent {
   final String message;
 
-  const _HomeError(this.message);
+  _HomeError(this.message);
 }

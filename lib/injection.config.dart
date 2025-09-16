@@ -16,6 +16,14 @@ import 'package:bitesize_golf/features/auth/data/repositories/auth_repo.dart'
     as _i941;
 import 'package:bitesize_golf/features/club/data/repositories/club_repository.dart'
     as _i652;
+import 'package:bitesize_golf/features/coach%20module/home/data/home_level_repo.dart'
+    as _i639;
+import 'package:bitesize_golf/features/coach%20module/home/home%20bloc/home_bloc.dart'
+    as _i666;
+import 'package:bitesize_golf/features/coach%20module/profile/data/pupil_profile_repo.dart'
+    as _i656;
+import 'package:bitesize_golf/features/coach%20module/profile/profile%20bloc/profile_bloc.dart'
+    as _i967;
 import 'package:bitesize_golf/features/coaches/data/repositories/coach_repo.dart'
     as _i604;
 import 'package:bitesize_golf/features/pupils%20modules/home/data/dashboard_repo.dart'
@@ -51,6 +59,10 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i974.FirebaseFirestore>(() => registerModule.firestore);
     gh.lazySingleton<_i398.FirebaseAnalytics>(() => registerModule.analytics);
     gh.lazySingleton<_i941.AuthRepository>(() => _i941.AuthRepository());
+    gh.lazySingleton<_i639.LevelRepository>(() => _i639.LevelRepository());
+    gh.lazySingleton<_i656.CoachProfilePageRepo>(
+      () => _i656.CoachProfilePageRepo(),
+    );
     gh.lazySingleton<_i604.CoachRepository>(() => _i604.CoachRepository());
     gh.lazySingleton<_i840.DashboardRepository>(
       () => _i840.DashboardRepository(),
@@ -79,8 +91,21 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i531.SubscriptionBloc>(
       () => _i531.SubscriptionBloc(gh<_i395.SubscriptionRepository>()),
     );
+    gh.factory<_i967.CoachProfileBloc>(
+      () => _i967.CoachProfileBloc(
+        gh<_i656.CoachProfilePageRepo>(),
+        gh<_i941.AuthRepository>(),
+      ),
+    );
     gh.factory<_i348.AuthBloc>(
       () => _i348.AuthBloc(repo: gh<_i941.AuthRepository>()),
+    );
+    gh.factory<_i666.CoachHomeBloc>(
+      () => _i666.CoachHomeBloc(
+        gh<_i656.CoachProfilePageRepo>(),
+        gh<_i639.LevelRepository>(),
+        gh<_i941.AuthRepository>(),
+      ),
     );
     return this;
   }

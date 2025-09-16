@@ -1,3 +1,4 @@
+import 'package:bitesize_golf/features/coach%20module/session/presentation/start_new_session.dart';
 import 'package:bitesize_golf/route/routes_names.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -12,6 +13,7 @@ import '../features/auth/presentation/pages/login_page.dart';
 import '../features/auth/presentation/pages/register_page.dart';
 import '../features/auth/presentation/pages/splash_page.dart';
 import '../features/auth/presentation/pages/welcome_page.dart';
+import '../features/coach module/home/presentation/main_wrapper.dart';
 import '../features/pupils modules/home/presentation/main_wrapper.dart';
 import '../features/subscription/presentation/pages/subscription_page.dart';
 import '../injection.dart';
@@ -86,9 +88,13 @@ class AppRouter {
       GoRoute(
         path: RouteNames.coachHome,
         name: 'coachHome',
-        builder: (context, state) => const Scaffold(
-          body: Center(child: Text('Coach Home - Coming Soon')),
-        ),
+        builder: (context, state) => const CoachMainWrapperScreen(),
+      ),
+
+      GoRoute(
+        path: RouteNames.createSession,
+        name: 'create-session',
+        builder: (context, state) => const CreateSessionScreen(),
       ),
 
       GoRoute(

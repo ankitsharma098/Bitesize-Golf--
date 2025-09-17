@@ -7,7 +7,6 @@ import '../model/session_schedule_model.dart';
 class ScheduleRepository {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  @override
   Future<List<PupilModel>> getPupilsByCoachAndLevel({
     required String coachId,
     required int levelNumber,
@@ -20,11 +19,15 @@ class ScheduleRepository {
           .where('assignmentStatus', isEqualTo: 'assigned')
           .get();
 
-      return querySnapshot.docs.map((doc) {
+      List<PupilModel> pupils = querySnapshot.docs.map((doc) {
         final data = doc.data();
         data['id'] = doc.id; // Add document ID to data
         return PupilModel.fromJson(data);
       }).toList();
+
+      print("Pupils ${pupils.length}");
+
+      return pupils;
     } catch (e) {
       throw Exception('Failed to fetch pupils: $e');
     }

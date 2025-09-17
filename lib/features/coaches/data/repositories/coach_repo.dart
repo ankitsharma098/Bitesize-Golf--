@@ -101,22 +101,22 @@ class CoachRepository {
   }
 
   // Get coaches by club
+  // In your CoachRepository class
   Future<List<Coach>> getCoachesByClub(String clubId) async {
     try {
-      final querySnapshot = await _coaches
+      print("Club Id -- ${clubId}");
+      final snapshot = await _coaches
           .where('assignedClubId', isEqualTo: clubId)
-          .orderBy('createdAt', descending: true)
+          .where('verificationStatus', isEqualTo: 'verified')
           .get();
 
-      return querySnapshot.docs
-          .map(
-            (doc) =>
-                CoachModel.fromFirestore(doc.data() as Map<String, dynamic>),
-          )
-          .map((model) => model.toEntity())
-          .toList();
+      return snapshot.docs.map((doc) {
+        final data = doc.data() as Map<String, dynamic>;
+        // Ensure the document ID is included
+        data['id'] = doc.id; // This is crucial!
+        return CoachModel.fromFirestore(data).toEntity();
+      }).toList();
     } catch (e) {
-      print('Error getting coaches by club: $e');
       throw Exception('Failed to get coaches by club: $e');
     }
   }

@@ -164,7 +164,7 @@ class CoachModel {
   };
 
   factory CoachModel.fromJson(Map<String, dynamic> json) => CoachModel(
-    id: json['id'] as String? ?? '',
+    id: json['id'] as String? ?? json['userId'] as String? ?? '',
     userId: json['userId'] as String? ?? '',
     name: json['name'] as String? ?? '',
     avatarUrl: json['avatarUrl'] as String?, // NEW: Loaded as string

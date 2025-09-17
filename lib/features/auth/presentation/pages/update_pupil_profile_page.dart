@@ -187,7 +187,8 @@ class _UpdatePupilProfilePageState extends State<UpdatePupilProfilePage> {
                           _selectedClubId = club.id;
                           _selectedClubName = club.name;
                           _selectedCoachId = null;
-                          _selectedCoachName = null;
+                          _selectedCoachName =
+                              null; // ← ADD THIS LINE if it's missing
                           _availableCoaches = [];
                         });
                         Navigator.pop(context);
@@ -296,11 +297,27 @@ class _UpdatePupilProfilePageState extends State<UpdatePupilProfilePage> {
                         size: 16,
                         color: Colors.grey[400],
                       ),
+                      // In your coach selection ListTile onTap
                       onTap: () {
+                        print('🎯 Selected coach: ${coach.name}');
+                        print('🆔 Coach ID: ${coach.id}');
+                        print('👤 Coach userId: ${coach.userId}');
+
                         setState(() {
-                          _selectedCoachId = coach.id;
+                          // Use coach.userId if coach.id is empty
+                          _selectedCoachId = coach.id.isNotEmpty
+                              ? coach.id
+                              : coach.userId;
                           _selectedCoachName = coach.name;
                         });
+
+                        print(
+                          '✅ Setting _selectedCoachId to: $_selectedCoachId',
+                        );
+                        print(
+                          '✅ Setting _selectedCoachName to: $_selectedCoachName',
+                        );
+
                         Navigator.pop(context);
                       },
                     );

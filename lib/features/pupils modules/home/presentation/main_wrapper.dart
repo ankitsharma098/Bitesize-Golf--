@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/themes/theme_colors.dart';
+import '../../../../injection.dart';
 import '../../../auth/data/repositories/auth_repo.dart';
 import '../../../components/utils/size_config.dart';
+import '../../../joining request/repo/joining_request_repo.dart';
 import '../../custom bottom navigation/bloc/custom_bottom_navigation_bloc.dart';
 import '../../custom bottom navigation/bloc/custom_bottom_navigation_event.dart';
 import '../../custom bottom navigation/bloc/custom_bottom_navigation_state.dart';
@@ -50,7 +52,9 @@ class _MainWrapperScreenState extends State<MainWrapperScreen> {
     return MultiProvider(
       providers: [
         Provider<DashboardRepository>(create: (_) => DashboardRepository()),
-        Provider<AuthRepository>(create: (_) => AuthRepository()),
+        Provider<AuthRepository>(
+          create: (_) => AuthRepository(getIt<JoinRequestRepository>()),
+        ),
       ],
       child: MultiBlocProvider(
         providers: [

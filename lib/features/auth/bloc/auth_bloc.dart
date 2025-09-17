@@ -144,22 +144,35 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   ) async {
     emit(AuthLoading());
     try {
+      // Debug logging
+      print('📝 Completing profile for: ${event.userId}');
+      print('🎯 Selected Coach ID: ${event.selectedCoachId}');
+      print('👨‍🏫 Selected Coach Name: ${event.selectedCoachName}');
+      print('🏌️ Selected Club ID: ${event.selectedClubId}');
+      print('🏛️ Selected Club Name: ${event.selectedClubName}');
+
+      final profileData = {
+        'pupilId': event.pupilId,
+        'name': event.name,
+        'dateOfBirth': event.dateOfBirth?.toIso8601String(),
+        'handicap': event.handicap,
+        'selectedCoachId': event.selectedCoachId,
+        'selectedCoachName': event.selectedCoachName,
+        'selectedClubId': event.selectedClubId,
+        'selectedClubName': event.selectedClubName,
+        'avatar': event.avatar,
+      };
+
+      print('📋 Profile data being sent: $profileData');
+
       await _repo.completeProfile(
         userId: event.userId,
-        profileData: {
-          'pupilId': event.pupilId,
-          'name': event.name,
-          'dateOfBirth': event.dateOfBirth?.toIso8601String(),
-          'handicap': event.handicap,
-          'selectedCoachId': event.selectedCoachId,
-          'selectedCoachName': event.selectedCoachName,
-          'selectedClubId': event.selectedClubId,
-          'selectedClubName': event.selectedClubName,
-          'avatar': event.avatar,
-        },
+        profileData: profileData,
       );
+
       add(AuthAppStarted()); // refresh user
     } catch (e) {
+      print('❌ Profile completion error: $e');
       emit(AuthError(e.toString()));
     }
   }

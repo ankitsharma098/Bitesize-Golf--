@@ -26,6 +26,8 @@ import 'package:bitesize_golf/features/coach%20module/profile/profile%20bloc/pro
     as _i967;
 import 'package:bitesize_golf/features/coaches/data/repositories/coach_repo.dart'
     as _i604;
+import 'package:bitesize_golf/features/joining%20request/repo/joining_request_repo.dart'
+    as _i626;
 import 'package:bitesize_golf/features/pupils%20modules/home/data/dashboard_repo.dart'
     as _i840;
 import 'package:bitesize_golf/features/pupils%20modules/home/home%20bloc/home_bloc.dart'
@@ -58,7 +60,6 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i59.FirebaseAuth>(() => registerModule.firebaseAuth);
     gh.lazySingleton<_i974.FirebaseFirestore>(() => registerModule.firestore);
     gh.lazySingleton<_i398.FirebaseAnalytics>(() => registerModule.analytics);
-    gh.lazySingleton<_i941.AuthRepository>(() => _i941.AuthRepository());
     gh.lazySingleton<_i639.LevelRepository>(() => _i639.LevelRepository());
     gh.lazySingleton<_i656.CoachProfilePageRepo>(
       () => _i656.CoachProfilePageRepo(),
@@ -66,6 +67,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i604.CoachRepository>(() => _i604.CoachRepository());
     gh.lazySingleton<_i840.DashboardRepository>(
       () => _i840.DashboardRepository(),
+    );
+    gh.lazySingleton<_i626.JoinRequestRepository>(
+      () => _i626.JoinRequestRepository(),
     );
     gh.lazySingleton<_i700.HiveStorageService>(
       () => _i700.HiveStorageServiceImpl(),
@@ -76,20 +80,11 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i395.SubscriptionRepository>(
       () => _i395.SubscriptionRepository(gh<_i974.FirebaseFirestore>()),
     );
-    gh.factory<_i579.HomeBloc>(
-      () => _i579.HomeBloc(
-        gh<_i840.DashboardRepository>(),
-        gh<_i941.AuthRepository>(),
-      ),
-    );
-    gh.factory<_i104.ProfileBloc>(
-      () => _i104.ProfileBloc(
-        gh<_i840.DashboardRepository>(),
-        gh<_i941.AuthRepository>(),
-      ),
-    );
     gh.factory<_i531.SubscriptionBloc>(
       () => _i531.SubscriptionBloc(gh<_i395.SubscriptionRepository>()),
+    );
+    gh.lazySingleton<_i941.AuthRepository>(
+      () => _i941.AuthRepository(gh<_i626.JoinRequestRepository>()),
     );
     gh.factory<_i967.CoachProfileBloc>(
       () => _i967.CoachProfileBloc(
@@ -104,6 +99,18 @@ extension GetItInjectableX on _i174.GetIt {
       () => _i666.CoachHomeBloc(
         gh<_i656.CoachProfilePageRepo>(),
         gh<_i639.LevelRepository>(),
+        gh<_i941.AuthRepository>(),
+      ),
+    );
+    gh.factory<_i579.HomeBloc>(
+      () => _i579.HomeBloc(
+        gh<_i840.DashboardRepository>(),
+        gh<_i941.AuthRepository>(),
+      ),
+    );
+    gh.factory<_i104.ProfileBloc>(
+      () => _i104.ProfileBloc(
+        gh<_i840.DashboardRepository>(),
         gh<_i941.AuthRepository>(),
       ),
     );

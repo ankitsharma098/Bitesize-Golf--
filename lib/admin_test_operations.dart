@@ -77,6 +77,7 @@ import 'features/challenges/model/challenge_model.dart';
 import 'features/games/model/game_model.dart';
 import 'features/lesson/model/lesson_model.dart';
 import 'features/quizes/model/quiz_model.dart';
+import 'joining_request_approval_script.dart';
 
 /// Run this file directly (right-click → Run) to approve **all pending** join-requests.
 /// ⚠️  Use only during development / before real users.
@@ -85,94 +86,32 @@ Future<void> main() async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   await configureDependencies(); // injectable setup
 
-  final firestore = FirebaseFirestore.instance;
+  //final firestore = FirebaseFirestore.instance;
+  final admin = AdminJoinRequestScript();
 
-  //--- Approve Pupil → Coach Requests ---
-  // final pupilReqs = await firestore
-  //     .collection('joinRequests')
-  //     .where('requestType', isEqualTo: 'pupil_to_coach')
-  //     .where('status', isEqualTo: 'pending')
-  //     .get();
+  // View all pending requests
+  // await admin.viewAllPendingRequests();
   //
-  // for (final doc in pupilReqs.docs) {
-  //   final data = doc.data();
-  //   final batch = firestore.batch();
+  // // View only coach verification requests
+  // await admin.viewRequestsByType('coach_verification');
   //
-  //   // 1. Approve request
-  //   batch.update(doc.reference, {
-  //     'status': 'approved',
-  //     'reviewedBy': 'admin_script', // your admin UID later
-  //     'reviewedAt': FieldValue.serverTimestamp(),
-  //     'reviewNote': 'Auto-approved via admin script',
-  //   });
-  //
-  //   // 2. Update pupil document
-  //   final pupilSnap = await firestore
-  //       .collection('pupils')
-  //       .where('userId', isEqualTo: data['requesterId'])
-  //       .limit(1)
-  //       .get();
-  //
-  //   if (pupilSnap.docs.isNotEmpty) {
-  //     final pupilDoc = pupilSnap.docs.first.reference;
-  //     batch.update(pupilDoc, {
-  //       'assignedCoachId': data['targetCoachId'],
-  //       'assignedCoachName': data['targetCoachName'],
-  //       'assignmentStatus': 'approved',
-  //       'updatedAt': FieldValue.serverTimestamp(),
-  //     });
-  //   }
-  //
-  //   await batch.commit();
-  //   print('✅ Approved pupil→coach request ${doc.id}');
-  // }
+  // // Approve a specific request
+  // await admin.approveRequest('request_id_here', reviewNote: 'Approved manually');
 
-  //--- Approve Coach → Club Requests ---
+  // Bulk approve all coach verifications
+  // await admin.quickApproveAllCoachVerifications();
 
-  // final coachReqs = await firestore
-  //     .collection('joinRequests')
-  //     .where('requestType', isEqualTo: 'coach_to_club')
-  //     .where('status', isEqualTo: 'pending')
-  //     .get();
-  //
-  // for (final doc in coachReqs.docs) {
-  //   final data = doc.data();
-  //   final batch = firestore.batch();
-  //
-  //   // 1. Approve request
-  //   batch.update(doc.reference, {
-  //     'status': 'approved',
-  //     'reviewedBy': 'admin_script',
-  //     'reviewedAt': FieldValue.serverTimestamp(),
-  //     'reviewNote': 'Auto-approved via admin script',
-  //   });
-  //
-  //   // 2. Update coach document
-  //   final coachSnap = await firestore
-  //       .collection('coaches')
-  //       .where('userId', isEqualTo: data['requesterId'])
-  //       .limit(1)
-  //       .get();
-  //
-  //   if (coachSnap.docs.isNotEmpty) {
-  //     final coachDoc = coachSnap.docs.first.reference;
-  //     batch.update(coachDoc, {
-  //       'assignedClubId': data['targetClubId'],
-  //       'assignedClubName': data['targetClubName'],
-  //       'clubAssignmentStatus': 'approved',
-  //       'updatedAt': FieldValue.serverTimestamp(),
-  //     });
-  //   }
-  //
-  //   await batch.commit();
-  //   print('✅ Approved coach→club request ${doc.id}');
-  // }
+  await admin.bulkApproveByType(
+    'pupil_to_coach',
+    reviewNote: 'Approved by Script',
+  );
 
-  // print('🎉 All pending requests approved!');
+  // View summary
+  await admin.viewSummary();
 
-  //await createRedLevelLesson(firestore);
-
-  await createLevelsInFirestore(firestore);
+  // await createRedLevelLesson(firestore);
+  //
+  // await createLevelsInFirestore(firestore);
 }
 
 List<Map<String, dynamic>> generateLevels() {

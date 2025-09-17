@@ -1,4 +1,6 @@
 import 'package:bitesize_golf/features/coach%20module/profile/data/pupil_profile_repo.dart';
+import 'package:bitesize_golf/features/joining%20request/repo/joining_request_repo.dart';
+import 'package:bitesize_golf/injection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:provider/provider.dart';
@@ -52,7 +54,9 @@ class _CoachMainWrapperScreenState extends State<CoachMainWrapperScreen> {
       providers: [
         Provider<CoachProfilePageRepo>(create: (_) => CoachProfilePageRepo()),
         Provider<LevelRepository>(create: (_) => LevelRepository()),
-        Provider<AuthRepository>(create: (_) => AuthRepository()),
+        Provider<AuthRepository>(
+          create: (_) => AuthRepository(getIt<JoinRequestRepository>()),
+        ),
       ],
       child: MultiBlocProvider(
         providers: [

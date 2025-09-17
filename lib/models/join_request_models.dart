@@ -52,12 +52,15 @@ class JoinRequestModel {
   });
 
   // Factory constructors for different request types
+  // Factory constructors for different request types
   factory JoinRequestModel.pupilToCoach({
     required String id,
     required String pupilUserId,
     required String pupilName,
     required String coachId,
     required String coachName,
+    String? clubId, // ADD THIS PARAMETER
+    String? clubName, // ADD THIS PARAMETER
     String? message,
     DateTime? requestedAt,
   }) {
@@ -69,6 +72,8 @@ class JoinRequestModel {
       requesterName: pupilName,
       targetCoachId: coachId,
       targetCoachName: coachName,
+      targetClubId: clubId, // SET THIS FIELD
+      targetClubName: clubName, // SET THIS FIELD
       requestType: 'pupil_to_coach',
       requestedAt: requestedAt ?? now,
       message: message,

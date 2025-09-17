@@ -18,10 +18,10 @@ class CreateScheduleScreen extends StatelessWidget {
     return BlocProvider(
       create: (context) => CreateScheduleBloc(repository: ScheduleRepository())
         ..add(
-          LoadPupils(coachId: '7ZvhugMejXO6p3Dg5I9Qe1IpTeo2', levelNumber: 1),
+          LoadPupils(coachId: 'wpYCKul7zvYZB1TJ9pKG0AG8H482', levelNumber: 1),
         ),
       child: const CreateScheduleScreenView(
-        coachId: '7ZvhugMejXO6p3Dg5I9Qe1IpTeo2',
+        coachId: 'wpYCKul7zvYZB1TJ9pKG0AG8H482',
         clubId: '3MYfcrS3a4pztGAZoMmA',
         levelNumber: 1,
       ),

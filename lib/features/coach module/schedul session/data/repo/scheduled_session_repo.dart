@@ -12,11 +12,14 @@ class ScheduleRepository {
     required int levelNumber,
   }) async {
     try {
+      print("Coach Id ----> $coachId");
+      print("Level Number ----> $levelNumber");
+
       final querySnapshot = await _firestore
           .collection('pupils')
           .where('assignedCoachId', isEqualTo: coachId)
           .where('currentLevel', isEqualTo: levelNumber)
-          .where('assignmentStatus', isEqualTo: 'assigned')
+          //.where('assignmentStatus', isEqualTo: 'assigned')
           .get();
 
       List<PupilModel> pupils = querySnapshot.docs.map((doc) {
@@ -25,7 +28,7 @@ class ScheduleRepository {
         return PupilModel.fromJson(data);
       }).toList();
 
-      print("Pupils ${pupils.length}");
+      print("Pupils found: ${pupils.length}");
 
       return pupils;
     } catch (e) {
@@ -97,7 +100,6 @@ class ScheduleRepository {
     }
   }
 
-  @override
   Future<void> deleteSchedule(String scheduleId) async {
     try {
       await _firestore.collection('schedules').doc(scheduleId).delete();

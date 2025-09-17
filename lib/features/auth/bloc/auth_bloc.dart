@@ -22,10 +22,6 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<AuthCompleteCoachProfileRequested>(_onCompleteCoachProfile);
   }
 
-  /* ---------- helpers ---------- */
-  UserModel _userFromRepo(UserModel model) =>
-      model; // identity – no mapping needed
-
   /* ---------- handlers ---------- */
   Future<void> _onAppStarted(
     AuthAppStarted event,

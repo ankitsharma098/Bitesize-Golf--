@@ -9,6 +9,8 @@ import '../../../components/avatar_widget.dart';
 import '../../../components/ball_image.dart';
 import '../../../components/custom_scaffold.dart';
 import '../../../components/utils/size_config.dart';
+import '../../subcription/presentation/subscription_page.dart';
+import '../../update profile/presentation/update_profile_page.dart';
 import '../profile bloc/profile_bloc.dart';
 import '../profile bloc/profile_event.dart';
 import '../profile bloc/profile_state.dart';
@@ -31,8 +33,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget build(BuildContext context) {
     return CustomScaffold(
       screenType: ScreenType.fullScreen,
-      appBarType: AppBarType.none, // Remove the app bar completely
-      scrollable: false, // Handle scrolling internally
+      appBarType: AppBarType.none,
+      scrollable: false,
       body: BlocBuilder<ProfileBloc, ProfileState>(
         builder: (context, state) {
           if (state is ProfileLoading) {
@@ -335,24 +337,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   void _handleEditProfile() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Edit Profile tapped'),
-        backgroundColor: AppColors.greenDark,
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) =>  EditProfilePage(),
       ),
     );
-    // Add navigation to edit profile screen here
   }
 
   void _handleSubscription() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Subscription tapped'),
-        backgroundColor: AppColors.greenDark,
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => SubscriptionPage(
+          planName: "Annual Plan",
+          price: "\$60/year",
+          startDate: DateTime(2024, 3, 20), endDate: DateTime(2025, 4, 20),  // Expire 20 Mar 2026 (future)
+        ),
       ),
     );
-    // Add navigation to subscription screen here
   }
+
 
   void _handleLogOut() {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -361,7 +366,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
         backgroundColor: AppColors.error,
       ),
     );
-    // Add logout logic here
   }
 
   Widget _buildInfoCard(String title, String value, String asset) {

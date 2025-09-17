@@ -1,6 +1,3 @@
-// features/auth/domain/failures.dart
-import 'package:equatable/equatable.dart';
-// core/error/failure.dart
 import 'package:equatable/equatable.dart';
 
 abstract class Failure extends Equatable {

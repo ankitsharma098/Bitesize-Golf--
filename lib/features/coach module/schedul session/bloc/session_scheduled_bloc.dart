@@ -170,7 +170,7 @@ class CreateScheduleBloc
           levelNumber: event.levelNumber,
           createdAt: DateTime.now(),
           updatedAt: DateTime.now(),
-          status: ScheduleStatus.draft,
+          status: ScheduleStatus.active,
           pupilIds: currentState.selectedPupilIds,
           sessions: currentState.sessions,
           notes: event.notes,

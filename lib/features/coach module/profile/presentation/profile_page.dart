@@ -436,11 +436,10 @@ class _CoachProfileScreenState extends State<CoachProfileScreen> {
                 ),
               ),
             ),
-            Image.asset(
-              'assets/images/navigation.png',
-              color: AppColors.redDark,
-              height: 35,
-              width: 35,
+            SvgPicture.asset(
+              'assets/images/navigation.svg',
+              width: 25,
+              height: 25,
             ),
           ],
         ),

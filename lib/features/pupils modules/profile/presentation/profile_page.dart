@@ -1,4 +1,7 @@
 import 'package:bitesize_golf/core/themes/asset_custom.dart';
+import 'package:bitesize_golf/features/auth/data/models/user_model.dart';
+import 'package:bitesize_golf/features/pupils%20modules/pupil/data/models/pupil_model.dart';
+import 'package:bitesize_golf/route/navigator_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/svg.dart';
@@ -9,6 +12,7 @@ import '../../../components/avatar_widget.dart';
 import '../../../components/ball_image.dart';
 import '../../../components/custom_scaffold.dart';
 import '../../../components/utils/size_config.dart';
+import '../../lesson Scheduled/presentation/pupil_lesson_scheduled.dart';
 import '../profile bloc/profile_bloc.dart';
 import '../profile bloc/profile_event.dart';
 import '../profile bloc/profile_state.dart';
@@ -171,7 +175,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
               SizedBox(height: SizeConfig.scaleHeight(8)),
               // Lesson Schedule card
-              _buildLessonScheduleCard(),
+              _buildLessonScheduleCard(state.pupil),
 
               SizedBox(height: SizeConfig.scaleHeight(20)),
 
@@ -406,13 +410,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildLessonScheduleCard() {
+  Widget _buildLessonScheduleCard(PupilModel pupil) {
     return GestureDetector(
       onTap: () {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Navigating to Lesson Schedule'),
-            backgroundColor: AppColors.greenDark,
+        print("PupilId --- > ${pupil.id}");
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => LessonScheduleScreen(pupilId: pupil.id),
           ),
         );
       },
@@ -445,11 +450,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             ),
 
-            Image.asset(
-              'assets/images/navigation.png',
-              color: AppColors.redDark,
-              height: 35,
-              width: 35,
+            SvgPicture.asset(
+              'assets/images/navigation.svg',
+              width: 25,
+              height: 25,
             ),
           ],
         ),

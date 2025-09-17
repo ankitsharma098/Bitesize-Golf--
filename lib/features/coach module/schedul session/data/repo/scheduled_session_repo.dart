@@ -36,7 +36,6 @@ class ScheduleRepository {
     }
   }
 
-  @override
   Future<String> createSchedule(Schedule schedule) async {
     try {
       final scheduleModel = ScheduleModel.fromEntity(schedule);
@@ -50,7 +49,6 @@ class ScheduleRepository {
     }
   }
 
-  @override
   Future<void> updateSchedule(Schedule schedule) async {
     try {
       final scheduleModel = ScheduleModel.fromEntity(schedule);

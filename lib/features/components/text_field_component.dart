@@ -234,23 +234,73 @@ extension CustomTextFieldFactory on CustomTextField {
       textInputAction: TextInputAction.done,
     );
   }
+  // Add this to your existing CustomTextFieldFactory extension
 
   static CustomTextField search({
-    String? placeholder = 'Search...',
+    String? placeholder = 'Search by Name...',
+    String? label,
     TextEditingController? controller,
     LevelType? levelType,
     ValueChanged<String>? onChanged,
     VoidCallback? onClear,
+    bool showClearButton = true,
   }) {
     return CustomTextField(
+      label: label,
       placeholder: placeholder,
       controller: controller,
-      prefixIcon: Icons.search_outlined,
-      suffixIcon: controller?.text.isNotEmpty == true ? Icons.close : null,
-      onSuffixIconTap: onClear,
+      prefixIcon: Icons.search,
+      suffixIcon:
+          showClearButton && controller != null && controller.text.isNotEmpty
+          ? Icons.clear
+          : null,
+      onSuffixIconTap:
+          onClear ??
+          () {
+            controller?.clear();
+            onChanged?.call('');
+          },
       levelType: levelType,
       onChanged: onChanged,
       textInputAction: TextInputAction.search,
+      keyboardType: TextInputType.text,
+    );
+  }
+
+  // Alternative search with more customization options
+  static CustomTextField searchAdvanced({
+    String? placeholder = 'Search...',
+    String? label,
+    TextEditingController? controller,
+    LevelType? levelType,
+    ValueChanged<String>? onChanged,
+    VoidCallback? onClear,
+    VoidCallback? onSubmitted,
+    IconData? searchIcon = Icons.search,
+    IconData? clearIcon = Icons.clear,
+    bool autofocus = false,
+    bool showClearButton = true,
+  }) {
+    return CustomTextField(
+      label: label,
+      placeholder: placeholder,
+      controller: controller,
+      prefixIcon: searchIcon,
+      suffixIcon:
+          showClearButton && controller != null && controller.text.isNotEmpty
+          ? clearIcon
+          : null,
+      onSuffixIconTap:
+          onClear ??
+          () {
+            controller?.clear();
+            onChanged?.call('');
+          },
+      levelType: levelType,
+      onChanged: onChanged,
+      textInputAction: TextInputAction.search,
+      keyboardType: TextInputType.text,
+      autofocus: autofocus,
     );
   }
 

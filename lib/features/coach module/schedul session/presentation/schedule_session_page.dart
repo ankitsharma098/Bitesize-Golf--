@@ -1,13 +1,17 @@
 import 'package:bitesize_golf/features/coach%20module/schedul%20session/presentation/select_pupil_ui.dart';
-import 'package:bitesize_golf/features/pupils%20modules/pupil/data/models/pupil_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:intl/intl.dart';
+import 'package:flutter_svg/svg.dart';
+import '../../../../core/themes/theme_colors.dart';
+import '../../../components/custom_date_time.dart';
+import '../../../components/custom_scaffold.dart';
+import '../../../components/utils/select_pupil_card.dart';
 import '../bloc/session_scheduled_bloc.dart';
 import '../bloc/session_scheduled_event.dart';
 import '../bloc/session_scheduled_state.dart';
-import '../data/entity/session_schedule_entity.dart';
 import '../data/repo/scheduled_session_repo.dart';
+import '../../../components/utils/size_config.dart';
+import '../../../components/custom_button.dart';
 
 class CreateScheduleScreen extends StatelessWidget {
   const CreateScheduleScreen({super.key});
@@ -42,25 +46,31 @@ class CreateScheduleScreenView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.grey[100],
+    return AppScaffold.withCustomAppBar(
       appBar: AppBar(
-        backgroundColor: Colors.red,
-        title: const Text(
+        title: Text(
           'Create Schedule Form',
           style: TextStyle(
-            color: Colors.white,
-            fontSize: 18,
+            color: AppColors.white,
+            fontSize: SizeConfig.scaleWidth(18),
             fontWeight: FontWeight.w600,
           ),
         ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: Icon(Icons.arrow_back, color: AppColors.white),
           onPressed: () => Navigator.of(context).pop(),
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.close, color: Colors.white),
+            icon: Container(
+              width: 30,
+              height: 30,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(8),
+                color: AppColors.redLight.withOpacity(0.5),
+              ),
+              child: Icon(Icons.close, color: AppColors.grey900),
+            ),
             onPressed: () => Navigator.of(context).pop(),
           ),
         ],
@@ -72,14 +82,14 @@ class CreateScheduleScreenView extends StatelessWidget {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(state.message),
-                backgroundColor: Colors.red,
+                backgroundColor: AppColors.error,
               ),
             );
           } else if (state is CreateScheduleSuccess) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
                 content: Text('Schedule created successfully!'),
-                backgroundColor: Colors.green,
+                backgroundColor: AppColors.success,
               ),
             );
             Navigator.of(context).pop();
@@ -88,7 +98,9 @@ class CreateScheduleScreenView extends StatelessWidget {
         builder: (context, state) {
           if (state is CreateScheduleInitial ||
               state is CreateScheduleLoading) {
-            return const Center(child: CircularProgressIndicator());
+            return Center(
+              child: CircularProgressIndicator(color: LevelType.redLevel.color),
+            );
           }
 
           if (state is CreateScheduleError) {
@@ -98,16 +110,17 @@ class CreateScheduleScreenView extends StatelessWidget {
                 children: [
                   Text(
                     'Error: ${state.message}',
-                    style: const TextStyle(color: Colors.red),
+                    style: TextStyle(color: AppColors.error),
                   ),
-                  const SizedBox(height: 16),
-                  ElevatedButton(
+                  SizedBox(height: SizeConfig.scaleHeight(16)),
+                  CustomButtonFactory.primary(
+                    text: 'Retry',
                     onPressed: () {
                       context.read<CreateScheduleBloc>().add(
                         LoadPupils(coachId: coachId, levelNumber: levelNumber),
                       );
                     },
-                    child: const Text('Retry'),
+                    levelType: LevelType.redLevel,
                   ),
                 ],
               ),
@@ -115,28 +128,25 @@ class CreateScheduleScreenView extends StatelessWidget {
           }
 
           if (state is CreateScheduleLoaded) {
-            return Column(
-              children: [
-                Expanded(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildPupilsSection(context, state),
-                        const SizedBox(height: 24),
-                        _buildSessionsSection(context, state),
-                        const SizedBox(height: 24),
-                        _buildSelectedPupilsSection(context, state),
-                        const SizedBox(height: 16),
-                        _buildNoticeSection(),
-                        const SizedBox(height: 100), // Space for button
-                      ],
-                    ),
-                  ),
-                ),
-                _buildSendButton(context, state),
-              ],
+            return SingleChildScrollView(
+              //padding: EdgeInsets.all(SizeConfig.scaleWidth(5)),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildPupilsSection(context, state),
+                  SizedBox(height: SizeConfig.scaleHeight(24)),
+                  _buildSessionsSection(context, state),
+                  SizedBox(height: SizeConfig.scaleHeight(24)),
+                  _buildSelectedPupilsSection(context, state),
+                  SizedBox(height: SizeConfig.scaleHeight(16)),
+                  _buildNoticeSection(),
+                  SizedBox(height: SizeConfig.scaleHeight(16)),
+                  _buildSendButton(context, state),
+                  SizedBox(
+                    height: SizeConfig.scaleHeight(32),
+                  ), // Bottom padding
+                ],
+              ),
             );
           }
 
@@ -147,67 +157,65 @@ class CreateScheduleScreenView extends StatelessWidget {
   }
 
   Widget _buildPupilsSection(BuildContext context, CreateScheduleLoaded state) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Pupils',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              color: Colors.black87,
-            ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Pupils',
+          style: TextStyle(
+            fontSize: SizeConfig.scaleWidth(16),
+            fontWeight: FontWeight.w600,
+            color: AppColors.grey900,
           ),
-          const SizedBox(height: 12),
-          Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(8),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.grey.withOpacity(0.1),
-                  spreadRadius: 1,
-                  blurRadius: 3,
-                  offset: const Offset(0, 1),
-                ),
-              ],
+        ),
+        SizedBox(height: SizeConfig.scaleHeight(12)),
+        Container(
+          padding: EdgeInsets.all(0),
+          decoration: BoxDecoration(
+            color: AppColors.white,
+            borderRadius: BorderRadius.circular(SizeConfig.scaleWidth(8)),
+          ),
+          child: ListTile(
+            title: Text(
+              'Select pupils',
+              style: TextStyle(
+                fontSize: SizeConfig.scaleWidth(16),
+                color: AppColors.grey900,
+              ),
             ),
-            child: ListTile(
-              title: const Text('Select pupils'),
-              trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-              onTap: () async {
-                final result = await Navigator.of(context).push<List<String>>(
-                  MaterialPageRoute(
-                    builder: (context) => SelectPupilsScreen(
-                      allPupils: state.allPupils,
-                      selectedPupilIds: state.selectedPupilIds,
-                      levelNumber: levelNumber,
-                    ),
+            trailing: SvgPicture.asset(
+              'assets/images/navigation.svg',
+              width: 20,
+              height: 20,
+            ),
+            onTap: () async {
+              final result = await Navigator.of(context).push<List<String>>(
+                MaterialPageRoute(
+                  builder: (context) => SelectPupilsScreen(
+                    allPupils: state.allPupils,
+                    selectedPupilIds: state.selectedPupilIds,
+                    levelNumber: levelNumber,
                   ),
-                );
+                ),
+              );
 
-                if (result != null && context.mounted) {
-                  // Update selected pupils using updated BLoC events
-                  final bloc = context.read<CreateScheduleBloc>();
-                  for (String pupilId in result) {
-                    if (!state.selectedPupilIds.contains(pupilId)) {
-                      bloc.add(SelectPupil(pupilId));
-                    }
-                  }
-                  // Remove unselected pupils
-                  for (String pupilId in state.selectedPupilIds) {
-                    if (!result.contains(pupilId)) {
-                      bloc.add(DeselectPupil(pupilId));
-                    }
+              if (result != null && context.mounted) {
+                final bloc = context.read<CreateScheduleBloc>();
+                for (String pupilId in result) {
+                  if (!state.selectedPupilIds.contains(pupilId)) {
+                    bloc.add(SelectPupil(pupilId));
                   }
                 }
-              },
-            ),
+                for (String pupilId in state.selectedPupilIds) {
+                  if (!result.contains(pupilId)) {
+                    bloc.add(DeselectPupil(pupilId));
+                  }
+                }
+              }
+            },
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -221,149 +229,20 @@ class CreateScheduleScreenView extends StatelessWidget {
           final index = entry.key;
           final session = entry.value;
 
-          return _buildSessionCard(
-            context,
-            session,
-            index,
-            session.isLevelTransition
+          return DateTimePickerField(
+            label: session.isLevelTransition
                 ? 'Next Level Starts'
                 : 'Session ${session.sessionNumber}',
+            date: session.date,
+            time: session.time,
+            levelType: session.isLevelTransition
+                ? LevelType.orangeLevel
+                : LevelType.redLevel,
+            onDateTap: () => _selectDate(context, index, session.date),
+            onTimeTap: () => _selectTime(context, index, session.time),
           );
         }).toList(),
       ],
-    );
-  }
-
-  Widget _buildSessionCard(
-    BuildContext context,
-    Session session,
-    int index,
-    String title,
-  ) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            spreadRadius: 1,
-            blurRadius: 3,
-            offset: const Offset(0, 1),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Text(
-              title,
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: session.isLevelTransition
-                    ? Colors.orange[600]
-                    : Colors.red,
-              ),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Date*',
-                        style: TextStyle(fontSize: 14, color: Colors.grey),
-                      ),
-                      const SizedBox(height: 8),
-                      GestureDetector(
-                        onTap: () => _selectDate(context, index, session.date),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 16,
-                          ),
-                          decoration: BoxDecoration(
-                            border: Border.all(color: Colors.grey[300]!),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Row(
-                            children: [
-                              Text(
-                                DateFormat('MM/dd/yyyy').format(session.date),
-                                style: const TextStyle(fontSize: 16),
-                              ),
-                              const Spacer(),
-                              Icon(
-                                Icons.calendar_today,
-                                color: Colors.grey[600],
-                                size: 20,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Time*',
-                        style: TextStyle(fontSize: 14, color: Colors.grey),
-                      ),
-                      const SizedBox(height: 8),
-                      GestureDetector(
-                        onTap: () => _selectTime(context, index, session.time),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 16,
-                          ),
-                          decoration: BoxDecoration(
-                            border: Border.all(color: Colors.grey[300]!),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Row(
-                            children: [
-                              Text(
-                                session.time.isEmpty ? 'HH:MM' : session.time,
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  color: session.time.isEmpty
-                                      ? Colors.grey[500]
-                                      : Colors.black,
-                                ),
-                              ),
-                              const Spacer(),
-                              Icon(
-                                Icons.access_time,
-                                color: Colors.grey[600],
-                                size: 20,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
-        ],
-      ),
     );
   }
 
@@ -378,192 +257,73 @@ class CreateScheduleScreenView extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Selected Pupils',
           style: TextStyle(
-            fontSize: 16,
+            fontSize: SizeConfig.scaleWidth(16),
             fontWeight: FontWeight.w600,
-            color: Colors.black87,
+            color: AppColors.grey900,
           ),
         ),
-        const SizedBox(height: 12),
+        SizedBox(height: SizeConfig.scaleHeight(12)),
         ...state.selectedPupils
-            .map((pupil) => _buildSelectedPupilCard(pupil, context))
+            .map(
+              (pupil) => PupilCard(
+                pupil: pupil,
+                levelType: LevelType.redLevel,
+                onRemove: () {
+                  context.read<CreateScheduleBloc>().add(
+                    DeselectPupil(pupil.id),
+                  );
+                },
+              ),
+            )
             .toList(),
       ],
     );
   }
 
-  Widget _buildSelectedPupilCard(PupilModel pupil, BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            spreadRadius: 1,
-            blurRadius: 3,
-            offset: const Offset(0, 1),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          CircleAvatar(
-            radius: 20,
-            backgroundColor: Colors.grey[300],
-            // Updated to use avatar property instead of avatarUrl/hasAvatar
-            backgroundImage: pupil.avatar != null && pupil.avatar!.isNotEmpty
-                ? NetworkImage(pupil.avatar!)
-                : null,
-            child: pupil.avatar == null || pupil.avatar!.isEmpty
-                ? Text(
-                    pupil.name.isNotEmpty ? pupil.name[0].toUpperCase() : '?',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  )
-                : null,
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  pupil.name,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.red[100],
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    // Updated to use currentLevel instead of level
-                    _getLevelName(pupil.currentLevel),
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.red[800],
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          IconButton(
-            icon: const Icon(Icons.close, size: 20),
-            onPressed: () {
-              context.read<CreateScheduleBloc>().add(DeselectPupil(pupil.id));
-            },
-          ),
-        ],
-      ),
-    );
-  }
-
-  // Helper method to convert level number to level name
-  String _getLevelName(int levelNumber) {
-    switch (levelNumber) {
-      case 1:
-        return 'Red Level';
-      case 2:
-        return 'Orange Level';
-      case 3:
-        return 'Yellow Level';
-      case 4:
-        return 'Green Level';
-      case 5:
-        return 'Blue Level';
-      case 6:
-        return 'Purple Level';
-      default:
-        return 'Red Level';
-    }
-  }
-
   Widget _buildNoticeSection() {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(SizeConfig.scaleWidth(16)),
       decoration: BoxDecoration(
-        color: Colors.grey[50],
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.grey[200]!),
+        color: AppColors.grey200,
+        borderRadius: BorderRadius.circular(SizeConfig.scaleWidth(8)),
+        border: Border.all(color: AppColors.grey300),
       ),
-      child: const Text(
+      child: Text(
         'These session dates may be subject to change. '
         'All payments are due on or before session 1 of each course.\n\n'
         'As levels progress interim sessions may be needed to reach '
         'the required standard, which means it should not be assumed '
         'that pupils progress automatically to the next level every '
         'six weeks. It is purely at the discretion of the Bitesize Golf coach.',
-        style: TextStyle(fontSize: 12, color: Colors.grey, height: 1.4),
+        style: TextStyle(
+          fontSize: SizeConfig.scaleWidth(12),
+          color: AppColors.grey700,
+          height: 1.4,
+        ),
       ),
     );
   }
 
   Widget _buildSendButton(BuildContext context, CreateScheduleLoaded state) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.2),
-            spreadRadius: 1,
-            blurRadius: 5,
-            offset: const Offset(0, -2),
-          ),
-        ],
-      ),
-      child: SafeArea(
-        child: SizedBox(
-          width: double.infinity,
-          child: ElevatedButton(
-            onPressed: state.canSubmit
-                ? () {
-                    context.read<CreateScheduleBloc>().add(
-                      CreateScheduleSubmit(
-                        coachId: coachId,
-                        clubId: clubId,
-                        levelNumber: levelNumber,
-                        notes: '',
-                      ),
-                    );
-                  }
-                : null,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              disabledBackgroundColor: Colors.grey[300],
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-            ),
-            child: const Text(
-              'Send Schedule',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: Colors.white,
-              ),
-            ),
-          ),
-        ),
-      ),
+    return CustomButtonFactory.primary(
+      text: 'Send Schedule',
+      onPressed: state.canSubmit
+          ? () {
+              context.read<CreateScheduleBloc>().add(
+                CreateScheduleSubmit(
+                  coachId: coachId,
+                  clubId: clubId,
+                  levelNumber: levelNumber,
+                  notes: '',
+                ),
+              );
+            }
+          : null,
+      levelType: LevelType.redLevel,
+      size: ButtonSize.large,
     );
   }
 
@@ -582,7 +342,7 @@ class CreateScheduleScreenView extends StatelessWidget {
           data: Theme.of(context).copyWith(
             colorScheme: Theme.of(
               context,
-            ).colorScheme.copyWith(primary: Colors.red),
+            ).colorScheme.copyWith(primary: LevelType.redLevel.color),
           ),
           child: child!,
         );
@@ -609,7 +369,7 @@ class CreateScheduleScreenView extends StatelessWidget {
           data: Theme.of(context).copyWith(
             colorScheme: Theme.of(
               context,
-            ).colorScheme.copyWith(primary: Colors.red),
+            ).colorScheme.copyWith(primary: LevelType.redLevel.color),
           ),
           child: child!,
         );

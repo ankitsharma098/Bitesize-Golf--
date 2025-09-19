@@ -1,32 +1,39 @@
 import 'package:bitesize_golf/core/themes/asset_custom.dart';
-import 'package:bitesize_golf/features/components/custom_button.dart';
-import 'package:bitesize_golf/route/navigator_service.dart';
-import 'package:bitesize_golf/route/routes_names.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/svg.dart';
+import '../../../../../core/themes/level_utils.dart';
+import '../../../../../core/themes/theme_colors.dart';
+import '../../../../components/avatar_widget.dart';
+import '../../../../components/ball_image.dart';
+import '../../../../components/custom_scaffold.dart';
+import '../../../../components/utils/size_config.dart';
+import '../data/guest_profile_bloc.dart';
 
-import '../../../../core/themes/theme_colors.dart';
-import '../../../components/avatar_widget.dart';
-import '../../../components/custom_scaffold.dart';
-import '../../../components/utils/size_config.dart';
-import '../../schedul session/presentation/schedule_session_page.dart';
-import '../profile bloc/profile_bloc.dart';
-import '../profile bloc/profile_event.dart';
-import '../profile bloc/profile_state.dart';
-
-class CoachProfileScreen extends StatefulWidget {
-  const CoachProfileScreen({super.key});
+class GuestProfilePage extends StatelessWidget {
+  const GuestProfilePage({super.key});
 
   @override
-  State<CoachProfileScreen> createState() => _CoachProfileScreenState();
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (context) => GuestProfileBloc()..add(LoadGuestProfile()),
+      child: const GuestProfilePageView(),
+    );
+  }
 }
 
-class _CoachProfileScreenState extends State<CoachProfileScreen> {
+class GuestProfilePageView extends StatefulWidget {
+  const GuestProfilePageView({super.key});
+
+  @override
+  State<GuestProfilePageView> createState() => _GuestProfilePageViewState();
+}
+
+class _GuestProfilePageViewState extends State<GuestProfilePageView> {
   @override
   void initState() {
+    context.read<GuestProfileBloc>().add(LoadGuestProfile());
     super.initState();
-    context.read<CoachProfileBloc>().add(const LoadProfileData());
   }
 
   @override
@@ -35,16 +42,16 @@ class _CoachProfileScreenState extends State<CoachProfileScreen> {
       screenType: ScreenType.fullScreen,
       appBarType: AppBarType.none,
       scrollable: false,
-      body: BlocBuilder<CoachProfileBloc, CoachProfileState>(
+      body: BlocBuilder<GuestProfileBloc, GuestProfileState>(
         builder: (context, state) {
-          if (state is ProfileLoading) {
+          if (state is GuestProfileLoading) {
             return _buildLoadingState();
           }
-          if (state is ProfileError) {
+          if (state is GuestProfileError) {
             return _buildErrorState(state.message);
           }
-          if (state is ProfileLoaded) {
-            return _buildProfileContent(state);
+          if (state is GuestProfileLoaded) {
+            return _buildGuestProfileContent();
           }
           return _buildInitialState();
         },
@@ -97,7 +104,7 @@ class _CoachProfileScreenState extends State<CoachProfileScreen> {
           SizedBox(height: SizeConfig.scaleHeight(24)),
           ElevatedButton(
             onPressed: () =>
-                context.read<CoachProfileBloc>().add(const RefreshProfile()),
+                context.read<GuestProfileBloc>().add(RefreshGuestProfile()),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.greenDark,
               padding: EdgeInsets.symmetric(
@@ -124,7 +131,7 @@ class _CoachProfileScreenState extends State<CoachProfileScreen> {
     );
   }
 
-  Widget _buildProfileContent(ProfileLoaded state) {
+  Widget _buildGuestProfileContent() {
     return SingleChildScrollView(
       child: Stack(
         children: [
@@ -133,7 +140,7 @@ class _CoachProfileScreenState extends State<CoachProfileScreen> {
               _buildHeaderSection(),
               SizedBox(height: SizeConfig.scaleHeight(60)),
               Text(
-                state.coach.name,
+                "Guest User",
                 style: TextStyle(
                   fontSize: SizeConfig.scaleText(20),
                   fontWeight: FontWeight.w700,
@@ -141,50 +148,45 @@ class _CoachProfileScreenState extends State<CoachProfileScreen> {
                 ),
               ),
               Text(
-                'Coach',
+                'Age: Not specified',
                 style: TextStyle(
                   fontSize: SizeConfig.scaleText(16),
                   color: AppColors.grey600,
                 ),
               ),
               SizedBox(height: SizeConfig.scaleHeight(20)),
-              _buildInfoCard(
-                'Experience:',
-                '${state.coach.experience} years of coaching',
-                'assets/bird/bird.png',
-              ),
+
               _buildInfoCard(
                 'Golf Club:',
-                state.coach.selectedClubName ?? 'Not specified',
+                'Not specified',
                 'assets/profile assets/club.png',
               ),
               _buildInfoCard(
-                'Pupils:',
-                '${state.coach.currentPupils}',
+                'Coach:',
+                'Not assigned',
                 'assets/profile assets/coach.png',
               ),
-              _buildLessonScheduleFormCard(),
-              SizedBox(height: SizeConfig.scaleHeight(20)),
-              Padding(
-                padding: EdgeInsets.all(SizeConfig.scaleWidth(12)),
-                child: CustomButtonFactory.primary(
-                  text: 'Start New Session',
-                  levelType: LevelType.redLevel,
-                  onPressed: () {
-                    NavigationService.push(RouteNames.createSession);
-                  },
-                ),
+              _buildInfoCard(
+                'Handicap:',
+                'Not set',
+                'assets/profile assets/handicap.png',
               ),
-              // _buildStartNewSessionButton(),
+              SizedBox(height: SizeConfig.scaleHeight(20)),
+
+              _buildCurrentLevelCard(),
+
               SizedBox(height: SizeConfig.scaleHeight(30)),
             ],
           ),
+
           Positioned(
             top: SizeConfig.scaleHeight(130),
             left: 0,
             right: 0,
-            child: Center(
-              child: AvatarWidget(avatarUrl: state.coach.avatarUrl),
+            child: const Center(
+              child: AvatarWidget(
+                avatarUrl: null, // guest avatar placeholder
+              ),
             ),
           ),
         ],
@@ -200,7 +202,7 @@ class _CoachProfileScreenState extends State<CoachProfileScreen> {
         children: [
           Container(
             height: SizeConfig.scaleHeight(200),
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               image: DecorationImage(
                 image: AssetImage('assets/images/profile_cover.png'),
                 fit: BoxFit.cover,
@@ -225,9 +227,6 @@ class _CoachProfileScreenState extends State<CoachProfileScreen> {
             child: PopupMenuButton<String>(
               onSelected: (String value) {
                 switch (value) {
-                  case 'edit_profile':
-                    _handleEditProfile();
-                    break;
                   case 'subscription':
                     _handleSubscription();
                     break;
@@ -237,26 +236,6 @@ class _CoachProfileScreenState extends State<CoachProfileScreen> {
                 }
               },
               itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
-                PopupMenuItem<String>(
-                  value: 'edit_profile',
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Edit Profile',
-                        style: TextStyle(
-                          color: AppColors.grey900,
-                          fontSize: SizeConfig.scaleText(16),
-                        ),
-                      ),
-                      SvgPicture.asset(
-                        'assets/setting/user.svg',
-                        width: 25,
-                        height: 25,
-                      ),
-                    ],
-                  ),
-                ),
                 PopupMenuItem<String>(
                   value: 'subscription',
                   child: Row(
@@ -319,24 +298,13 @@ class _CoachProfileScreenState extends State<CoachProfileScreen> {
     );
   }
 
-  void _handleEditProfile() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Edit Profile tapped'),
-        backgroundColor: AppColors.greenDark,
-      ),
-    );
-    // Add navigation to edit profile screen here
-  }
-
   void _handleSubscription() {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
-        content: Text('Subscription tapped'),
-        backgroundColor: AppColors.greenDark,
+        content: Text('Comming Soon'),
+        backgroundColor: AppColors.error,
       ),
     );
-    // Add navigation to subscription screen here
   }
 
   void _handleLogOut() {
@@ -346,7 +314,6 @@ class _CoachProfileScreenState extends State<CoachProfileScreen> {
         backgroundColor: AppColors.error,
       ),
     );
-    // Add logout logic here
   }
 
   Widget _buildInfoCard(String title, String value, String asset) {
@@ -362,10 +329,9 @@ class _CoachProfileScreenState extends State<CoachProfileScreen> {
       ),
       child: Row(
         children: [
-          Image.asset(asset, height: 35, width: 35, color: AppColors.greenDark),
+          Image.asset(asset, height: 35, width: 35),
           SizedBox(width: SizeConfig.scaleWidth(12)),
           Column(
-            mainAxisAlignment: MainAxisAlignment.start,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
@@ -391,73 +357,111 @@ class _CoachProfileScreenState extends State<CoachProfileScreen> {
     );
   }
 
-  Widget _buildLessonScheduleFormCard() {
-    return GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => CreateScheduleScreen()),
-        );
-      },
-      child: Container(
-        margin: EdgeInsets.symmetric(
-          horizontal: SizeConfig.scaleWidth(20),
-          vertical: SizeConfig.scaleHeight(8),
-        ),
-        padding: EdgeInsets.all(SizeConfig.scaleWidth(12)),
-        decoration: BoxDecoration(
-          color: AppColors.white,
-          borderRadius: BorderRadius.circular(SizeConfig.scaleWidth(12)),
-        ),
-        // margin: EdgeInsets.symmetric(
-        //   horizontal: SizeConfig.scaleWidth(20),
-        //   vertical: SizeConfig.scaleHeight(8),
-        // ),
-        // padding: EdgeInsets.all(SizeConfig.scaleWidth(12)),
-        // decoration: BoxDecoration(
-        //   color: AppColors.white,
-        //   borderRadius: BorderRadius.circular(SizeConfig.scaleWidth(12)),
-        // ),
-        child: Row(
+  Widget _buildCurrentLevelCard() {
+    LinearGradient levelGradient = LevelUtils.getLevelGradient(1);
+    LevelType levelType = LevelUtils.getLevelTypeFromNumber(1);
+
+    return Container(
+      margin: EdgeInsets.symmetric(horizontal: SizeConfig.scaleWidth(20)),
+      decoration: BoxDecoration(
+        gradient: levelGradient,
+        borderRadius: BorderRadius.circular(SizeConfig.scaleWidth(16)),
+      ),
+      child: Padding(
+        padding: EdgeInsets.all(SizeConfig.scaleWidth(8)),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Image.asset(
-              'assets/profile assets/lesson schedule.png',
-              height: 35,
-              width: 35,
-            ),
-            SizedBox(width: SizeConfig.scaleWidth(12)),
-            Expanded(
-              child: Text(
-                'Lesson Schedule Form',
-                style: TextStyle(
-                  fontSize: SizeConfig.scaleText(16),
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.grey900,
+            Row(
+              children: [
+                Image.asset(
+                  "assets/bird/bird.png",
+                  width: 45,
+                  height: 45,
+                  color: AppColors.white,
                 ),
-              ),
+                SizedBox(width: SizeConfig.scaleWidth(8)),
+                Text(
+                  "Beginner Level",
+                  style: TextStyle(
+                    color: AppColors.white,
+                    fontSize: SizeConfig.scaleText(18),
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
             ),
-            SvgPicture.asset(
-              'assets/images/navigation.svg',
-              width: 25,
-              height: 25,
+            SizedBox(height: SizeConfig.scaleHeight(8)),
+            Row(
+              children: [
+                Expanded(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: AppColors.white.withOpacity(0.9),
+                      borderRadius: BorderRadius.circular(
+                        SizeConfig.scaleWidth(12),
+                      ),
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        BallImage(
+                          ballType: BallType.know,
+                          levelType: levelType,
+                          height: 55,
+                          width: 55,
+                        ),
+                        Text(
+                          'More Information',
+                          style: TextStyle(
+                            color: AppColors.grey900,
+                            fontSize: SizeConfig.scaleText(12),
+                            fontWeight: FontWeight.w600,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        SizedBox(height: SizeConfig.scaleHeight(8)),
+                      ],
+                    ),
+                  ),
+                ),
+                SizedBox(width: SizeConfig.scaleWidth(12)),
+                Expanded(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: AppColors.white.withOpacity(0.9),
+                      borderRadius: BorderRadius.circular(
+                        SizeConfig.scaleWidth(12),
+                      ),
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        BallImage(
+                          ballType: BallType.swingOne,
+                          levelType: levelType,
+                          height: 55,
+                          width: 55,
+                        ),
+                        Text(
+                          'More Information',
+                          style: TextStyle(
+                            color: AppColors.grey900,
+                            fontSize: SizeConfig.scaleText(12),
+                            fontWeight: FontWeight.w600,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        SizedBox(height: SizeConfig.scaleHeight(8)),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             ),
           ],
         ),
       ),
-    );
-  }
-
-  Widget _buildStartNewSessionButton() {
-    return CustomButtonFactory.primary(
-      text: 'Start New Session',
-      onPressed: () {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Starting New Session'),
-            backgroundColor: AppColors.redDark,
-          ),
-        );
-      },
     );
   }
 }

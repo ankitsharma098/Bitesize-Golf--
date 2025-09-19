@@ -1,4 +1,7 @@
 import 'package:bitesize_golf/core/themes/asset_custom.dart';
+import 'package:bitesize_golf/features/auth/data/models/user_model.dart';
+import 'package:bitesize_golf/features/pupils%20modules/pupil/data/models/pupil_model.dart';
+import 'package:bitesize_golf/route/navigator_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/svg.dart';
@@ -9,10 +12,7 @@ import '../../../components/avatar_widget.dart';
 import '../../../components/ball_image.dart';
 import '../../../components/custom_scaffold.dart';
 import '../../../components/utils/size_config.dart';
-import '../../../guest module/profile/presentation/guest_profile_page.dart';
-import '../../subcription/presentation/subscription_page.dart';
-import '../../update profile/data/update_profile_bloc.dart';
-import '../../update profile/presentation/update_profile_page.dart';
+import '../../lesson Scheduled/presentation/pupil_lesson_scheduled.dart';
 import '../profile bloc/profile_bloc.dart';
 import '../profile bloc/profile_event.dart';
 import '../profile bloc/profile_state.dart';
@@ -35,8 +35,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget build(BuildContext context) {
     return CustomScaffold(
       screenType: ScreenType.fullScreen,
-      appBarType: AppBarType.none,
-      scrollable: false,
+      appBarType: AppBarType.none, // Remove the app bar completely
+      scrollable: false, // Handle scrolling internally
       body: BlocBuilder<ProfileBloc, ProfileState>(
         builder: (context, state) {
           if (state is ProfileLoading) {
@@ -132,9 +132,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
         children: [
           Column(
             children: [
+              // Background image with overlay title
               _buildHeaderSection(),
 
-              SizedBox(height: SizeConfig.scaleHeight(60)),
+              // Space for overlapping avatar (half the avatar height)
+              SizedBox(
+                height: SizeConfig.scaleHeight(60),
+              ), // Adjust based on avatar size
+              // Profile info (name and age)
               Text(
                 state.pupil.name,
                 style: TextStyle(
@@ -152,6 +157,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
               SizedBox(height: SizeConfig.scaleHeight(20)),
 
+              // Profile info cards
               _buildInfoCard(
                 'Golf Club:',
                 state.pupil.selectedClubName ?? 'Not specified',
@@ -168,18 +174,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 'assets/profile assets/handicap.png',
               ),
               SizedBox(height: SizeConfig.scaleHeight(8)),
-              _buildLessonScheduleCard(),
+              // Lesson Schedule card
+              _buildLessonScheduleCard(state.pupil),
 
               SizedBox(height: SizeConfig.scaleHeight(20)),
 
+              // Current Level card
               _buildCurrentLevelCard(state.currentLevel),
 
               SizedBox(height: SizeConfig.scaleHeight(30)),
             ],
           ),
 
+          // Overlapping Avatar - positioned to overlap background and content but scrolls with content
           Positioned(
-            top: SizeConfig.scaleHeight(130),
+            top: SizeConfig.scaleHeight(
+              130,
+            ), // Position it to overlap image and white area
             left: 0,
             right: 0,
             child: Center(child: AvatarWidget(avatarUrl: state.pupil.avatar)),
@@ -195,6 +206,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       width: double.infinity,
       child: Stack(
         children: [
+          // Background golf course image
           Container(
             height: SizeConfig.scaleHeight(200),
             decoration: BoxDecoration(
@@ -205,8 +217,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           ),
 
+          // Profile title - positioned to overlay the image
           Positioned(
-            top: SizeConfig.scaleHeight(20),
+            top: SizeConfig.scaleHeight(20), // Adjust this to match your design
             left: SizeConfig.scaleWidth(20),
             child: Text(
               'Profile',
@@ -218,6 +231,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           ),
 
+          // Settings popup menu
           Positioned(
             top: SizeConfig.scaleHeight(20),
             right: SizeConfig.scaleWidth(20),
@@ -271,6 +285,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ),
                       ),
 
+                      //  SizedBox(width: SizeConfig.scaleWidth(12)),
                       SvgPicture.asset(
                         'assets/setting/wallet-2.svg',
                         width: 25,
@@ -292,6 +307,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           fontSize: SizeConfig.scaleText(16),
                         ),
                       ),
+
                       SvgPicture.asset(
                         'assets/setting/arrow-left.svg',
                         width: 25,
@@ -323,37 +339,33 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   void _handleEditProfile() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => BlocProvider<UpdateProfileBloc>(
-          create: (context) => UpdateProfileBloc(),
-          child: const EditProfilePage(),
-        ),
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Edit Profile tapped'),
+        backgroundColor: AppColors.greenDark,
       ),
     );
+    // Add navigation to edit profile screen here
   }
 
   void _handleSubscription() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => SubscriptionPage(
-          planName: "Annual Plan",
-          price: "\$60/year",
-          startDate: DateTime(2024, 3, 20),
-          endDate: DateTime(2025, 12, 20),
-        ),
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Subscription tapped'),
+        backgroundColor: AppColors.greenDark,
       ),
     );
+    // Add navigation to subscription screen here
   }
 
   void _handleLogOut() {
-    print("Logout");
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => GuestProfilePage()),
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Log Out tapped'),
+        backgroundColor: AppColors.error,
+      ),
     );
+    // Add logout logic here
   }
 
   Widget _buildInfoCard(String title, String value, String asset) {
@@ -398,13 +410,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildLessonScheduleCard() {
+  Widget _buildLessonScheduleCard(PupilModel pupil) {
     return GestureDetector(
       onTap: () {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Navigating to Lesson Schedule'),
-            backgroundColor: AppColors.greenDark,
+        print("PupilId --- > ${pupil.id}");
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => LessonScheduleScreen(pupilId: pupil.id),
           ),
         );
       },
@@ -437,11 +450,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             ),
 
-            Image.asset(
-              'assets/images/navigation.png',
-              color: AppColors.redDark,
-              height: 35,
-              width: 35,
+            SvgPicture.asset(
+              'assets/images/navigation.svg',
+              width: 25,
+              height: 25,
             ),
           ],
         ),

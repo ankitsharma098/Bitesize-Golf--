@@ -1,34 +1,39 @@
 import 'package:bitesize_golf/core/themes/asset_custom.dart';
+import 'package:bitesize_golf/features/guest%20module/profile/data/guest_profile_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/svg.dart';
-
 import '../../../../core/themes/level_utils.dart';
 import '../../../../core/themes/theme_colors.dart';
 import '../../../components/avatar_widget.dart';
 import '../../../components/ball_image.dart';
 import '../../../components/custom_scaffold.dart';
 import '../../../components/utils/size_config.dart';
-import '../../../guest module/profile/presentation/guest_profile_page.dart';
-import '../../subcription/presentation/subscription_page.dart';
-import '../../update profile/data/update_profile_bloc.dart';
-import '../../update profile/presentation/update_profile_page.dart';
-import '../profile bloc/profile_bloc.dart';
-import '../profile bloc/profile_event.dart';
-import '../profile bloc/profile_state.dart';
 
-class ProfileScreen extends StatefulWidget {
-  const ProfileScreen({super.key});
+class GuestProfilePage extends StatelessWidget {
+  const GuestProfilePage({super.key});
 
   @override
-  State<ProfileScreen> createState() => _ProfileScreenState();
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (context) => GuestProfileBloc()..add(LoadGuestProfile()),
+      child: const GuestProfilePageView(),
+    );
+  }
 }
 
-class _ProfileScreenState extends State<ProfileScreen> {
+class GuestProfilePageView extends StatefulWidget {
+  const GuestProfilePageView({super.key});
+
+  @override
+  State<GuestProfilePageView> createState() => _GuestProfilePageViewState();
+}
+
+class _GuestProfilePageViewState extends State<GuestProfilePageView> {
   @override
   void initState() {
+    context.read<GuestProfileBloc>().add(LoadGuestProfile());
     super.initState();
-    context.read<ProfileBloc>().add(const LoadProfileData());
   }
 
   @override
@@ -37,16 +42,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
       screenType: ScreenType.fullScreen,
       appBarType: AppBarType.none,
       scrollable: false,
-      body: BlocBuilder<ProfileBloc, ProfileState>(
+      body: BlocBuilder<GuestProfileBloc, GuestProfileState>(
         builder: (context, state) {
-          if (state is ProfileLoading) {
+          if (state is GuestProfileLoading) {
             return _buildLoadingState();
           }
-          if (state is ProfileError) {
+          if (state is GuestProfileError) {
             return _buildErrorState(state.message);
           }
-          if (state is ProfileLoaded) {
-            return _buildProfileContent(state);
+          if (state is GuestProfileLoaded) {
+            return _buildGuestProfileContent();
           }
           return _buildInitialState();
         },
@@ -99,7 +104,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           SizedBox(height: SizeConfig.scaleHeight(24)),
           ElevatedButton(
             onPressed: () =>
-                context.read<ProfileBloc>().add(const RefreshProfile()),
+                context.read<GuestProfileBloc>().add(RefreshGuestProfile()),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.greenDark,
               padding: EdgeInsets.symmetric(
@@ -126,17 +131,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildProfileContent(ProfileLoaded state) {
+  Widget _buildGuestProfileContent() {
     return SingleChildScrollView(
       child: Stack(
         children: [
           Column(
             children: [
               _buildHeaderSection(),
-
               SizedBox(height: SizeConfig.scaleHeight(60)),
               Text(
-                state.pupil.name,
+                "Guest User",
                 style: TextStyle(
                   fontSize: SizeConfig.scaleText(20),
                   fontWeight: FontWeight.w700,
@@ -144,7 +148,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
               ),
               Text(
-                'Age: ${state.pupil.age ?? 'Not specified'}',
+                'Age: Not specified',
                 style: TextStyle(
                   fontSize: SizeConfig.scaleText(16),
                   color: AppColors.grey600,
@@ -154,25 +158,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
               _buildInfoCard(
                 'Golf Club:',
-                state.pupil.selectedClubName ?? 'Not specified',
+                'Not specified',
                 'assets/profile assets/club.png',
               ),
               _buildInfoCard(
                 'Coach:',
-                state.pupil.assignedCoachName ?? 'Not assigned',
+                'Not assigned',
                 'assets/profile assets/coach.png',
               ),
               _buildInfoCard(
                 'Handicap:',
-                state.pupil.handicap?.toString() ?? 'Not set',
+                'Not set',
                 'assets/profile assets/handicap.png',
               ),
-              SizedBox(height: SizeConfig.scaleHeight(8)),
-              _buildLessonScheduleCard(),
-
               SizedBox(height: SizeConfig.scaleHeight(20)),
 
-              _buildCurrentLevelCard(state.currentLevel),
+              _buildCurrentLevelCard(),
 
               SizedBox(height: SizeConfig.scaleHeight(30)),
             ],
@@ -182,7 +183,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
             top: SizeConfig.scaleHeight(130),
             left: 0,
             right: 0,
-            child: Center(child: AvatarWidget(avatarUrl: state.pupil.avatar)),
+            child: const Center(
+              child: AvatarWidget(
+                avatarUrl: null, // guest avatar placeholder
+              ),
+            ),
           ),
         ],
       ),
@@ -197,14 +202,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
         children: [
           Container(
             height: SizeConfig.scaleHeight(200),
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               image: DecorationImage(
                 image: AssetImage('assets/images/profile_cover.png'),
                 fit: BoxFit.cover,
               ),
             ),
           ),
-
           Positioned(
             top: SizeConfig.scaleHeight(20),
             left: SizeConfig.scaleWidth(20),
@@ -217,16 +221,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             ),
           ),
-
           Positioned(
             top: SizeConfig.scaleHeight(20),
             right: SizeConfig.scaleWidth(20),
             child: PopupMenuButton<String>(
               onSelected: (String value) {
                 switch (value) {
-                  case 'edit_profile':
-                    _handleEditProfile();
-                    break;
                   case 'subscription':
                     _handleSubscription();
                     break;
@@ -237,31 +237,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
               },
               itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
                 PopupMenuItem<String>(
-                  value: 'edit_profile',
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Edit Profile',
-                        style: TextStyle(
-                          color: AppColors.grey900,
-                          fontSize: SizeConfig.scaleText(16),
-                        ),
-                      ),
-                      // SizedBox(width: SizeConfig.scaleWidth(12)),
-                      SvgPicture.asset(
-                        'assets/setting/user.svg',
-                        width: 25,
-                        height: 25,
-                      ),
-                    ],
-                  ),
-                ),
-                PopupMenuItem<String>(
                   value: 'subscription',
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-
                     children: [
                       Text(
                         'Subscription',
@@ -270,7 +248,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           fontSize: SizeConfig.scaleText(16),
                         ),
                       ),
-
                       SvgPicture.asset(
                         'assets/setting/wallet-2.svg',
                         width: 25,
@@ -283,7 +260,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   value: 'log_out',
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-
                     children: [
                       Text(
                         'Log Out',
@@ -322,37 +298,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  void _handleEditProfile() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => BlocProvider<UpdateProfileBloc>(
-          create: (context) => UpdateProfileBloc(),
-          child: const EditProfilePage(),
-        ),
-      ),
-    );
-  }
-
   void _handleSubscription() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => SubscriptionPage(
-          planName: "Annual Plan",
-          price: "\$60/year",
-          startDate: DateTime(2024, 3, 20),
-          endDate: DateTime(2025, 12, 20),
-        ),
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Comming Soon'),
+        backgroundColor: AppColors.error,
       ),
     );
   }
 
   void _handleLogOut() {
-    print("Logout");
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => GuestProfilePage()),
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Log Out tapped'),
+        backgroundColor: AppColors.error,
+      ),
     );
   }
 
@@ -372,7 +332,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
           Image.asset(asset, height: 35, width: 35),
           SizedBox(width: SizeConfig.scaleWidth(12)),
           Column(
-            mainAxisAlignment: MainAxisAlignment.start,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
@@ -398,64 +357,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildLessonScheduleCard() {
-    return GestureDetector(
-      onTap: () {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Navigating to Lesson Schedule'),
-            backgroundColor: AppColors.greenDark,
-          ),
-        );
-      },
-      child: Container(
-        margin: EdgeInsets.symmetric(
-          horizontal: SizeConfig.scaleWidth(20),
-          vertical: SizeConfig.scaleHeight(8),
-        ),
-        padding: EdgeInsets.all(SizeConfig.scaleWidth(12)),
-        decoration: BoxDecoration(
-          color: AppColors.white,
-          borderRadius: BorderRadius.circular(SizeConfig.scaleWidth(12)),
-        ),
-        child: Row(
-          children: [
-            Image.asset(
-              'assets/profile assets/lesson schedule.png',
-              height: 35,
-              width: 35,
-            ),
-            SizedBox(width: SizeConfig.scaleWidth(12)),
-            Expanded(
-              child: Text(
-                'Lesson Schedule',
-                style: TextStyle(
-                  fontSize: SizeConfig.scaleText(16),
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.grey900,
-                ),
-              ),
-            ),
-
-            Image.asset(
-              'assets/images/navigation.png',
-              color: AppColors.redDark,
-              height: 35,
-              width: 35,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildCurrentLevelCard(dynamic currentLevel) {
-    LinearGradient levelGradient = LevelUtils.getLevelGradient(
-      currentLevel.levelNumber,
-    );
-    LevelType levelType = LevelUtils.getLevelTypeFromNumber(
-      currentLevel.levelNumber,
-    );
+  Widget _buildCurrentLevelCard() {
+    LinearGradient levelGradient = LevelUtils.getLevelGradient(1);
+    LevelType levelType = LevelUtils.getLevelTypeFromNumber(1);
 
     return Container(
       margin: EdgeInsets.symmetric(horizontal: SizeConfig.scaleWidth(20)),
@@ -478,7 +382,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
                 SizedBox(width: SizeConfig.scaleWidth(8)),
                 Text(
-                  currentLevel.name,
+                  "Beginner Level",
                   style: TextStyle(
                     color: AppColors.white,
                     fontSize: SizeConfig.scaleText(18),
@@ -491,81 +395,65 @@ class _ProfileScreenState extends State<ProfileScreen> {
             Row(
               children: [
                 Expanded(
-                  child: GestureDetector(
-                    onTap: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('More Information'),
-                          backgroundColor: AppColors.greenDark,
-                        ),
-                      );
-                    },
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: AppColors.white.withOpacity(0.9),
-                        borderRadius: BorderRadius.circular(
-                          SizeConfig.scaleWidth(12),
-                        ),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: AppColors.white.withOpacity(0.9),
+                      borderRadius: BorderRadius.circular(
+                        SizeConfig.scaleWidth(12),
                       ),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          BallImage(
-                            ballType: BallType.know,
-                            levelType: levelType,
-                            height: 55,
-                            width: 55,
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        BallImage(
+                          ballType: BallType.know,
+                          levelType: levelType,
+                          height: 55,
+                          width: 55,
+                        ),
+                        Text(
+                          'More Information',
+                          style: TextStyle(
+                            color: AppColors.grey900,
+                            fontSize: SizeConfig.scaleText(12),
+                            fontWeight: FontWeight.w600,
                           ),
-                          Text(
-                            'More Information',
-                            style: TextStyle(
-                              color: AppColors.grey900,
-                              fontSize: SizeConfig.scaleText(12),
-                              fontWeight: FontWeight.w600,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                          SizedBox(height: SizeConfig.scaleHeight(8)),
-                        ],
-                      ),
+                          textAlign: TextAlign.center,
+                        ),
+                        SizedBox(height: SizeConfig.scaleHeight(8)),
+                      ],
                     ),
                   ),
                 ),
                 SizedBox(width: SizeConfig.scaleWidth(12)),
                 Expanded(
-                  child: GestureDetector(
-                    onTap: () => _navigateToLevel(currentLevel.levelNumber),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: AppColors.white.withOpacity(0.9),
-                        borderRadius: BorderRadius.circular(
-                          SizeConfig.scaleWidth(12),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: AppColors.white.withOpacity(0.9),
+                      borderRadius: BorderRadius.circular(
+                        SizeConfig.scaleWidth(12),
+                      ),
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        BallImage(
+                          ballType: BallType.swingOne,
+                          levelType: levelType,
+                          height: 55,
+                          width: 55,
                         ),
-                      ),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          BallImage(
-                            ballType: BallType.swingOne,
-                            levelType: levelType,
-                            height: 55,
-                            width: 55,
+                        Text(
+                          'More Information',
+                          style: TextStyle(
+                            color: AppColors.grey900,
+                            fontSize: SizeConfig.scaleText(12),
+                            fontWeight: FontWeight.w600,
                           ),
-
-                          Text(
-                            'More Information',
-                            style: TextStyle(
-                              color: AppColors.grey900,
-                              fontSize: SizeConfig.scaleText(12),
-                              fontWeight: FontWeight.w600,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                          SizedBox(height: SizeConfig.scaleHeight(8)),
-                        ],
-                      ),
+                          textAlign: TextAlign.center,
+                        ),
+                        SizedBox(height: SizeConfig.scaleHeight(8)),
+                      ],
                     ),
                   ),
                 ),
@@ -573,24 +461,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  void _openSettings() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Opening settings...'),
-        backgroundColor: AppColors.greenDark,
-      ),
-    );
-  }
-
-  void _navigateToLevel(int levelNumber) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Navigating to Level $levelNumber'),
-        backgroundColor: AppColors.greenDark,
       ),
     );
   }

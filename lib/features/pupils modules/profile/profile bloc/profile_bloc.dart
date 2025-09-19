@@ -3,7 +3,6 @@ import 'package:bitesize_golf/features/pupils%20modules/profile/profile%20bloc/p
 import 'package:bitesize_golf/features/pupils%20modules/profile/profile%20bloc/profile_state.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
-
 import '../../../auth/data/repositories/auth_repo.dart';
 import '../../../level/entity/level_entity.dart';
 import '../../home/data/dashboard_repo.dart';
@@ -30,13 +29,11 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
   ) async {
     try {
       emit(const ProfileLoading());
-
       final currentUser = await _authRepository.getCurrentUser();
       if (currentUser == null) {
         emit(const ProfileError('User not found'));
         return;
       }
-
       await _startListeningToUpdates(currentUser.uid);
     } catch (e) {
       emit(ProfileError('Failed to load profile: $e'));
@@ -53,17 +50,13 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
         emit(const ProfileError('User not found'));
         return;
       }
-
       final pupil = await _dashboardRepository.getPupilData(currentUser.uid);
       final levels = await _dashboardRepository.getAllLevels();
-
       if (pupil != null) {
-        // Find current level
         final currentLevel = levels.firstWhere(
           (level) => level.levelNumber == pupil.currentLevel,
           orElse: () => levels.first,
         );
-
         emit(ProfileLoaded(pupil: pupil, currentLevel: currentLevel));
       } else {
         emit(const ProfileError('Profile data not found'));
@@ -83,13 +76,10 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
         emit(const ProfileError('User not found'));
         return;
       }
-
       await _dashboardRepository.updatePupilProgress(
         currentUser.uid,
         event.updatedPupil,
       );
-
-      // The stream will automatically update the UI
     } catch (e) {
       emit(ProfileError('Failed to update profile: $e'));
     }
@@ -104,7 +94,6 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
 
   Future<void> _startListeningToUpdates(String userId) async {
     await _pupilSubscription?.cancel();
-
     _pupilSubscription = _dashboardRepository
         .getPupilDataStream(userId)
         .listen(
@@ -116,7 +105,6 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
                   (level) => level.levelNumber == pupil.currentLevel,
                   orElse: () => levels.first,
                 );
-
                 add(
                   _ProfileDataUpdated(pupil: pupil, currentLevel: currentLevel),
                 );

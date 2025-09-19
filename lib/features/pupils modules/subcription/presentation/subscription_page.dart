@@ -97,10 +97,6 @@ class SubscriptionPage extends StatelessWidget {
           _buildFeatureItem("Interactive challenges & fun games"),
           _buildFeatureItem("Progress tracking and achievements"),
           _buildFeatureItem("Access to playing stat sheets"),
-          _buildFeatureItem(
-            "Access to the most comprehensive junior development structure available",
-          ),
-          _buildFeatureItem("Designed by top junior golf coaches"),
 
           const SizedBox(height: 20),
 

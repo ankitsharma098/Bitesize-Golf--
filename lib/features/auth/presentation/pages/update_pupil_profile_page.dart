@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/themes/theme_colors.dart';
 import '../../../../route/navigator_service.dart';
@@ -35,14 +34,12 @@ class _UpdatePupilProfilePageState extends State<UpdatePupilProfilePage> {
   final lastNameCtrl = TextEditingController();
   final dateOfBirthCtrl = TextEditingController();
   final handicapCtrl = TextEditingController();
-
   File? _profileImage;
   DateTime? _selectedDateOfBirth;
   String? _selectedCoachId;
   String? _selectedCoachName;
   String? _selectedClubId;
   String? _selectedClubName;
-
   List<Club> _availableClubs = [];
   List<Coach> _availableCoaches = [];
   bool _isLoadingClubs = false;

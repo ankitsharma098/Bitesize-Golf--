@@ -131,7 +131,7 @@ class _UpdateProfileCoachPageState extends State<UpdateProfileCoachPage> {
       showModalBottomSheet(
         context: context,
         isScrollControlled: true,
-        builder: (_) => Container(
+        builder: (_) => SizedBox(
           height: MediaQuery.of(context).size.height * 0.6,
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -208,7 +208,6 @@ class _UpdateProfileCoachPageState extends State<UpdateProfileCoachPage> {
       builder: (context, state) {
         final isLoading = state is AuthLoading;
 
-        // MUCH CLEANER - Using AppScaffold.form() with scrollable
         return AppScaffold.form(
           title: 'Complete Your Profile',
           showBackButton: true,
@@ -225,7 +224,6 @@ class _UpdateProfileCoachPageState extends State<UpdateProfileCoachPage> {
                 ),
                 SizedBox(height: SizeConfig.scaleHeight(24)),
 
-                // First Name
                 CustomTextFieldFactory.name(
                   controller: firstNameCtrl,
                   label: 'First Name',
@@ -240,7 +238,6 @@ class _UpdateProfileCoachPageState extends State<UpdateProfileCoachPage> {
                 ),
                 SizedBox(height: SizeConfig.scaleHeight(16)),
 
-                // Last Name
                 CustomTextFieldFactory.name(
                   controller: lastNameCtrl,
                   label: 'Last Name',
@@ -255,7 +252,6 @@ class _UpdateProfileCoachPageState extends State<UpdateProfileCoachPage> {
                 ),
                 SizedBox(height: SizeConfig.scaleHeight(16)),
 
-                // Experience
                 CustomTextFieldFactory.number(
                   controller: experienceCtrl,
                   label: 'Experience',
@@ -274,7 +270,6 @@ class _UpdateProfileCoachPageState extends State<UpdateProfileCoachPage> {
                 ),
                 SizedBox(height: SizeConfig.scaleHeight(16)),
 
-                // Golf Club Selection
                 CustomTextFieldFactory.dropdown(
                   controller: TextEditingController(
                     text: _selectedGolfClubName ?? '',
@@ -286,13 +281,12 @@ class _UpdateProfileCoachPageState extends State<UpdateProfileCoachPage> {
                 ),
                 SizedBox(height: SizeConfig.scaleHeight(16)),
 
-                // Profile Photo
                 SizedBox(
-                  width: 900, // Increased width for a wider cuboid shape
-                  height: 120, // Keeping the height as is
+                  width: 900,
+                  height: 120,
                   child: Column(
                     crossAxisAlignment:
-                        CrossAxisAlignment.start, // Align to start (left)
+                        CrossAxisAlignment.start,
                     children: [
                       Text(
                         'Profile Photo',
@@ -303,10 +297,9 @@ class _UpdateProfileCoachPageState extends State<UpdateProfileCoachPage> {
                       ),
                       SizedBox(height: SizeConfig.scaleHeight(8)),
                       Expanded(
-                        // Use Expanded to fill remaining height
                         child: CustomImagePicker(
                           image: _profileImage,
-                          size: 200, // Adjust size to fit within height
+                          size: 200,
                           onImage: (f) => setState(() => _profileImage = f),
                           levelType: LevelType.redLevel,
                         ),
@@ -314,10 +307,7 @@ class _UpdateProfileCoachPageState extends State<UpdateProfileCoachPage> {
                     ],
                   ),
                 ),
-
                 SizedBox(height: SizeConfig.scaleHeight(32)),
-
-                // Buttons
                 CustomButtonFactory.primary(
                   text: 'Save and Continue',
                   onPressed: isLoading ? null : _handleSaveProfile,

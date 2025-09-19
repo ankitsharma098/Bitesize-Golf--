@@ -14,6 +14,7 @@ import '../features/auth/presentation/pages/register_page.dart';
 import '../features/auth/presentation/pages/splash_page.dart';
 import '../features/auth/presentation/pages/welcome_page.dart';
 import '../features/coach module/home/presentation/main_wrapper.dart';
+import '../features/guest module/home/presentation/main_wrapper.dart';
 import '../features/pupils modules/home/presentation/main_wrapper.dart';
 import '../features/subscription/presentation/pages/subscription_page.dart';
 import '../injection.dart';
@@ -21,9 +22,8 @@ import '../injection.dart';
 class AppRouter {
   static final GoRouter router = GoRouter(
     initialLocation: RouteNames.splash,
-    debugLogDiagnostics: true, // Enable for debugging
+    debugLogDiagnostics: true,
     routes: [
-      // Auth routes - always accessible
       GoRoute(
         path: RouteNames.splash,
         name: 'splash',
@@ -45,7 +45,7 @@ class AppRouter {
         },
       ),
       GoRoute(
-        path: '/subscription', // keep the same path
+        path: '/subscription',
         name: 'subscription',
         builder: (context, state) {
           // read the query parameter ?pupilId=xyz
@@ -106,12 +106,9 @@ class AppRouter {
       GoRoute(
         path: RouteNames.guestHome,
         name: 'guestHome',
-        builder: (context, state) => const Scaffold(
-          body: Center(child: Text('Guest Home - Coming Soon')),
-        ),
+        builder: (context, state) => const MainGuestWrapperScreen(),
       ),
     ],
-    // Simplified redirect - let the splash screen handle most navigation logic
     redirect: _handleRedirect,
     errorBuilder: (context, state) => Scaffold(
       body: Center(
@@ -174,7 +171,6 @@ class AppRouter {
       // Let the splash screen handle the navigation
     } catch (e) {
       print("Error in redirect: $e");
-      // If there's an error accessing the auth bloc, go to start
       return RouteNames.splash;
     }
 

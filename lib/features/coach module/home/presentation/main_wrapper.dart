@@ -99,8 +99,7 @@ class _CoachMainWrapperScreenState extends State<CoachMainWrapperScreen> {
                   ),
                   bottomNavigationBar: CustomBottomNavBar(
                     currentIndex: state.selectedIndex,
-                    onTap: (index) =>
-                        _onTabTapped(context, index), // Pass context
+                    onTap: (index) => _onTabTapped(context, index), // Pass context
                   ),
                 );
               },

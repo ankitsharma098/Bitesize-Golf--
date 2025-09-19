@@ -173,6 +173,7 @@ class WelcomePage extends StatelessWidget {
               text: 'Continue as Guest',
               onPressed: () {
                 context.go(RouteNames.guestHome);
+
               },
               levelType: LevelType.redLevel, // Use red theme for text color
             ),

@@ -58,7 +58,6 @@ class LevelUtils {
     }
   }
 
-  // Convenience method to get ball asset directly from level number
   static String getBallAssetFromLevelNumber(
     BallType ballType,
     int levelNumber,

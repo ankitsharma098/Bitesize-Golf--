@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/svg.dart';
 
+import '../../../../core/constants/common_controller.dart';
 import '../../../../core/themes/theme_colors.dart';
 import '../../../components/avatar_widget.dart';
 import '../../../components/custom_scaffold.dart';
@@ -232,7 +233,7 @@ class _CoachProfileScreenState extends State<CoachProfileScreen> {
                     _handleSubscription();
                     break;
                   case 'log_out':
-                    _handleLogOut();
+                    logout(context);
                     break;
                 }
               },
@@ -346,7 +347,6 @@ class _CoachProfileScreenState extends State<CoachProfileScreen> {
         backgroundColor: AppColors.error,
       ),
     );
-    // Add logout logic here
   }
 
   Widget _buildInfoCard(String title, String value, String asset) {

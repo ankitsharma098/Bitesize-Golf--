@@ -1,14 +1,15 @@
 import 'package:bitesize_golf/core/themes/asset_custom.dart';
-import 'package:bitesize_golf/features/guest%20module/profile/data/guest_profile_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/svg.dart';
-import '../../../../core/themes/level_utils.dart';
-import '../../../../core/themes/theme_colors.dart';
+import '../../../../../core/themes/level_utils.dart';
+import '../../../../../core/themes/theme_colors.dart';
+import '../../../../core/constants/common_controller.dart';
 import '../../../components/avatar_widget.dart';
 import '../../../components/ball_image.dart';
 import '../../../components/custom_scaffold.dart';
 import '../../../components/utils/size_config.dart';
+import '../data/guest_profile_bloc.dart';
 
 class GuestProfilePage extends StatelessWidget {
   const GuestProfilePage({super.key});
@@ -231,7 +232,7 @@ class _GuestProfilePageViewState extends State<GuestProfilePageView> {
                     _handleSubscription();
                     break;
                   case 'log_out':
-                    _handleLogOut();
+                    logout(context);
                     break;
                 }
               },

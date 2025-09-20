@@ -1,5 +1,6 @@
 import 'package:bitesize_golf/core/constants/common_controller.dart';
 import 'package:bitesize_golf/core/themes/asset_custom.dart';
+import 'package:bitesize_golf/features/pupils%20modules/pupil/data/models/pupil_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/svg.dart';
@@ -12,6 +13,7 @@ import '../../../components/custom_scaffold.dart';
 import '../../../components/utils/size_config.dart';
 import '../../../guest module/profile/data/guest_profile_bloc.dart';
 import '../../../guest module/profile/presentation/guest_profile_page.dart';
+import '../../lesson Scheduled/presentation/pupil_lesson_scheduled.dart';
 import '../../subcription/presentation/subscription_page.dart';
 import '../../update profile/data/update_profile_bloc.dart';
 import '../../update profile/presentation/update_profile_page.dart';
@@ -171,7 +173,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 'assets/profile assets/handicap.png',
               ),
               SizedBox(height: SizeConfig.scaleHeight(8)),
-              _buildLessonScheduleCard(),
+              _buildLessonScheduleCard(state.pupil),
 
               SizedBox(height: SizeConfig.scaleHeight(20)),
 
@@ -404,15 +406,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildLessonScheduleCard() {
+  Widget _buildLessonScheduleCard(PupilModel pupil) {
     return GestureDetector(
       onTap: () {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Navigating to Lesson Schedule'),
-            backgroundColor: AppColors.greenDark,
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => LessonScheduleScreen(pupilId: pupil.id),
           ),
         );
+        // ScaffoldMessenger.of(context).showSnackBar(
+        //   SnackBar(
+        //     content: Text('Navigating to Lesson Schedule'),
+        //     backgroundColor: AppColors.greenDark,
+        //   ),
+        // );
       },
       child: Container(
         margin: EdgeInsets.symmetric(

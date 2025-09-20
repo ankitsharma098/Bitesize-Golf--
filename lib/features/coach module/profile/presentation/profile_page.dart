@@ -229,9 +229,9 @@ class _CoachProfileScreenState extends State<CoachProfileScreen> {
                   case 'edit_profile':
                     _handleEditProfile();
                     break;
-                  case 'subscription':
-                    _handleSubscription();
-                    break;
+                  // case 'subscription':
+                  //   _handleSubscription();
+                  //   break;
                   case 'log_out':
                     logout(context);
                     break;
@@ -258,26 +258,26 @@ class _CoachProfileScreenState extends State<CoachProfileScreen> {
                     ],
                   ),
                 ),
-                PopupMenuItem<String>(
-                  value: 'subscription',
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Subscription',
-                        style: TextStyle(
-                          color: AppColors.grey900,
-                          fontSize: SizeConfig.scaleText(16),
-                        ),
-                      ),
-                      SvgPicture.asset(
-                        'assets/setting/wallet-2.svg',
-                        width: 25,
-                        height: 25,
-                      ),
-                    ],
-                  ),
-                ),
+                // PopupMenuItem<String>(
+                //   value: 'subscription',
+                //   child: Row(
+                //     mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                //     children: [
+                //       Text(
+                //         'Subscription',
+                //         style: TextStyle(
+                //           color: AppColors.grey900,
+                //           fontSize: SizeConfig.scaleText(16),
+                //         ),
+                //       ),
+                //       SvgPicture.asset(
+                //         'assets/setting/wallet-2.svg',
+                //         width: 25,
+                //         height: 25,
+                //       ),
+                //     ],
+                //   ),
+                // ),
                 PopupMenuItem<String>(
                   value: 'log_out',
                   child: Row(

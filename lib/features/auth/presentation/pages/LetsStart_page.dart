@@ -1,4 +1,5 @@
 import 'package:bitesize_golf/core/themes/theme_colors.dart';
+import 'package:bitesize_golf/route/routes_names.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../components/custom_button.dart';
@@ -12,6 +13,8 @@ class LetsStart extends StatelessWidget {
   void _handleContinue(BuildContext context) {
     // Navigate to next screen - replace with your route
     // context.push('/next-screen');
+    isPupil ? context.go(RouteNames.pupilHome) : context.go(RouteNames.coachHome);
+
   }
 
   @override

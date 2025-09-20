@@ -99,12 +99,12 @@ Future<void> main() async {
   // await admin.approveRequest('request_id_here', reviewNote: 'Approved manually');
 
   // Bulk approve all coach verifications
-  // await admin.quickApproveAllCoachVerifications();
+   await admin.quickApproveAllCoachVerifications();
 
-  await admin.bulkApproveByType(
-    'pupil_to_coach',
-    reviewNote: 'Approved by Script',
-  );
+  // await admin.bulkApproveByType(
+  //   'pupil_to_coach',
+  //   reviewNote: 'Approved by Script',
+  // );
 
   // View summary
   await admin.viewSummary();

@@ -1,27 +1,36 @@
-import '../../../level/entity/level_entity.dart';
-import '../../pupil/data/models/pupil_model.dart';
+import 'package:equatable/equatable.dart';
+import '../../../../Models/level model/level_model.dart';
+import '../../../../Models/pupil model/pupil_model.dart';
 
-abstract class HomeState {
-  const HomeState();
+abstract class PupilHomeState extends Equatable {
+  const PupilHomeState();
+
+  @override
+  List<Object?> get props => [];
 }
 
-class HomeInitial extends HomeState {
+class HomeInitial extends PupilHomeState {
   const HomeInitial();
 }
 
-class HomeLoading extends HomeState {
+class HomeLoading extends PupilHomeState {
   const HomeLoading();
 }
 
-class HomeLoaded extends HomeState {
+class HomeLoaded extends PupilHomeState {
   final PupilModel pupil;
-  final List<Level> levels;
+  final List<LevelModel> levels;
 
   const HomeLoaded({required this.pupil, required this.levels});
+
+  @override
+  List<Object?> get props => [pupil, levels];
 }
 
-class HomeError extends HomeState {
+class HomeError extends PupilHomeState {
   final String message;
-
   const HomeError(this.message);
+
+  @override
+  List<Object?> get props => [message];
 }

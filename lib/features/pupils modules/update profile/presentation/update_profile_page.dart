@@ -4,21 +4,23 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
+import '../../../../Models/pupil model/pupil_model.dart';
+import '../../../../core/utils/snackBarUtils.dart';
 import '../../../components/custom_button.dart';
 import '../../../components/custom_scaffold.dart';
 import '../../../components/text_field_component.dart';
 import '../../../components/utils/size_config.dart';
 import '../../../../core/themes/theme_colors.dart';
-import '../data/update_profile_bloc.dart';
+import '../bloc/update_profile_bloc.dart';
 
-class EditProfilePage extends StatefulWidget {
-  const EditProfilePage({super.key});
+class EditPupilProfilePage extends StatefulWidget {
+  const EditPupilProfilePage({super.key});
 
   @override
-  State<EditProfilePage> createState() => _EditProfilePageState();
+  State<EditPupilProfilePage> createState() => _EditPupilProfilePageState();
 }
 
-class _EditProfilePageState extends State<EditProfilePage> {
+class _EditPupilProfilePageState extends State<EditPupilProfilePage> {
   final _formKey = GlobalKey<FormState>();
   final firstNameCtrl = TextEditingController();
   final lastNameCtrl = TextEditingController();
@@ -47,26 +49,32 @@ class _EditProfilePageState extends State<EditProfilePage> {
   }
 
   void _loadProfileData() {
-    context.read<UpdateProfileBloc>().add(const LoadUpdateProfile());
+    context.read<UpdatePupilProfileBloc>().add(const LoadPupilUpdateProfile());
   }
 
-  void _populateFields(Map<String, dynamic> profile) {
-    firstNameCtrl.text = profile['firstName'] ?? '';
-    lastNameCtrl.text = profile['lastName'] ?? '';
-    dobCtrl.text = profile['dateOfBirth'] ?? '';
-    handicapCtrl.text = profile['handicap']?.toString() ?? '';
-    _selectedCoachName = profile['coachName'];
-    _selectedClubName = profile['golfClub'];
-    coachNameCtrl.text = _selectedCoachName ?? '';
-    golfClubCtrl.text = _selectedClubName ?? '';
+  void _populateFields(PupilModel pupil) {
+    // Split name safely
+    final parts = (pupil.name).split(" ");
+    firstNameCtrl.text = parts.isNotEmpty ? parts.first : '';
+    lastNameCtrl.text = parts.length > 1 ? parts.sublist(1).join(" ") : '';
 
-    if (profile['dateOfBirth'] != null) {
-      try {
-        _selectedDateOfBirth = DateFormat('dd/MM/yyyy').parse(profile['dateOfBirth']);
-      } catch (e) {
-        print('Error parsing date: $e');
-      }
+    // Date of birth
+    if (pupil.dateOfBirth != null) {
+      _selectedDateOfBirth = pupil.dateOfBirth;
+      dobCtrl.text = DateFormat('dd/MM/yyyy').format(pupil.dateOfBirth!);
     }
+
+    // Handicap
+    handicapCtrl.text = pupil.handicap?.toString() ?? '';
+
+    // Club & Coach
+    _selectedCoachId = pupil.selectedCoachId;
+    _selectedCoachName = pupil.selectedCoachName;
+    coachNameCtrl.text = _selectedCoachName ?? '';
+
+    _selectedClubId = pupil.selectedClubId;
+    _selectedClubName = pupil.selectedClubName;
+    golfClubCtrl.text = _selectedClubName ?? '';
   }
 
   Future<void> _loadClubs() async {
@@ -77,9 +85,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
       ];
       setState(() {});
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to load clubs: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Failed to load clubs: $e')));
     } finally {
       setState(() => _isLoadingClubs = false);
     }
@@ -100,9 +108,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
       }
       setState(() {});
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to load coaches: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Failed to load coaches: $e')));
     } finally {
       setState(() => _isLoadingCoaches = false);
     }
@@ -119,7 +127,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
   Future<void> _selectDate() async {
     final date = await showDatePicker(
       context: context,
-      initialDate: _selectedDateOfBirth ?? DateTime.now().subtract(const Duration(days: 365 * 8)),
+      initialDate:
+          _selectedDateOfBirth ??
+          DateTime.now().subtract(const Duration(days: 365 * 8)),
       firstDate: DateTime.now().subtract(const Duration(days: 365 * 18)),
       lastDate: DateTime.now().subtract(const Duration(days: 365 * 5)),
     );
@@ -346,18 +356,26 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocConsumer<UpdateProfileBloc, UpdateProfileState>(
+    return BlocConsumer<UpdatePupilProfileBloc, UpdatePupilProfileState>(
       listener: (context, state) {
-        if (state is UpdateProfileLoaded) {
-          _populateFields(state.profile);
-        } else if (state is UpdateProfileError) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(state.message)),
+        if (state is UpdatePupilProfileLoaded) {
+          _populateFields(state.pupil);
+        } else if (state is UpdatePupilProfileSuccess) {
+          SnackBarUtils.showSuccessSnackBar(
+            context,
+            message: 'Profile updated successfully!',
+            levelNumber: 1,
           );
+
+          Navigator.pop(context);
+        } else if (state is UpdatePupilProfileError) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(state.message)));
         }
       },
       builder: (context, state) {
-        final isLoading = state is UpdateProfileLoading;
+        final isLoading = state is UpdatePupilProfileLoading;
 
         return AppScaffold.form(
           title: 'Edit Profile',
@@ -377,8 +395,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
                         radius: SizeConfig.scaleWidth(45),
                         backgroundImage: _profileImage != null
                             ? FileImage(_profileImage!)
-                            : const NetworkImage("https://via.placeholder.com/150")
-                        as ImageProvider,
+                            : const NetworkImage(
+                                    "https://via.placeholder.com/150",
+                                  )
+                                  as ImageProvider,
                       ),
                       Positioned(
                         bottom: 0,
@@ -391,7 +411,11 @@ class _EditProfilePageState extends State<EditProfilePage> {
                               shape: BoxShape.circle,
                             ),
                             padding: const EdgeInsets.all(4),
-                            child: const Icon(Icons.edit, color: Colors.white, size: 18),
+                            child: const Icon(
+                              Icons.edit,
+                              color: Colors.white,
+                              size: 18,
+                            ),
                           ),
                         ),
                       ),
@@ -405,7 +429,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
                   levelType: LevelType.redLevel,
                   label: 'First Name',
                   placeholder: 'Enter First Name',
-                  validator: (v) => (v ?? '').trim().isEmpty ? 'Required' : null,
+                  validator: (v) =>
+                      (v ?? '').trim().isEmpty ? 'Required' : null,
                 ),
                 SizedBox(height: SizeConfig.scaleHeight(20)),
 
@@ -414,7 +439,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
                   levelType: LevelType.redLevel,
                   label: 'Last Name',
                   placeholder: 'Enter Last Name',
-                  validator: (v) => (v ?? '').trim().isEmpty ? 'Required' : null,
+                  validator: (v) =>
+                      (v ?? '').trim().isEmpty ? 'Required' : null,
                 ),
                 SizedBox(height: SizeConfig.scaleHeight(20)),
 
@@ -424,7 +450,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
                   placeholder: 'DD/MM/YYYY',
                   levelType: LevelType.redLevel,
                   onTap: _selectDate,
-                  validator: (v) => (v ?? '').trim().isEmpty ? 'Required' : null,
+                  validator: (v) =>
+                      (v ?? '').trim().isEmpty ? 'Required' : null,
                 ),
                 SizedBox(height: SizeConfig.scaleHeight(20)),
 
@@ -443,34 +470,75 @@ class _EditProfilePageState extends State<EditProfilePage> {
                 ),
                 SizedBox(height: SizeConfig.scaleHeight(20)),
 
+                // CustomTextFieldFactory.dropdown(
+                //   controller: golfClubCtrl,
+                //   levelType: LevelType.redLevel,
+                //   label: 'Golf Club or Facility',
+                //   placeholder: 'Select Golf Club or Facility',
+                //   onTap: _showClubSelection,
+                //   validator: (v) =>
+                //       (v ?? '').trim().isEmpty ? 'Required' : null,
+                // ),
                 CustomTextFieldFactory.dropdown(
                   controller: golfClubCtrl,
                   levelType: LevelType.redLevel,
                   label: 'Golf Club or Facility',
-                  placeholder: 'Select Golf Club or Facility',
-                  onTap: _showClubSelection,
-                  validator: (v) => (v ?? '').trim().isEmpty ? 'Required' : null,
+                  placeholder: _selectedClubName ?? 'Assigned by Admin',
+                  locked: true, // 🔒 now disabled
                 ),
+
                 SizedBox(height: SizeConfig.scaleHeight(20)),
 
+                // CustomTextFieldFactory.dropdown(
+                //   controller: coachNameCtrl,
+                //   levelType: LevelType.redLevel,
+                //   label: 'Coach Name',
+                //   placeholder: _selectedClubId == null
+                //       ? 'Select a club first'
+                //       : 'Select Coach',
+                //   onTap: _selectedClubId == null ? null : _showCoachSelection,
+                // ),
                 CustomTextFieldFactory.dropdown(
                   controller: coachNameCtrl,
                   levelType: LevelType.redLevel,
                   label: 'Coach Name',
-                  placeholder: _selectedClubId == null
-                      ? 'Select a club first'
-                      : 'Select Coach',
-                  onTap: _selectedClubId == null ? null : _showCoachSelection,
+                  placeholder: _selectedCoachName ?? 'Assigned by Admin',
+                  locked: true, // 🔒 now disabled
                 ),
                 SizedBox(height: SizeConfig.scaleHeight(40)),
 
                 CustomButtonFactory.primary(
                   text: "Save Changes",
-                  onPressed: isLoading ? null : _handleSave,
-                  levelType: LevelType.redLevel,
-                  size: ButtonSize.medium,
+                  onPressed: isLoading
+                      ? null
+                      : () {
+                          final updated = state is UpdatePupilProfileLoaded
+                              ? state.pupil.copyWith(
+                                  name:
+                                      "${firstNameCtrl.text.trim()} ${lastNameCtrl.text.trim()}"
+                                          .trim(),
+                                  dateOfBirth: _selectedDateOfBirth,
+                                  handicap: handicapCtrl.text.trim().isNotEmpty
+                                      ? handicapCtrl.text.trim()
+                                      : null,
+                                  selectedCoachId: _selectedCoachId,
+                                  selectedCoachName: _selectedCoachName,
+                                  selectedClubId: _selectedClubId,
+                                  selectedClubName: _selectedClubName,
+                                  updatedAt: DateTime.now(),
+                                )
+                              : null;
+
+                          if (updated != null) {
+                            context.read<UpdatePupilProfileBloc>().add(
+                              SavePupilUpdateProfile(updated),
+                            );
+                          }
+                        },
                   isLoading: isLoading,
+                  levelType: LevelType.redLevel,
                 ),
+
                 SizedBox(height: SizeConfig.scaleHeight(8)),
 
                 CustomButtonFactory.text(

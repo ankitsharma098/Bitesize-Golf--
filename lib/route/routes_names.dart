@@ -26,6 +26,7 @@ class RouteNames {
 
   // Auth sub-routes
   static const emailVerification = '/email-verification';
+  static const pendingVerification = '/pendingVerification';
 
   // Common
   static const profile = '/profile';

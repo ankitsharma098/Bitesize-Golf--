@@ -1,13 +1,11 @@
+import 'package:bitesize_golf/core/utils/snackBarUtils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../Models/scheduled model/scheduled_model.dart';
 import '../../../../core/themes/theme_colors.dart';
-import '../../../coach module/schedul session/data/model/session_schedule_model.dart';
 import '../../../components/custom_scaffold.dart';
-import '../../../components/utils/pupil_scheduled_lesson_header.dart';
-import '../../../components/utils/pupil_scheduled_lesson_sesson_card.dart';
-import '../../../components/utils/pupil_scheduled_next_card.dart';
 import '../../../components/utils/size_config.dart';
 import '../bloc/pupil_lesson_scheduled_bloc.dart';
 import '../bloc/pupil_lesson_scheduled_event.dart';
@@ -71,11 +69,10 @@ class LessonScheduleView extends StatelessWidget {
       body: BlocConsumer<LessonScheduleBloc, LessonScheduleState>(
         listener: (context, state) {
           if (state is LessonScheduleError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.message),
-                backgroundColor: AppColors.error,
-              ),
+            SnackBarUtils.showErrorSnackBar(
+              context,
+              message: state.message,
+              levelNumber: 1,
             );
           }
         },
@@ -116,24 +113,27 @@ class LessonScheduleView extends StatelessWidget {
                 children: [
                   SizedBox(height: SizeConfig.scaleHeight(16)),
 
+                  if (state.allSessions.isEmpty)
+                    Center(
+                      child: Text(
+                        'No pupils are assigned to you.',
+                        style: TextStyle(
+                          fontSize: SizeConfig.scaleWidth(14),
+                          color: AppColors.grey600,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+
                   if (state.allSessions.isNotEmpty)
                     _buildSessionTable(state.allSessions, false),
 
                   SizedBox(height: SizeConfig.scaleHeight(16)),
+
                   if (state.nextLevelSession != null)
                     _buildSessionTable([state.nextLevelSession!], true),
 
                   const ScheduleNotice(),
-
-                  Container(
-                    margin: EdgeInsets.only(top: SizeConfig.scaleHeight(24)),
-                    width: SizeConfig.scaleWidth(134),
-                    height: SizeConfig.scaleHeight(5),
-                    decoration: BoxDecoration(
-                      color: AppColors.grey900,
-                      borderRadius: BorderRadius.circular(2.5),
-                    ),
-                  ),
                 ],
               ),
             );
@@ -149,7 +149,6 @@ class LessonScheduleView extends StatelessWidget {
     if (isNextLevel) {
       return Column(
         children: [
-          // Custom header for next level
           Container(
             width: double.infinity,
             padding: EdgeInsets.symmetric(vertical: SizeConfig.scaleHeight(12)),
@@ -170,19 +169,8 @@ class LessonScheduleView extends StatelessWidget {
               textAlign: TextAlign.center,
             ),
           ),
-          // Table for data rows only
           Table(
-            border: TableBorder(
-              horizontalInside: BorderSide(color: AppColors.grey200, width: 1),
-              verticalInside: BorderSide(color: AppColors.grey200, width: 1),
-              bottom: BorderSide(color: AppColors.grey200, width: 1),
-              left: BorderSide(color: AppColors.grey200, width: 1),
-              right: BorderSide(color: AppColors.grey200, width: 1),
-              borderRadius: BorderRadius.only(
-                bottomLeft: Radius.circular(SizeConfig.scaleWidth(8)),
-                bottomRight: Radius.circular(SizeConfig.scaleWidth(8)),
-              ),
-            ),
+            border: TableBorder.all(color: AppColors.grey200, width: 1),
             columnWidths: const {
               0: FlexColumnWidth(1),
               1: FlexColumnWidth(2),
@@ -192,17 +180,7 @@ class LessonScheduleView extends StatelessWidget {
               final index = entry.key;
               final session = entry.value;
               return TableRow(
-                decoration: BoxDecoration(
-                  color: AppColors.white,
-                  borderRadius: index == sessions.length - 1
-                      ? BorderRadius.only(
-                          bottomLeft: Radius.circular(SizeConfig.scaleWidth(8)),
-                          bottomRight: Radius.circular(
-                            SizeConfig.scaleWidth(8),
-                          ),
-                        )
-                      : null,
-                ),
+                decoration: BoxDecoration(color: AppColors.white),
                 children: [
                   _buildTableCell((index + 1).toString()),
                   _buildTableCell(
@@ -218,53 +196,28 @@ class LessonScheduleView extends StatelessWidget {
       );
     }
 
-    // Regular table for normal sessions
     return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(SizeConfig.scaleWidth(8)),
-      ),
       child: Table(
-        border: TableBorder(
-          horizontalInside: BorderSide(color: AppColors.grey200, width: 1),
-          verticalInside: BorderSide(color: AppColors.grey200, width: 1),
-          borderRadius: BorderRadius.circular(SizeConfig.scaleWidth(8)),
-        ),
+        border: TableBorder.all(color: AppColors.grey200, width: 1),
         columnWidths: const {
           0: FlexColumnWidth(1),
           1: FlexColumnWidth(2),
           2: FlexColumnWidth(1),
         },
         children: [
-          // Header
           TableRow(
-            decoration: BoxDecoration(
-              color: AppColors.error,
-              borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(SizeConfig.scaleWidth(8)),
-                topRight: Radius.circular(SizeConfig.scaleWidth(8)),
-              ),
-            ),
+            decoration: BoxDecoration(color: AppColors.error),
             children: [
               _buildTableCell('Session', isHeader: true),
               _buildTableCell('Date', isHeader: true),
               _buildTableCell('Time', isHeader: true),
             ],
           ),
-          // Data Rows
-          ...sessions.asMap().entries.map((entry) {
-            final index = entry.key;
-            final session = entry.value;
+          ...sessions.map((session) {
             return TableRow(
-              decoration: BoxDecoration(
-                color: AppColors.white,
-                border: index == sessions.length - 1
-                    ? null
-                    : Border(
-                        bottom: BorderSide(color: AppColors.grey200, width: 1),
-                      ),
-              ),
+              decoration: BoxDecoration(color: AppColors.white),
               children: [
-                _buildTableCell(session.sessionNumber.toString()),
+                _buildTableCell(session!.sessionNumber.toString()),
                 _buildTableCell(
                   DateFormat('dd/MM/yyyy').format(session.date),
                   isDate: true,
@@ -282,7 +235,6 @@ class LessonScheduleView extends StatelessWidget {
     String text, {
     bool isHeader = false,
     bool isDate = false,
-    int colspan = 1,
   }) {
     return Padding(
       padding: EdgeInsets.symmetric(
@@ -320,14 +272,9 @@ class ScheduleNotice extends StatelessWidget {
       ),
       child: Text(
         'These session dates may be subject to change.\n'
-        'All payments are due on or before\n'
-        'session 1 of each course.\n\n'
-        'As levels progress interim sessions may be\n'
-        'needed to reach the required standards. This\n'
-        'means it should not be assumed that pupils\n'
-        'progress automatically to the next level every\n'
-        'six weeks. It is purely at the discretion of the\n'
-        'Bitesize Golf coach.',
+        'All payments are due on or before session 1 of each course.\n\n'
+        'As levels progress interim sessions may be needed to reach the required standards.\n'
+        'It is purely at the discretion of the Bitesize Golf coach.',
         style: TextStyle(
           fontSize: SizeConfig.scaleWidth(12),
           color: AppColors.grey900,

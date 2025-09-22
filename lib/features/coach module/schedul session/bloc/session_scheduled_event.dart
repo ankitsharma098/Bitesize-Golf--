@@ -1,3 +1,4 @@
+// session_scheduled_event.dart
 import 'package:equatable/equatable.dart';
 
 abstract class CreateScheduleEvent extends Equatable {
@@ -5,6 +6,19 @@ abstract class CreateScheduleEvent extends Equatable {
 
   @override
   List<Object?> get props => [];
+}
+
+class LoadExistingSchedule extends CreateScheduleEvent {
+  final String coachId;
+  final int levelNumber;
+
+  const LoadExistingSchedule({
+    required this.coachId,
+    required this.levelNumber,
+  });
+
+  @override
+  List<Object> get props => [coachId, levelNumber];
 }
 
 class LoadPupils extends CreateScheduleEvent {
@@ -57,6 +71,32 @@ class UpdateSessionTime extends CreateScheduleEvent {
   List<Object> get props => [sessionIndex, time];
 }
 
+class CreateOrUpdateScheduleSubmit extends CreateScheduleEvent {
+  final String coachId;
+  final String clubId;
+  final int levelNumber;
+  final String notes;
+  final String? existingScheduleId;
+
+  const CreateOrUpdateScheduleSubmit({
+    required this.coachId,
+    required this.clubId,
+    required this.levelNumber,
+    this.notes = '',
+    this.existingScheduleId,
+  });
+
+  @override
+  List<Object?> get props => [
+    coachId,
+    clubId,
+    levelNumber,
+    notes,
+    existingScheduleId,
+  ];
+}
+
+// Keep the old event for backward compatibility
 class CreateScheduleSubmit extends CreateScheduleEvent {
   final String coachId;
   final String clubId;

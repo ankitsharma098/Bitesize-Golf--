@@ -1,27 +1,28 @@
-import '../../../coaches/data/models/coach_model.dart';
-import '../../../level/entity/level_entity.dart';
+import 'package:bitesize_golf/Models/level%20model/level_model.dart';
+
+import '../../../../Models/coaches model/coach_model.dart';
 
 abstract class CoachHomeState {
   const CoachHomeState();
 }
 
-class HomeInitial extends CoachHomeState {
-  const HomeInitial();
+class CoachHomeInitial extends CoachHomeState {
+  const CoachHomeInitial();
 }
 
-class HomeLoading extends CoachHomeState {
-  const HomeLoading();
+class CoachHomeLoading extends CoachHomeState {
+  const CoachHomeLoading();
 }
 
-class HomeLoaded extends CoachHomeState {
+class CoachHomeLoaded extends CoachHomeState {
   final CoachModel coach;
-  final List<Level> levels;
+  final List<LevelModel> levels;
 
-  const HomeLoaded({required this.coach, required this.levels});
+  const CoachHomeLoaded({required this.coach, required this.levels});
 }
 
-class HomeError extends CoachHomeState {
+class CoachHomeError extends CoachHomeState {
   final String message;
 
-  const HomeError(this.message);
+  const CoachHomeError(this.message);
 }

@@ -9,6 +9,9 @@ class DateTimePickerField extends StatelessWidget {
   final String label;
   final DateTime? date;
   final String? time;
+  final String? dateHint;
+  final String? timeHint;
+  final bool showActualDateTime;
   final VoidCallback? onDateTap;
   final VoidCallback? onTimeTap;
   final LevelType levelType;
@@ -21,6 +24,9 @@ class DateTimePickerField extends StatelessWidget {
     this.onDateTap,
     this.onTimeTap,
     this.levelType = LevelType.redLevel,
+    this.dateHint,
+    this.timeHint,
+    this.showActualDateTime = true,
   });
 
   @override
@@ -75,14 +81,17 @@ class DateTimePickerField extends StatelessWidget {
                         child: Row(
                           children: [
                             Text(
-                              date != null
+                              showActualDateTime
                                   ? DateFormat('MM/dd/yyyy').format(date!)
-                                  : 'MM/DD/YYYY',
+                                  : dateHint ?? 'MM/DD/YYYY',
                               style: TextStyle(
-                                fontSize: SizeConfig.scaleWidth(16),
-                                color: date != null
+                                fontSize: SizeConfig.scaleWidth(14),
+                                color: showActualDateTime
                                     ? AppColors.grey900
                                     : AppColors.grey500,
+                                fontWeight: showActualDateTime
+                                    ? FontWeight.w500
+                                    : FontWeight.w400,
                               ),
                             ),
                             const Spacer(),
@@ -129,12 +138,17 @@ class DateTimePickerField extends StatelessWidget {
                         child: Row(
                           children: [
                             Text(
-                              time?.isNotEmpty == true ? time! : 'HH:MM',
+                              showActualDateTime
+                                  ? time.toString()
+                                  : timeHint ?? 'HH:MM',
                               style: TextStyle(
-                                fontSize: SizeConfig.scaleWidth(16),
-                                color: time?.isNotEmpty == true
+                                fontSize: SizeConfig.scaleWidth(14),
+                                color: showActualDateTime
                                     ? AppColors.grey900
                                     : AppColors.grey500,
+                                fontWeight: showActualDateTime
+                                    ? FontWeight.w500
+                                    : FontWeight.w400,
                               ),
                             ),
                             const Spacer(),

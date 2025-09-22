@@ -1,120 +1,150 @@
 import 'dart:async';
-import 'package:bitesize_golf/features/pupils%20modules/profile/profile%20bloc/profile_event.dart';
-import 'package:bitesize_golf/features/pupils%20modules/profile/profile%20bloc/profile_state.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:injectable/injectable.dart';
-import '../../../auth/data/repositories/auth_repo.dart';
-import '../../../level/entity/level_entity.dart';
-import '../../home/data/dashboard_repo.dart';
-import '../../pupil/data/models/pupil_model.dart';
 
-@injectable
-class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
-  final DashboardRepository _dashboardRepository;
-  final AuthRepository _authRepository;
+import '../../../../Models/level model/level_model.dart';
+import '../../../../Models/pupil model/pupil_model.dart';
+import '../../../../core/constants/firebase_collections_names.dart';
+import '../../../../core/utils/user_utils.dart';
+import 'profile_event.dart';
+import 'profile_state.dart';
 
-  StreamSubscription<PupilModel?>? _pupilSubscription;
+class PupilProfileBloc extends Bloc<PupilProfileEvent, PupilProfileState> {
+  StreamSubscription? _pupilSubscription;
 
-  ProfileBloc(this._dashboardRepository, this._authRepository)
-    : super(const ProfileInitial()) {
-    on<LoadProfileData>(_onLoadProfileData);
-    on<RefreshProfile>(_onRefreshProfile);
-    on<UpdateProfile>(_onUpdateProfile);
-    on<_ProfileDataUpdated>(_onProfileDataUpdated);
+  PupilProfileBloc() : super(const PupilProfileInitial()) {
+    on<PupilLoadProfileData>(_onLoadProfileData);
+    on<PupilRefreshProfile>(_onRefreshProfile);
+    on<PupilUpdateProfile>(_onUpdateProfile);
+    on<_UpdateProfileData>(_onUpdateProfileData); // Add internal event
   }
 
   Future<void> _onLoadProfileData(
-    LoadProfileData event,
-    Emitter<ProfileState> emit,
+    PupilLoadProfileData event,
+    Emitter<PupilProfileState> emit,
   ) async {
+    emit(const PupilProfileLoading());
     try {
-      emit(const ProfileLoading());
-      final currentUser = await _authRepository.getCurrentUser();
-      if (currentUser == null) {
-        emit(const ProfileError('User not found'));
+      final pupil = await UserUtil().getCurrentPupil();
+      if (pupil == null) {
+        emit(const PupilProfileError('Pupil profile not found'));
         return;
       }
-      await _startListeningToUpdates(currentUser.uid);
+      await _startListeningToUpdates(pupil.id);
     } catch (e) {
-      emit(ProfileError('Failed to load profile: $e'));
+      emit(PupilProfileError('Failed to load profile: $e'));
     }
   }
 
   Future<void> _onRefreshProfile(
-    RefreshProfile event,
-    Emitter<ProfileState> emit,
+    PupilRefreshProfile event,
+    Emitter<PupilProfileState> emit,
   ) async {
     try {
-      final currentUser = await _authRepository.getCurrentUser();
-      if (currentUser == null) {
-        emit(const ProfileError('User not found'));
+      final pupil = await UserUtil().getCurrentPupil();
+      if (pupil == null) {
+        emit(const PupilProfileError('Pupil profile not found'));
         return;
       }
-      final pupil = await _dashboardRepository.getPupilData(currentUser.uid);
-      final levels = await _dashboardRepository.getAllLevels();
-      if (pupil != null) {
-        final currentLevel = levels.firstWhere(
-          (level) => level.levelNumber == pupil.currentLevel,
-          orElse: () => levels.first,
-        );
-        emit(ProfileLoaded(pupil: pupil, currentLevel: currentLevel));
-      } else {
-        emit(const ProfileError('Profile data not found'));
-      }
+
+      final levelQuery = await FirestoreCollections.levelsCol
+          .where('isActive', isEqualTo: true)
+          .where('isPublished', isEqualTo: true)
+          .orderBy('levelNumber')
+          .get();
+
+      final levels = levelQuery.docs
+          .map((doc) => LevelModel.fromJson(doc.data()))
+          .toList();
+
+      final currentLevel = levels.firstWhere(
+        (lvl) => lvl.levelNumber == pupil.currentLevel,
+        orElse: () => levels.first,
+      );
+
+      emit(PupilProfileLoaded(pupil: pupil, currentLevel: currentLevel));
     } catch (e) {
-      emit(ProfileError('Failed to refresh profile: $e'));
+      emit(PupilProfileError('Failed to refresh profile: $e'));
     }
   }
 
   Future<void> _onUpdateProfile(
-    UpdateProfile event,
-    Emitter<ProfileState> emit,
+    PupilUpdateProfile event,
+    Emitter<PupilProfileState> emit,
   ) async {
     try {
-      final currentUser = await _authRepository.getCurrentUser();
-      if (currentUser == null) {
-        emit(const ProfileError('User not found'));
+      final pupil = await UserUtil().getCurrentPupil();
+      if (pupil == null) {
+        emit(const PupilProfileError('Pupil profile not found'));
         return;
       }
-      await _dashboardRepository.updatePupilProgress(
-        currentUser.uid,
-        event.updatedPupil,
-      );
+
+      await FirestoreCollections.pupilsCol
+          .doc(pupil.id)
+          .update(event.updatedPupil.toFirestore());
     } catch (e) {
-      emit(ProfileError('Failed to update profile: $e'));
+      emit(PupilProfileError('Failed to update profile: $e'));
     }
   }
 
-  void _onProfileDataUpdated(
-    _ProfileDataUpdated event,
-    Emitter<ProfileState> emit,
+  // Internal event handler for stream updates
+  void _onUpdateProfileData(
+    _UpdateProfileData event,
+    Emitter<PupilProfileState> emit,
   ) {
-    emit(ProfileLoaded(pupil: event.pupil, currentLevel: event.currentLevel));
+    if (event.error != null) {
+      emit(PupilProfileError(event.error!));
+    } else if (event.pupil != null && event.currentLevel != null) {
+      emit(
+        PupilProfileLoaded(
+          pupil: event.pupil!,
+          currentLevel: event.currentLevel!,
+        ),
+      );
+    }
   }
 
   Future<void> _startListeningToUpdates(String userId) async {
     await _pupilSubscription?.cancel();
-    _pupilSubscription = _dashboardRepository
-        .getPupilDataStream(userId)
+
+    _pupilSubscription = FirestoreCollections.pupilsCol
+        .doc(userId)
+        .snapshots()
         .listen(
-          (pupil) async {
-            if (pupil != null) {
+          (doc) async {
+            if (doc.exists) {
               try {
-                final levels = await _dashboardRepository.getAllLevels();
+                final pupil = PupilModel.fromFirestore(
+                  doc.data() as Map<String, dynamic>,
+                );
+
+                final levelQuery = await FirestoreCollections.levelsCol
+                    .where('isActive', isEqualTo: true)
+                    .where('isPublished', isEqualTo: true)
+                    .orderBy('levelNumber')
+                    .get();
+
+                final levels = levelQuery.docs
+                    .map((d) => LevelModel.fromJson(d.data()))
+                    .toList();
+
                 final currentLevel = levels.firstWhere(
-                  (level) => level.levelNumber == pupil.currentLevel,
+                  (lvl) => lvl.levelNumber == pupil.currentLevel,
                   orElse: () => levels.first,
                 );
+
+                // Use add() instead of emit()
                 add(
-                  _ProfileDataUpdated(pupil: pupil, currentLevel: currentLevel),
+                  _UpdateProfileData(pupil: pupil, currentLevel: currentLevel),
                 );
               } catch (e) {
-                add(_ProfileError('Failed to load level data: $e'));
+                add(_UpdateProfileData(error: 'Failed to load level bloc: $e'));
               }
             }
           },
           onError: (error) {
-            add(_ProfileError('Failed to load profile data: $error'));
+            add(
+              _UpdateProfileData(error: 'Failed to load profile bloc: $error'),
+            );
           },
         );
   }
@@ -126,15 +156,14 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
   }
 }
 
-class _ProfileDataUpdated extends ProfileEvent {
-  final PupilModel pupil;
-  final Level currentLevel;
+// Internal event for handling stream updates
+class _UpdateProfileData extends PupilProfileEvent {
+  final PupilModel? pupil;
+  final LevelModel? currentLevel;
+  final String? error;
 
-  const _ProfileDataUpdated({required this.pupil, required this.currentLevel});
-}
+  const _UpdateProfileData({this.pupil, this.currentLevel, this.error});
 
-class _ProfileError extends ProfileEvent {
-  final String message;
-
-  const _ProfileError(this.message);
+  @override
+  List<Object?> get props => [pupil, currentLevel, error];
 }

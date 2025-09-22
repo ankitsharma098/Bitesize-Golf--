@@ -1,95 +1,79 @@
 import 'dart:async';
-import 'package:bitesize_golf/features/coaches/data/models/coach_model.dart';
-import 'package:bitesize_golf/features/level/entity/level_entity.dart';
-import 'package:bloc/bloc.dart';
-import 'package:injectable/injectable.dart';
-import '../../../auth/data/repositories/auth_repo.dart';
-import '../../profile/data/pupil_profile_repo.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+
+import '../../../../Models/level model/level_model.dart';
+import '../../../../Models/coaches model/coach_model.dart';
+import '../../../../core/utils/user_utils.dart';
 import '../data/home_level_repo.dart';
+import '../../profile/data/pupil_profile_repo.dart';
 import 'home_event.dart';
 import 'home_state.dart';
 
-@injectable
 class CoachHomeBloc extends Bloc<CoachHomeEvent, CoachHomeState> {
-  final CoachProfilePageRepo _coachDashboardRepository;
-  final LevelRepository _levelRepository;
-  final AuthRepository _authRepository;
+  final CoachProfilePageRepo _coachRepo = CoachProfilePageRepo();
+  final LevelRepository _levelRepo = LevelRepository();
 
   StreamSubscription<CoachModel?>? _coachSubscription;
-  StreamSubscription<List<Level>>? _levelsSubscription;
+  StreamSubscription<List<LevelModel>>? _levelsSubscription;
 
-  CoachHomeBloc(
-    this._coachDashboardRepository,
-    this._levelRepository,
-    this._authRepository,
-  ) : super(const HomeInitial()) {
-    on<LoadHomeData>(_onLoadHomeData);
-    on<RefreshHome>(_onRefreshHome);
+  CoachHomeBloc() : super(const CoachHomeInitial()) {
+    on<LoadCoachHomeData>(_onLoadHomeData);
+    on<RefreshCoachHome>(_onRefreshHome);
     on<NavigateToLevel>(_onNavigateToLevel);
-    on<_HomeDataUpdated>(_onHomeDataUpdated);
+    on<_UpdateCoachHomeData>(_onUpdateCoachHomeData); // Add internal event
   }
 
   Future<void> _onLoadHomeData(
-    LoadHomeData event,
+    LoadCoachHomeData event,
     Emitter<CoachHomeState> emit,
   ) async {
     try {
-      emit(const HomeLoading());
+      emit(const CoachHomeLoading());
 
-      final currentUser = await _authRepository.getCurrentUser();
-      if (currentUser == null) {
-        emit(const HomeError('User not found'));
+      final coach = await UserUtil().getCurrentCoach();
+      if (coach == null) {
+        emit(const CoachHomeError('Coach profile not found'));
         return;
       }
 
-      await _startListeningToUpdates(currentUser.uid);
+      await _startListeningToUpdates(coach.id);
     } catch (e) {
-      emit(HomeError('Failed to load home: $e'));
+      emit(CoachHomeError('Failed to load home: $e'));
     }
   }
 
   Future<void> _onRefreshHome(
-    RefreshHome event,
+    RefreshCoachHome event,
     Emitter<CoachHomeState> emit,
   ) async {
     try {
-      final currentUser = await _authRepository.getCurrentUser();
-      if (currentUser == null) {
-        emit(const HomeError('User not found'));
+      final coach = await UserUtil().getCurrentCoach();
+      if (coach == null) {
+        emit(const CoachHomeError('Coach profile not found'));
         return;
       }
 
-      final coach = await _coachDashboardRepository.getCoachData(
-        currentUser.uid,
-      );
-      final levels = await _levelRepository.getAllLevels();
-
-      if (coach != null) {
-        emit(HomeLoaded(coach: coach, levels: levels));
-      } else {
-        emit(const HomeError('Coach data not found'));
-      }
+      final levels = await _levelRepo.getAllLevels();
+      emit(CoachHomeLoaded(coach: coach, levels: levels));
     } catch (e) {
-      emit(HomeError('Failed to refresh home: $e'));
+      emit(CoachHomeError('Failed to refresh home: $e'));
     }
   }
 
   void _onNavigateToLevel(NavigateToLevel event, Emitter<CoachHomeState> emit) {
-    // Navigation logic will be handled by the UI layer
-    // This could emit a navigation state or trigger a callback
-    // ScaffoldMessenger.of(emit as BuildContext).showSnackBar(
-    //   SnackBar(
-    //     content: Text('Navigating to Level ${event.levelNumber}'),
-    //     backgroundColor: AppColors.greenDark,
-    //   ),
-    // );
+    // UI handles navigation
   }
 
-  void _onHomeDataUpdated(
-    _HomeDataUpdated event,
+  // Internal event handler for stream updates
+  void _onUpdateCoachHomeData(
+    _UpdateCoachHomeData event,
     Emitter<CoachHomeState> emit,
   ) {
-    emit(HomeLoaded(coach: event.coach, levels: event.levels));
+    if (event.error != null) {
+      emit(CoachHomeError(event.error!));
+    } else if (event.coach != null && event.levels != null) {
+      emit(CoachHomeLoaded(coach: event.coach!, levels: event.levels!));
+    }
   }
 
   Future<void> _startListeningToUpdates(String userId) async {
@@ -97,33 +81,42 @@ class CoachHomeBloc extends Bloc<CoachHomeEvent, CoachHomeState> {
     await _levelsSubscription?.cancel();
 
     CoachModel? currentCoach;
-    List<Level> currentLevels = [];
+    List<LevelModel> currentLevels = [];
 
-    _coachSubscription = _coachDashboardRepository
+    // Helper function to add internal event when both are loaded
+    void tryEmitLoaded() {
+      if (currentCoach != null && currentLevels.isNotEmpty) {
+        add(_UpdateCoachHomeData(coach: currentCoach, levels: currentLevels));
+      }
+    }
+
+    // Coach stream
+    _coachSubscription = _coachRepo
         .getCoachesDataStream(userId)
         .listen(
           (coach) {
             if (coach != null) {
               currentCoach = coach;
-              if (currentLevels.isNotEmpty) {
-                add(_HomeDataUpdated(coach: coach, levels: currentLevels));
-              }
+              tryEmitLoaded();
             }
           },
           onError: (error) {
-            add(_HomeError('Failed to load coach data: $error'));
+            add(
+              _UpdateCoachHomeData(error: 'Failed to load coach bloc: $error'),
+            );
           },
         );
 
-    _levelsSubscription = _levelRepository.getLevelsStream().listen(
+    // Levels stream
+    _levelsSubscription = _levelRepo.getLevelsStream().listen(
       (levels) {
         currentLevels = levels;
         if (currentCoach != null) {
-          add(_HomeDataUpdated(coach: currentCoach!, levels: levels));
+          add(_UpdateCoachHomeData(coach: currentCoach, levels: levels));
         }
       },
       onError: (error) {
-        add(_HomeError('Failed to load levels: $error'));
+        add(_UpdateCoachHomeData(error: 'Failed to load levels: $error'));
       },
     );
   }
@@ -136,15 +129,14 @@ class CoachHomeBloc extends Bloc<CoachHomeEvent, CoachHomeState> {
   }
 }
 
-class _HomeDataUpdated extends CoachHomeEvent {
-  final CoachModel coach;
-  final List<Level> levels;
+// Internal event for handling stream updates
+class _UpdateCoachHomeData extends CoachHomeEvent {
+  final CoachModel? coach;
+  final List<LevelModel>? levels;
+  final String? error;
 
-  _HomeDataUpdated({required this.coach, required this.levels});
-}
+  _UpdateCoachHomeData({this.coach, this.levels, this.error});
 
-class _HomeError extends CoachHomeEvent {
-  final String message;
-
-  _HomeError(this.message);
+  @override
+  List<Object?> get props => [coach, levels, error];
 }

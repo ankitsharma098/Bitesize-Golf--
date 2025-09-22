@@ -1,34 +1,28 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:injectable/injectable.dart';
-import '../../../level/entity/level_entity.dart';
+import 'package:bitesize_golf/Models/level%20model/level_model.dart';
 
-@LazySingleton()
+import '../../../../core/constants/firebase_collections_names.dart';
+
 class LevelRepository {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final _levels = FirestoreCollections.levelsCol;
 
-  // Collections
-  CollectionReference get _levels => _firestore.collection('levels');
-
-  // Get all levels
-  Future<List<Level>> getAllLevels() async {
+  /// Get all published and active levels
+  Future<List<LevelModel>> getAllLevels() async {
     try {
-      final levelsQuery = await _levels
+      final query = await _levels
           .where('isActive', isEqualTo: true)
           .where('isPublished', isEqualTo: true)
           .orderBy('levelNumber')
           .get();
 
-      return levelsQuery.docs
-          .map((doc) => Level.fromJson(doc.data() as Map<String, dynamic>))
-          .toList();
+      return query.docs.map((doc) => LevelModel.fromJson(doc.data())).toList();
     } catch (e) {
-      print('Error getting levels: $e');
-      throw Exception('Failed to get levels: $e');
+      print('🔥 Error getting levels: $e');
+      throw Exception('Failed to fetch levels: $e');
     }
   }
 
-  // Listen to levels changes
-  Stream<List<Level>> getLevelsStream() {
+  /// Listen to realtime level changes
+  Stream<List<LevelModel>> getLevelsStream() {
     return _levels
         .where('isActive', isEqualTo: true)
         .where('isPublished', isEqualTo: true)
@@ -36,7 +30,7 @@ class LevelRepository {
         .snapshots()
         .map(
           (snapshot) => snapshot.docs
-              .map((doc) => Level.fromJson(doc.data() as Map<String, dynamic>))
+              .map((doc) => LevelModel.fromJson(doc.data()))
               .toList(),
         );
   }

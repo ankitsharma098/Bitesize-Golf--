@@ -1,15 +1,9 @@
-import 'package:bitesize_golf/features/auth/data/repositories/auth_repo.dart';
-import 'package:bitesize_golf/features/coach%20module/home/data/home_level_repo.dart';
 import 'package:bitesize_golf/features/coach%20module/home/home%20bloc/home_event.dart';
 import 'package:bitesize_golf/features/coach%20module/home/home%20bloc/home_state.dart';
-import 'package:bitesize_golf/features/coach%20module/profile/data/pupil_profile_repo.dart';
-import 'package:bitesize_golf/features/coaches/data/repositories/coach_repo.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-
 import '../../../../core/themes/level_utils.dart';
 import '../../../../core/themes/theme_colors.dart';
-import '../../../../injection.dart';
 import '../../../components/custom_scaffold.dart';
 import '../../../components/custom_session_card.dart';
 import '../../../components/utils/size_config.dart';
@@ -21,11 +15,7 @@ class CreateSessionScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) => CoachHomeBloc(
-        getIt<CoachProfilePageRepo>(),
-        getIt<LevelRepository>(),
-        getIt<AuthRepository>(),
-      )..add(LoadHomeData()),
+      create: (context) => CoachHomeBloc()..add(LoadCoachHomeData()),
       child: const CreateSessionScreenView(),
     );
   }
@@ -117,13 +107,13 @@ class _CreateSessionScreenViewState extends State<CreateSessionScreenView> {
           // Level cards
           BlocBuilder<CoachHomeBloc, CoachHomeState>(
             builder: (context, state) {
-              if (state is HomeLoading) {
+              if (state is CoachHomeLoading) {
                 return _buildLoadingState();
               }
-              if (state is HomeError) {
+              if (state is CoachHomeError) {
                 return _buildErrorState(state.message);
               }
-              if (state is HomeLoaded) {
+              if (state is CoachHomeLoaded) {
                 return _buildLevelGrid(state);
               }
               return _buildInitialState();
@@ -175,7 +165,8 @@ class _CreateSessionScreenViewState extends State<CreateSessionScreenView> {
           ),
           SizedBox(height: SizeConfig.scaleHeight(24)),
           ElevatedButton(
-            onPressed: () => context.read<CoachHomeBloc>().add(RefreshHome()),
+            onPressed: () =>
+                context.read<CoachHomeBloc>().add(RefreshCoachHome()),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.greenDark,
               padding: EdgeInsets.symmetric(
@@ -202,7 +193,7 @@ class _CreateSessionScreenViewState extends State<CreateSessionScreenView> {
     );
   }
 
-  Widget _buildLevelGrid(HomeLoaded state) {
+  Widget _buildLevelGrid(CoachHomeLoaded state) {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: SizeConfig.scaleWidth(8)),
       child: GridView.builder(

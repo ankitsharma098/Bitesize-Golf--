@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../pupils%20modules/pupil/data/models/pupil_model.dart';
+import '../../../Models/pupil model/pupil_model.dart';
 import '../../../core/themes/theme_colors.dart';
 import '../../components/utils/size_config.dart';
 
@@ -47,10 +47,11 @@ class PupilCard extends StatelessWidget {
           CircleAvatar(
             radius: SizeConfig.scaleWidth(20),
             backgroundColor: AppColors.grey400,
-            backgroundImage: pupil.avatar != null && pupil.avatar!.isNotEmpty
-                ? NetworkImage(pupil.avatar!)
+            backgroundImage:
+                pupil.profilePic != null && pupil.profilePic!.isNotEmpty
+                ? NetworkImage(pupil.profilePic!)
                 : null,
-            child: pupil.avatar == null || pupil.avatar!.isEmpty
+            child: pupil.profilePic == null || pupil.profilePic!.isEmpty
                 ? Text(
                     pupil.name.isNotEmpty ? pupil.name[0].toUpperCase() : '?',
                     style: TextStyle(

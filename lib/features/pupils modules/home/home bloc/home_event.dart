@@ -1,33 +1,25 @@
-import '../../../level/entity/level_entity.dart';
-import '../../pupil/data/models/pupil_model.dart';
+import 'package:equatable/equatable.dart';
 
-abstract class HomeEvent {
-  const HomeEvent();
+abstract class PupilHomeEvent extends Equatable {
+  const PupilHomeEvent();
+
+  @override
+  List<Object?> get props => [];
 }
 
-class LoadHomeData extends HomeEvent {
+class LoadHomeData extends PupilHomeEvent {
   const LoadHomeData();
 }
 
-class RefreshHome extends HomeEvent {
+class RefreshHome extends PupilHomeEvent {
   const RefreshHome();
 }
 
-class NavigateToLevel extends HomeEvent {
+class NavigateToLevel extends PupilHomeEvent {
   final int levelNumber;
 
   const NavigateToLevel(this.levelNumber);
-}
 
-class _HomeDataUpdated extends HomeEvent {
-  final PupilModel pupil;
-  final List<Level> levels;
-
-  const _HomeDataUpdated({required this.pupil, required this.levels});
-}
-
-class _HomeError extends HomeEvent {
-  final String message;
-
-  const _HomeError(this.message);
+  @override
+  List<Object?> get props => [levelNumber];
 }

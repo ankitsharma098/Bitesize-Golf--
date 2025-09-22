@@ -373,14 +373,16 @@ extension CustomTextFieldFactory on CustomTextField {
     LevelType? levelType,
     VoidCallback? onTap,
     String? Function(String?)? validator,
+    bool locked = false, // 🔒 new param
   }) => CustomTextField(
     controller: controller,
     label: label,
     placeholder: placeholder,
     levelType: levelType,
-    validator: validator,
-    onTap: onTap,
+    validator: locked ? null : validator, // no validation if locked
+    onTap: locked ? null : onTap, // disable tap
     readOnly: true,
+    isEnabled: !locked, // grey background
     suffixIcon: Icons.arrow_drop_down,
     textInputAction: TextInputAction.next,
   );

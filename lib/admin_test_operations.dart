@@ -1,117 +1,201 @@
-// // Create this file: lib/scripts/create_clubs.dart
-// import 'package:cloud_firestore/cloud_firestore.dart';
-// import 'package:firebase_core/firebase_core.dart';
-// import 'package:flutter/material.dart';
-//
-// class ClubCreator {
-//   static Future<void> createInitialClubs() async {
-//     final clubs = [
-//       {
-//         'name': 'Local Golf Academy',
-//         'location': 'Downtown Sports Complex',
-//         'description':
-//             'Premier golf training facility with indoor and outdoor ranges',
-//         'contactEmail': 'info@localgolfacademy.com',
-//         'isActive': true,
-//         'totalCoaches': 0,
-//         'totalPupils': 0,
-//         'createdAt': FieldValue.serverTimestamp(),
-//         'updatedAt': FieldValue.serverTimestamp(),
-//       },
-//       {
-//         'name': 'Sunset Country Club',
-//         'location': 'Westside Golf Resort',
-//         'description':
-//             'Exclusive country club with championship course and pro shop',
-//         'contactEmail': 'membership@sunsetcountryclub.com',
-//         'isActive': true,
-//         'totalCoaches': 0,
-//         'totalPupils': 0,
-//         'createdAt': FieldValue.serverTimestamp(),
-//         'updatedAt': FieldValue.serverTimestamp(),
-//       },
-//       {
-//         'name': 'Community Golf Center',
-//         'location': 'Central Park Sports Area',
-//         'description':
-//             'Affordable community golf center for all ages and skill levels',
-//         'contactEmail': 'welcome@communitygolfcenter.org',
-//         'isActive': true,
-//         'totalCoaches': 0,
-//         'totalPupils': 0,
-//         'createdAt': FieldValue.serverTimestamp(),
-//         'updatedAt': FieldValue.serverTimestamp(),
-//       },
-//     ];
-//
-//     final batch = FirebaseFirestore.instance.batch();
-//
-//     for (var clubData in clubs) {
-//       final docRef = FirebaseFirestore.instance.collection('clubs').doc();
-//       batch.set(docRef, clubData);
-//       print('Creating club: ${clubData['name']} with ID: ${docRef.id}');
-//     }
-//
-//     await batch.commit();
-//     print('✅ All clubs created successfully!');
-//   }
-//
-//   // Quick function to run from anywhere
-//   static Future<void> run() async {
-//     try {
-//       await createInitialClubs();
-//     } catch (e) {
-//       print('❌ Error creating clubs: $e');
-//     }
-//   }
-// }
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:bitesize_golf/injection.dart';
 import 'package:bitesize_golf/firebase_options.dart';
 import 'package:flutter/cupertino.dart';
 
-import 'features/book/model/book_model.dart';
-import 'features/challenges/model/challenge_model.dart';
-import 'features/games/model/game_model.dart';
-import 'features/lesson/model/lesson_model.dart';
-import 'features/quizes/model/quiz_model.dart';
-import 'joining_request_approval_script.dart';
+import 'Models/book model/book_model.dart';
+import 'Models/challenge model/challenge_model.dart';
+import 'Models/club model/golf_club_model.dart';
+import 'Models/coaches model/coach_model.dart';
+import 'Models/game models/game_model.dart';
+import 'Models/joining request models/coach_to_club_request.dart';
+import 'Models/joining request models/coach_verification_request.dart';
+import 'Models/joining request models/pupil_to_coach_request.dart';
+import 'Models/lesson models/lesson_model.dart';
+import 'Models/pupil model/pupil_model.dart';
+import 'Models/quiz model/quiz_model.dart';
+import 'core/constants/firebase_collections_names.dart';
 
-/// Run this file directly (right-click → Run) to approve **all pending** join-requests.
-/// ⚠️  Use only during development / before real users.
+Future<void> uploadSampleClubs() async {
+  final firestore = FirebaseFirestore.instance;
+
+  final sampleData = [
+    {
+      'name': 'Sunset Country Club',
+      'location': 'California, USA',
+      'description':
+          'A premium country club with golf, tennis, and fine dining.',
+      'contactEmail': 'info@sunsetclub.com',
+      'isActive': true,
+      'totalCoaches': 0,
+      'totalPupils': 0,
+    },
+    {
+      'name': 'Riverdale Sports Academy',
+      'location': 'New York, USA',
+      'description':
+          'Focused on multi-sport training programs for youth and adults.',
+      'contactEmail': 'contact@riverdalesports.com',
+      'isActive': true,
+      'totalCoaches': 0,
+      'totalPupils': 0,
+    },
+    {
+      'name': 'Green Valley Tennis Club',
+      'location': 'Texas, USA',
+      'description':
+          'Dedicated to professional tennis coaching and tournaments.',
+      'contactEmail': 'support@greentennis.com',
+      'isActive': true,
+      'totalCoaches': 0,
+      'totalPupils': 0,
+    },
+  ];
+
+  for (var data in sampleData) {
+    final docRef = firestore.collection('clubs').doc(); // auto-generate ID
+    final club = ClubModel(
+      id: docRef.id, // use Firestore doc ID as club.id
+      name: data['name'] as String,
+      location: data['location'] as String,
+      description: data['description'] as String,
+      contactEmail: data['contactEmail'] as String,
+      isActive: data['isActive'] as bool,
+      totalCoaches: data['totalCoaches'] as int,
+      totalPupils: data['totalPupils'] as int,
+      createdAt: Timestamp.now().toDate(),
+      updatedAt: Timestamp.now().toDate(),
+    );
+
+    await docRef.set(club.toFirestore());
+  }
+}
+
+class ApprovalService {
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+  /// Approve pupil → coach request
+  Future<void> approvePupilToCoachRequest(String requestId) async {
+    final now = DateTime.now();
+
+    await _firestore.runTransaction((tx) async {
+      final reqDoc = await tx.get(
+        FirestoreCollections.pupilCoachReqCol.doc(requestId),
+      );
+      if (!reqDoc.exists) throw Exception("PupilToCoach request not found");
+
+      final req = PupilToCoachRequest.fromFirestore(reqDoc.data()!);
+
+      // ✅ Update pupil with assignment fields
+      final pupilUpdate = {
+        'assignedCoachId': req.coachId,
+        'assignedCoachName': req.coachName,
+        'coachAssignedAt': Timestamp.fromDate(now),
+        'assignmentStatus': 'approved',
+        'updatedAt': Timestamp.fromDate(now),
+      };
+
+      if (req.clubId != null) {
+        pupilUpdate.addAll({
+          'assignedClubId': ?req.clubId,
+          'assignedClubName': ?req.clubName,
+          'clubAssignedAt': Timestamp.fromDate(now),
+          'clubAssignmentStatus': 'approved',
+        });
+      }
+
+      tx.update(FirestoreCollections.pupilsCol.doc(req.pupilId), pupilUpdate);
+
+      // ✅ Increment coach pupils
+      tx.update(FirestoreCollections.coachesCol.doc(req.coachId), {
+        'currentPupils': FieldValue.increment(1),
+        'updatedAt': Timestamp.fromDate(now),
+      });
+
+      // ✅ Mark request approved
+      tx.update(reqDoc.reference, {
+        'status': 'approved',
+        'reviewedAt': Timestamp.fromDate(now),
+        'updatedAt': Timestamp.fromDate(now),
+      });
+    });
+  }
+
+  /// Approve coach → club request
+  Future<void> approveCoachToClubRequest(String requestId) async {
+    final now = DateTime.now();
+
+    await _firestore.runTransaction((tx) async {
+      final reqDoc = await tx.get(
+        FirestoreCollections.coachClubReqCol.doc(requestId),
+      );
+      if (!reqDoc.exists) throw Exception("CoachToClub request not found");
+
+      final req = CoachToClubRequest.fromFirestore(reqDoc.data()!);
+
+      // ✅ Update coach assigned club
+      tx.update(FirestoreCollections.coachesCol.doc(req.coachId), {
+        'assignedClubId': req.clubId,
+        'assignedClubName': req.clubName,
+        'clubAssignedAt': Timestamp.fromDate(now),
+        'clubAssignmentStatus': 'approved',
+        'updatedAt': Timestamp.fromDate(now),
+      });
+
+      // ✅ Increment club totalCoaches
+      tx.update(FirestoreCollections.clubsCol.doc(req.clubId), {
+        'totalCoaches': FieldValue.increment(1),
+        'updatedAt': Timestamp.fromDate(now),
+      });
+
+      // ✅ Mark request approved
+      tx.update(reqDoc.reference, {
+        'status': 'approved',
+        'reviewedAt': Timestamp.fromDate(now),
+        'updatedAt': Timestamp.fromDate(now),
+      });
+    });
+  }
+
+  /// Approve coach verification request
+  Future<void> approveCoachVerificationRequest(String requestId) async {
+    final now = DateTime.now();
+
+    await _firestore.runTransaction((tx) async {
+      final reqDoc = await tx.get(
+        FirestoreCollections.coachVerifReqCol.doc(requestId),
+      );
+      if (!reqDoc.exists) {
+        throw Exception("CoachVerification request not found");
+      }
+
+      final req = CoachVerificationRequest.fromFirestore(reqDoc.data()!);
+
+      // ✅ Update coach verificationStatus
+      tx.update(FirestoreCollections.coachesCol.doc(req.coachId), {
+        'verificationStatus': 'verified',
+        'verifiedAt': Timestamp.fromDate(now),
+        'verifiedBy': 'admin',
+        'updatedAt': Timestamp.fromDate(now),
+      });
+
+      // ✅ Mark request approved
+      tx.update(reqDoc.reference, {
+        'status': 'approved',
+        'reviewedAt': Timestamp.fromDate(now),
+        'updatedAt': Timestamp.fromDate(now),
+      });
+    });
+  }
+}
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  await configureDependencies(); // injectable setup
-
-  //final firestore = FirebaseFirestore.instance;
-  final admin = AdminJoinRequestScript();
-
-  // View all pending requests
-  // await admin.viewAllPendingRequests();
-  //
-  // // View only coach verification requests
-  // await admin.viewRequestsByType('coach_verification');
-  //
-  // // Approve a specific request
-  // await admin.approveRequest('request_id_here', reviewNote: 'Approved manually');
-
-  // Bulk approve all coach verifications
-   await admin.quickApproveAllCoachVerifications();
-
-  // await admin.bulkApproveByType(
-  //   'pupil_to_coach',
-  //   reviewNote: 'Approved by Script',
-  // );
-
-  // View summary
-  await admin.viewSummary();
-
-  // await createRedLevelLesson(firestore);
-  //
-  // await createLevelsInFirestore(firestore);
+  ApprovalService obj = ApprovalService();
+  // await obj.approveCoachVerificationRequest('3yGH0o7IyIyr65JORsxu');
+  // await obj.approveCoachToClubRequest('P0M9m4B2wui4HKA1TEOl');
+  await obj.approvePupilToCoachRequest('jqerbHi33wcnrbW034zb');
 }
 
 List<Map<String, dynamic>> generateLevels() {
@@ -585,7 +669,7 @@ Future<void> createRedLevelQuiz(FirebaseFirestore firestore) async {
   }
 
   // 3.2  Build model (timestamps will be overwritten by serverTimestamp below)
-  final model = QuizModel.fromJson(_redLevelQuizJson);
+  final model = QuizModel.fromFirestore(_redLevelQuizJson);
 
   // 3.3  Write document
   final docRef = firestore.collection('quizzes').doc(); // auto-id
@@ -595,7 +679,7 @@ Future<void> createRedLevelQuiz(FirebaseFirestore firestore) async {
           createdAt: DateTime.now(), // local convenience
           updatedAt: DateTime.now(),
         )
-        .toJson()
+        .toFirestore()
       ..['createdAt'] = FieldValue.serverTimestamp()
       ..['updatedAt'] = FieldValue.serverTimestamp(),
   );
@@ -638,7 +722,7 @@ Future<void> createRedLevelBook(FirebaseFirestore firestore) async {
   }
 
   // 3.2  Build model (timestamps will be overwritten by serverTimestamp below)
-  final model = BookModel.fromJson(redLevelBook);
+  final model = BookModel.fromFirestore(redLevelBook);
 
   // 3.3  Write document
   final docRef = firestore.collection('books').doc(); // auto-id
@@ -649,7 +733,7 @@ Future<void> createRedLevelBook(FirebaseFirestore firestore) async {
           updatedAt: DateTime.now(),
           id: docRef.id,
         )
-        .toJson()
+        .toFirestore()
       ..['createdAt'] = FieldValue.serverTimestamp()
       ..['updatedAt'] = FieldValue.serverTimestamp(),
   );
@@ -692,7 +776,7 @@ Future<void> createRedLevelLesson(FirebaseFirestore firestore) async {
   }
 
   // 3.2  Build model (timestamps will be overwritten by serverTimestamp below)
-  final model = LessonModel.fromJson(redLevelLesson);
+  final model = LessonModel.fromFirestore(redLevelLesson);
 
   // 3.3  Write document
   final docRef = firestore.collection('lessons').doc(); // auto-id
@@ -703,7 +787,7 @@ Future<void> createRedLevelLesson(FirebaseFirestore firestore) async {
           updatedAt: DateTime.now(),
           id: docRef.id,
         )
-        .toJson()
+        .toFirestore()
       ..['createdAt'] = FieldValue.serverTimestamp()
       ..['updatedAt'] = FieldValue.serverTimestamp(),
   );
@@ -715,9 +799,9 @@ Map<String, dynamic> redLevelChallenge = {
   "id": "",
   "title": "Red Level Challenges",
   "description":
-      "Master the basic golf shots and putting techniques. This challenge focuses on consistency and form rather than distance.",
+      "Master the basic golf shots and putting techniques. This challenge model focuses on consistency and form rather than distance.",
   "proTip":
-      "Keep practicing and aim for 1 great shot in each challenge! Ask your coach for help if needed — you're doing great!",
+      "Keep practicing and aim for 1 great shot in each challenge model! Ask your coach for help if needed — you're doing great!",
   "levelNumber": 1,
   "tasks": [
     {
@@ -772,7 +856,7 @@ Future<void> createRedLevelChallenges(FirebaseFirestore firestore) async {
   }
 
   // 3.2  Build model (timestamps will be overwritten by serverTimestamp below)
-  final model = ChallengeModel.fromJson(redLevelChallenge);
+  final model = ChallengeModel.fromFirestore(redLevelChallenge);
 
   // 3.3  Write document
   final docRef = firestore.collection('challenges').doc(); // auto-id
@@ -783,7 +867,7 @@ Future<void> createRedLevelChallenges(FirebaseFirestore firestore) async {
           createdAt: DateTime.now(), // local convenience
           updatedAt: DateTime.now(),
         )
-        .toJson()
+        .toFirestore()
       ..['createdAt'] = FieldValue.serverTimestamp()
       ..['updatedAt'] = FieldValue.serverTimestamp(),
   );
@@ -909,8 +993,8 @@ Future<void> createGamesOfRedLevel(FirebaseFirestore firestore) async {
       // 2. Create new document with auto-generated ID
       final docRef = firestore.collection('games').doc(); // auto-id
 
-      // 3. Prepare data with proper ID and server timestamps
-      final gameToUpload = GameModel.fromJson(gameData).copyWith(
+      // 3. Prepare bloc with proper ID and server timestamps
+      final gameToUpload = GameModel.fromFirestore(gameData).copyWith(
         id: docRef.id,
         createdAt:
             DateTime.now(), // Will be overridden by serverTimestamp below
@@ -920,7 +1004,7 @@ Future<void> createGamesOfRedLevel(FirebaseFirestore firestore) async {
 
       // 4. Upload to Firestore
       await docRef.set(
-        gameToUpload.toJson()
+        gameToUpload.toFirestore()
           ..['createdAt'] = FieldValue.serverTimestamp()
           ..['updatedAt'] = FieldValue.serverTimestamp(),
       );

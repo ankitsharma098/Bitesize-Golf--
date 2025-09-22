@@ -2,28 +2,26 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/themes/theme_colors.dart';
-import '../../../../injection.dart';
-import '../../../auth/data/repositories/auth_repo.dart';
+import '../../../auth/repositories/auth_repo.dart';
 import '../../../components/utils/size_config.dart';
-import '../../../joining request/repo/joining_request_repo.dart';
-import '../../custom bottom navigation/bloc/custom_bottom_navigation_bloc.dart';
-import '../../custom bottom navigation/bloc/custom_bottom_navigation_event.dart';
-import '../../custom bottom navigation/bloc/custom_bottom_navigation_state.dart';
-import '../../custom bottom navigation/presentation/custom_bottom_navigation.dart';
+import '../../../custom bottom navigation/bloc/custom_bottom_navigation_bloc.dart';
+import '../../../custom bottom navigation/bloc/custom_bottom_navigation_event.dart';
+import '../../../custom bottom navigation/bloc/custom_bottom_navigation_state.dart';
+import '../../../custom bottom navigation/presentation/custom_bottom_navigation.dart';
 import '../../profile/presentation/profile_page.dart';
 import '../../profile/profile bloc/profile_bloc.dart';
 import '../data/dashboard_repo.dart';
 import '../home bloc/home_bloc.dart';
 import 'home_page.dart';
 
-class MainWrapperScreen extends StatefulWidget {
-  const MainWrapperScreen({Key? key}) : super(key: key);
+class PupilMainWrapperScreen extends StatefulWidget {
+  const PupilMainWrapperScreen({super.key});
 
   @override
-  State<MainWrapperScreen> createState() => _MainWrapperScreenState();
+  State<PupilMainWrapperScreen> createState() => _PupilMainWrapperScreenState();
 }
 
-class _MainWrapperScreenState extends State<MainWrapperScreen> {
+class _PupilMainWrapperScreenState extends State<PupilMainWrapperScreen> {
   late PageController _pageController;
 
   @override
@@ -52,24 +50,17 @@ class _MainWrapperScreenState extends State<MainWrapperScreen> {
     return MultiProvider(
       providers: [
         Provider<DashboardRepository>(create: (_) => DashboardRepository()),
-        Provider<AuthRepository>(
-          create: (_) => AuthRepository(getIt<JoinRequestRepository>()),
-        ),
+        Provider<AuthRepository>(create: (_) => AuthRepository()),
       ],
       child: MultiBlocProvider(
         providers: [
           BlocProvider<BottomNavBloc>(create: (_) => BottomNavBloc()),
-          BlocProvider<HomeBloc>(
-            create: (context) => HomeBloc(
-              context.read<DashboardRepository>(),
-              context.read<AuthRepository>(),
-            ),
+          BlocProvider<PupilHomeBloc>(
+            create: (context) =>
+                PupilHomeBloc(context.read<DashboardRepository>()),
           ),
-          BlocProvider<ProfileBloc>(
-            create: (context) => ProfileBloc(
-              context.read<DashboardRepository>(),
-              context.read<AuthRepository>(),
-            ),
+          BlocProvider<PupilProfileBloc>(
+            create: (context) => PupilProfileBloc(),
           ),
         ],
         child: Builder(
@@ -87,11 +78,11 @@ class _MainWrapperScreenState extends State<MainWrapperScreen> {
                       );
                     },
                     children: const [
-                      HomeScreen(),
+                      PupilHomeScreen(),
                       PlaceholderScreen(title: 'Schedule'),
                       PlaceholderScreen(title: 'Progress'),
                       PlaceholderScreen(title: 'Awards'),
-                      ProfileScreen(),
+                      PupilProfileScreen(),
                     ],
                   ),
                   bottomNavigationBar: CustomBottomNavBar(

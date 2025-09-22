@@ -4,6 +4,7 @@ abstract class GuestProfileState {
   const GuestProfileState();
 }
 
+
 class GuestProfileInitial extends GuestProfileState {
   const GuestProfileInitial();
 }
@@ -11,7 +12,6 @@ class GuestProfileInitial extends GuestProfileState {
 class GuestProfileLoading extends GuestProfileState {
   const GuestProfileLoading();
 }
-
 class GuestProfileLoaded extends GuestProfileState {
   final Map<String, dynamic> profile;
   GuestProfileLoaded({required this.profile});

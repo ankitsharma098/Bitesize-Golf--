@@ -250,7 +250,7 @@ class _LoginPageState extends State<LoginPage> {
         return AppScaffold.form(
           title: 'Log in',
           levelType: LevelType.redLevel,
-          scrollable: false, // We're handling scrolling manually
+          scrollable: false,
           body: LayoutBuilder(
             builder: (context, constraints) {
               return SingleChildScrollView(
@@ -264,13 +264,11 @@ class _LoginPageState extends State<LoginPage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          // Form fields section
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
                               SizedBox(height: SizeConfig.scaleHeight(20)),
 
-                              // Email field
                               CustomTextFieldFactory.email(
                                 controller: emailCtrl,
                                 levelType: LevelType.redLevel,
@@ -307,14 +305,11 @@ class _LoginPageState extends State<LoginPage> {
                             ],
                           ),
 
-                          // Spacer to push buttons to bottom
                           const Spacer(),
 
-                          // Buttons section at bottom
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
-                              // Login button
                               CustomButtonFactory.primary(
                                 text: 'Log in',
                                 onPressed: isLoading ? null : _handleLogin,
@@ -324,7 +319,6 @@ class _LoginPageState extends State<LoginPage> {
 
                               SizedBox(height: SizeConfig.scaleHeight(16)),
 
-                              // Forgot password text button
                               CustomButtonFactory.text(
                                 text: 'Forgot password?',
                                 onPressed: _handleForgotPassword,

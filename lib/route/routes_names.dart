@@ -30,4 +30,8 @@ class RouteNames {
   // Common
   static const profile = '/profile';
   static const settings = '/settings';
+
+  //coaches
+  static const pupilstats = "/stats";
+  static const searchStats = "/searchStats";
 }

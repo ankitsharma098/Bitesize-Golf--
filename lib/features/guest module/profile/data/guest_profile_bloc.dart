@@ -22,7 +22,6 @@ class GuestProfileBloc extends Bloc<GuestProfileEvent, GuestProfileState> {
         "email": "guest@example.com",
         "level": "Beginner",
       };
-
       emit(GuestProfileLoaded(profile: guestProfile));
     } catch (e) {
       emit(GuestProfileError("Failed to load guest profile: $e"));

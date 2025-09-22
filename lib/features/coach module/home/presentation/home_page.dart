@@ -21,7 +21,6 @@ class _CoachHomeScreenState extends State<CoachHomeScreen> {
   @override
   void initState() {
     super.initState();
-    // Add null check and context availability check
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted && context.mounted) {
         context.read<CoachHomeBloc>().add(LoadHomeData());
@@ -34,7 +33,7 @@ class _CoachHomeScreenState extends State<CoachHomeScreen> {
     return AppScaffold.withCustomAppBar(
       customPadding: EdgeInsets.all(0),
       appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(30), // Custom height
+        preferredSize: const Size.fromHeight(30),
         child: AppBar(
           backgroundColor: Colors.transparent,
           elevation: 0,

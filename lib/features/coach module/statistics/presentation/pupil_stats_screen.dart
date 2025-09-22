@@ -8,13 +8,16 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/themes/level_utils.dart';
 import '../../../../core/themes/theme_colors.dart';
 import '../../../../injection.dart';
+import '../../../../route/navigator_service.dart';
+import '../../../../route/routes_names.dart';
 import '../../../components/custom_scaffold.dart';
 import '../../../components/custom_session_card.dart';
+import '../../../components/text_field_component.dart';
 import '../../../components/utils/size_config.dart';
 import '../../home/home bloc/home_bloc.dart';
 
-class CreateSessionScreen extends StatelessWidget {
-  const CreateSessionScreen({super.key});
+class PupilStatsScreen extends StatelessWidget {
+  const PupilStatsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -38,63 +41,41 @@ class CreateSessionScreenView extends StatefulWidget {
 }
 
 class _CreateSessionScreenViewState extends State<CreateSessionScreenView> {
+  final TextEditingController _searchController = TextEditingController();
+
   @override
   void initState() {
     super.initState();
-    // Add null check and context availability check
-    // WidgetsBinding.instance.addPostFrameCallback((_) {
-    //   if (mounted && context.mounted) {
-    //     context.read<CoachHomeBloc>().add(LoadHomeData());
-    //   }
-    // });
   }
 
   @override
   Widget build(BuildContext context) {
     return AppScaffold.withCustomAppBar(
       customPadding: EdgeInsets.all(0),
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(
-          100,
+      appBar: AppBar(
+        title: Text(
+          'Statistics',
+          style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.white),
         ),
-        child: Container(
-          decoration: BoxDecoration(
-            color: Colors.red,
-            borderRadius: BorderRadius.only(
-              bottomLeft: Radius.circular(SizeConfig.scaleWidth(0)),
-              bottomRight: Radius.circular(SizeConfig.scaleWidth(0)),
-            ),
-          ),
-          child: SafeArea(
-            child: Padding(
-              padding: EdgeInsets.symmetric(
-                horizontal: SizeConfig.scaleWidth(16),
-                vertical: SizeConfig.scaleHeight(8),
-              ),
-              child: Row(
-                children: [
-                  GestureDetector(
-                    onTap: () => Navigator.of(context).pop(),
-                    child: Icon(
-                      Icons.arrow_back,
-                      color: Colors.white,
-                      size: SizeConfig.scaleWidth(24),
-                    ),
-                  ),
-                  SizedBox(width: SizeConfig.scaleWidth(16)),
-                  Text(
-                    'Select Level',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: SizeConfig.scaleText(20),
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: AppColors.white),
+          onPressed: () => Navigator.of(context).pop(),
         ),
+        actions: [
+          IconButton(
+            icon: Container(
+              width: 30,
+              height: 30,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(8),
+                color: AppColors.redLight.withOpacity(0.5),
+              ),
+              child: Icon(Icons.close, color: AppColors.grey900),
+            ),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+        ],
+        elevation: 0,
       ),
       scrollable: true,
       body: Column(
@@ -112,7 +93,27 @@ class _CreateSessionScreenViewState extends State<CreateSessionScreenView> {
               ),
             ),
           ),
-          // Level cards
+          SizedBox(height: SizeConfig.scaleHeight(8)),
+          GestureDetector(
+            onTap: () {
+              NavigationService.push(RouteNames.searchStats);
+            },
+            child: Padding(
+              padding: EdgeInsets.all(SizeConfig.scaleWidth(8)),
+              child: CustomTextFieldFactory.search(
+                label: 'Search Pupil',
+                placeholder: 'Search by Name...',
+                controller: _searchController,
+                levelType: LevelType.redLevel,
+                onChanged: (value) {},
+                onClear: () {
+                  _searchController.clear();
+                },
+                showClearButton: true,
+              ),
+            ),
+          ),
+          SizedBox(height: SizeConfig.scaleHeight(16)),
           BlocBuilder<CoachHomeBloc, CoachHomeState>(
             builder: (context, state) {
               if (state is HomeLoading) {
@@ -218,7 +219,6 @@ class _CreateSessionScreenViewState extends State<CreateSessionScreenView> {
           final levelType = LevelUtils.getLevelTypeFromNumber(
             level.levelNumber,
           );
-
           return SessionLevelCard(
             levelName: level.name,
             levelNumber: level.levelNumber,
@@ -237,7 +237,5 @@ class _CreateSessionScreenViewState extends State<CreateSessionScreenView> {
         backgroundColor: AppColors.greenDark,
       ),
     );
-    // Navigate to session creation screen
-    // Navigator.push(context, MaterialPageRoute(builder: (context) => SessionCreationScreen(levelNumber: levelNumber)));
   }
 }

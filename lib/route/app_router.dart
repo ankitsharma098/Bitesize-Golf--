@@ -1,4 +1,5 @@
 import 'package:bitesize_golf/features/coach%20module/session/presentation/start_new_session.dart';
+import 'package:bitesize_golf/features/coach%20module/statistics/presentation/search_stats_screen.dart';
 import 'package:bitesize_golf/route/routes_names.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -14,6 +15,7 @@ import '../features/auth/presentation/pages/register_page.dart';
 import '../features/auth/presentation/pages/splash_page.dart';
 import '../features/auth/presentation/pages/welcome_page.dart';
 import '../features/coach module/home/presentation/main_wrapper.dart';
+import '../features/coach module/statistics/presentation/pupil_stats_screen.dart';
 import '../features/guest module/home/presentation/main_wrapper.dart';
 import '../features/pupils modules/home/presentation/main_wrapper.dart';
 import '../features/subscription/presentation/pages/subscription_page.dart';
@@ -107,6 +109,16 @@ class AppRouter {
         path: RouteNames.guestHome,
         name: 'guestHome',
         builder: (context, state) => const MainGuestWrapperScreen(),
+      ),
+      GoRoute(
+        path: RouteNames.pupilstats,
+        name: 'Statistics',
+        builder: (context, state) =>  PupilStatsScreen(),
+      ),
+      GoRoute(
+        path: RouteNames.searchStats,
+        name: 'searchStats',
+        builder: (context, state) =>  SearchStatsScreen(),
       ),
     ],
     redirect: _handleRedirect,

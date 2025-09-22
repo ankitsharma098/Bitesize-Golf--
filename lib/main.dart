@@ -19,9 +19,7 @@ void main() async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   await Hive.initFlutter();
   await configureDependencies();
-  // Ensure Firebase Auth is initialized
   await FirebaseAuth.instance.authStateChanges().first;
-
   runApp(const MyApp());
 }
 
@@ -51,7 +49,7 @@ class _AppContentState extends State<AppContent> {
   @override
   Widget build(BuildContext context) {
     return Consumer<ThemeProvider>(
-      builder: (context, themeProvider, _) {
+      builder: (context, themeProvider, _){
         return MaterialApp.router(
           debugShowCheckedModeBanner: false,
           title: AppName,

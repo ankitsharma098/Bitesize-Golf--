@@ -1,24 +1,11 @@
-// Updated custom_scaffold.dart
 import 'package:flutter/material.dart';
 import 'package:bitesize_golf/core/themes/theme_colors.dart';
 import 'package:bitesize_golf/features/components/utils/size_config.dart';
 import 'package:bitesize_golf/features/components/utils/custom_app_bar.dart';
 
-enum ScreenType {
-  form, // For login, register, etc. with form padding
-  content, // For home screens, lists, etc.
-  splash, // For splash screens with gradient
-  fullScreen, // No padding, full control
-  tabScreen, // For screens within tab navigation (no back button)
-}
+enum ScreenType { form, content, splash, fullScreen, tabScreen }
 
-enum AppBarType {
-  none, // No app bar
-  transparent, // Transparent app bar
-  colored, // Colored app bar with level color
-  gradient, // Gradient app bar
-  custom, // Fully custom app bar
-}
+enum AppBarType { none, transparent, colored, gradient, custom }
 
 class CustomScaffold extends StatelessWidget {
   final Widget body;
@@ -61,7 +48,6 @@ class CustomScaffold extends StatelessWidget {
     this.automaticallyImplyLeading = true,
   }) : customAppBar = null;
 
-  // Constructor for custom app bar
   const CustomScaffold.withCustomAppBar({
     super.key,
     required this.body,
@@ -99,13 +85,10 @@ class CustomScaffold extends StatelessWidget {
   }
 
   PreferredSizeWidget? _buildAppBar(BuildContext context) {
-    // Return custom app bar if provided
     if (customAppBar != null) return customAppBar;
 
-    // No app bar for certain types
     if (appBarType == AppBarType.none) return null;
 
-    // No app bar if no title and no back button needed
     if (title == null &&
         !showBackButton &&
         (actions == null || actions!.isEmpty)) {
@@ -263,7 +246,6 @@ class CustomScaffold extends StatelessWidget {
   Widget _buildBody() {
     Widget bodyWidget = body;
 
-    // Handle scrollable first
     if (scrollable) {
       bodyWidget = SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
@@ -271,12 +253,10 @@ class CustomScaffold extends StatelessWidget {
       );
     }
 
-    // Add safe area if requested
     if (safeArea) {
       bodyWidget = SafeArea(child: bodyWidget);
     }
 
-    // Add padding based on screen type
     if (screenType != ScreenType.fullScreen &&
         screenType != ScreenType.splash) {
       bodyWidget = Padding(padding: _getPadding(), child: bodyWidget);
@@ -286,9 +266,8 @@ class CustomScaffold extends StatelessWidget {
   }
 }
 
-// Updated factory class for common screen configurations
 class AppScaffold {
-  // Tab screen - no back button, colored app bar
+
 
   static Widget withCustomAppBar({
     Key? key,
@@ -317,7 +296,7 @@ class AppScaffold {
       resizeToAvoidBottomInset: resizeToAvoidBottomInset,
     );
   }
-  //
+
 
   static Widget tabScreen({
     Key? key,
@@ -342,7 +321,6 @@ class AppScaffold {
     );
   }
 
-  // Form screen - with back button, colored app bar
   static Widget form({
     Key? key,
     required Widget body,
@@ -367,7 +345,6 @@ class AppScaffold {
     );
   }
 
-  // Content screen - configurable app bar
   static Widget content({
     Key? key,
     required Widget body,
@@ -395,7 +372,6 @@ class AppScaffold {
     );
   }
 
-  // Splash screen - no app bar
   static Widget splash({Key? key, required Widget body}) {
     return CustomScaffold(
       key: key,
@@ -406,7 +382,6 @@ class AppScaffold {
     );
   }
 
-  // Full screen - transparent or no app bar
   static Widget fullScreen({
     Key? key,
     required Widget body,
@@ -430,7 +405,6 @@ class AppScaffold {
     );
   }
 
-  // Level screen - gradient app bar
   static Widget levelScreen({
     Key? key,
     required Widget body,

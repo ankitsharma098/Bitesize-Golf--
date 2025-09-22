@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import '../../../../core/themes/theme_colors.dart';
-import '../../../components/utils/size_config.dart';
 
 class CustomBottomNavBar extends StatelessWidget {
   final int currentIndex;
@@ -12,67 +12,107 @@ class CustomBottomNavBar extends StatelessWidget {
     required this.onTap,
   });
 
-  static const List<BottomNavigationBarItem> _bottomNavItems = [
-    BottomNavigationBarItem(
-      icon: Icon(Icons.home_outlined),
-      activeIcon: Icon(Icons.home),
-      label: 'Home',
-    ),
-    BottomNavigationBarItem(
-      icon: Icon(Icons.schedule_outlined),
-      activeIcon: Icon(Icons.schedule),
-      label: 'Schedule',
-    ),
-    BottomNavigationBarItem(
-      icon: Icon(Icons.insights_outlined),
-      activeIcon: Icon(Icons.insights),
-      label: 'Progress',
-    ),
-    BottomNavigationBarItem(
-      icon: Icon(Icons.emoji_events_outlined),
-      activeIcon: Icon(Icons.emoji_events),
-      label: 'Awards',
-    ),
-    BottomNavigationBarItem(
-      icon: Icon(Icons.person_outline),
-      activeIcon: Icon(Icons.person),
-      label: 'Profile',
-    ),
-  ];
-
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: EdgeInsets.only(
-        bottom: SizeConfig.scaleHeight(10),
-        left: SizeConfig.scaleWidth(20),
-        right: SizeConfig.scaleWidth(20),
-      ),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(SizeConfig.scaleWidth(25)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 10,
-            offset: const Offset(0, -5),
+    return SizedBox(
+      height: 80,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: Container(
+              height: 70,
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(25),
+                  topRight: Radius.circular(25),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 10,
+                    offset: Offset(0, -5),
+                  ),
+                ],
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: List.generate(5, (index) => _buildNavItem(index)),
+              ),
+            ),
+          ),
+
+          AnimatedPositioned(
+            duration: Duration(milliseconds: 300),
+            curve: Curves.easeInOut,
+            top: -10,
+            left: _getCurvePosition(context),
+            child: Container(
+              width: 60,
+              height: 30,
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(30),
+                  topRight: Radius.circular(30),
+                ),
+              ),
+            ),
           ),
         ],
       ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(SizeConfig.scaleWidth(25)),
-        child: BottomNavigationBar(
-          currentIndex: currentIndex,
-          onTap: onTap,
-          type: BottomNavigationBarType.fixed,
-          backgroundColor: Colors.white,
-          selectedItemColor: AppColors.greenDark,
-          unselectedItemColor: AppColors.grey600,
-          selectedFontSize: SizeConfig.scaleText(12),
-          unselectedFontSize: SizeConfig.scaleText(10),
-          elevation: 0,
-          items: _bottomNavItems,
-        ),
+    );
+  }
+
+  double _getCurvePosition(BuildContext context) {
+    double screenWidth = MediaQuery.of(context).size.width;
+    double itemWidth = screenWidth / 5;
+    double itemCenter = (currentIndex * itemWidth) + (itemWidth / 2);
+    return itemCenter - 30;
+  }
+
+  Widget _buildNavItem(int index) {
+    bool isSelected = currentIndex == index;
+
+    List<String> images = [
+      'assets/bottom/home.svg',
+      'assets/bottom/schedule.svg',
+      'assets/bottom/stats.svg',
+      'assets/bottom/award.svg',
+      'assets/bottom/profile.svg',
+    ];
+
+    return GestureDetector(
+      onTap: () => onTap(index),
+      child: SizedBox(
+        width: 50,
+        height: 50,
+        child: isSelected
+            ? CircleAvatar(
+                backgroundColor: Colors.green,
+                child: SvgPicture.asset(
+                  images[index],
+                  width: 28,
+                  height: 28,
+                  colorFilter: ColorFilter.mode(Colors.white, BlendMode.srcIn),
+                ),
+              )
+            : Container(
+                padding: EdgeInsets.all(10),
+                child: SvgPicture.asset(
+                  images[index],
+                  width: 18,
+                  height: 18,
+                  colorFilter: ColorFilter.mode(
+                    AppColors.grey700,
+                    BlendMode.srcIn,
+                  ),
+                ),
+              ),
       ),
     );
   }

@@ -6,7 +6,6 @@ import '../models/coach_model.dart';
 @LazySingleton()
 class CoachRepository {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-
   // Collections
   CollectionReference get _coaches => _firestore.collection('coaches');
 
@@ -310,12 +309,11 @@ class CoachRepository {
     }
   }
 
-  // Get coaches pending verification
   Future<List<Coach>> getPendingCoaches() async {
     try {
       final querySnapshot = await _coaches
           .where('verificationStatus', isEqualTo: 'pending')
-          .orderBy('createdAt', descending: false) // Oldest first for review
+          .orderBy('createdAt', descending: false)
           .get();
 
       return querySnapshot.docs

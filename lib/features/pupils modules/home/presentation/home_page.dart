@@ -19,7 +19,6 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    // Add null check and context availability check
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted && context.mounted) {
         context.read<HomeBloc>().add(const LoadHomeData());
@@ -32,7 +31,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return AppScaffold.withCustomAppBar(
       customPadding: EdgeInsets.all(5),
       appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(30), // Custom height
+        preferredSize: const Size.fromHeight(30),
         child: AppBar(
           backgroundColor: Colors.transparent,
           elevation: 0,
@@ -48,8 +47,6 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       //  title: 'Home',
       scrollable: true,
-      // appBarType: AppBarType.custom, // or AppBarType.none for no app bar
-      // levelType: LevelType.redLevel, // Dynamic based on user level
       body: BlocBuilder<HomeBloc, HomeState>(
         builder: (context, state) {
           if (state is HomeLoading) {

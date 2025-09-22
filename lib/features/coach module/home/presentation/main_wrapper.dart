@@ -1,4 +1,5 @@
 import 'package:bitesize_golf/features/coach%20module/profile/data/pupil_profile_repo.dart';
+import 'package:bitesize_golf/features/coach%20module/profile/presentation/profile_page.dart';
 import 'package:bitesize_golf/features/joining%20request/repo/joining_request_repo.dart';
 import 'package:bitesize_golf/injection.dart';
 import 'package:flutter/material.dart';
@@ -11,14 +12,14 @@ import '../../custom bottom navigation/bloc/custom_bottom_navigation_bloc.dart';
 import '../../custom bottom navigation/bloc/custom_bottom_navigation_event.dart';
 import '../../custom bottom navigation/bloc/custom_bottom_navigation_state.dart';
 import '../../custom bottom navigation/presentation/custom_bottom_navigation.dart';
-import '../../profile/presentation/profile_page.dart';
 import '../../profile/profile bloc/profile_bloc.dart';
+import '../../statistics/presentation/welcome_page.dart';
 import '../data/home_level_repo.dart';
 import '../home bloc/home_bloc.dart';
 import 'home_page.dart';
 
 class CoachMainWrapperScreen extends StatefulWidget {
-  const CoachMainWrapperScreen({Key? key}) : super(key: key);
+  const CoachMainWrapperScreen({super.key});
 
   @override
   State<CoachMainWrapperScreen> createState() => _CoachMainWrapperScreenState();
@@ -85,6 +86,7 @@ class _CoachMainWrapperScreenState extends State<CoachMainWrapperScreen> {
                   body: PageView(
                     controller: _pageController,
                     onPageChanged: (index) {
+                      debugPrint("==========>${_pageController}");
                       context.read<BottomNavBloc>().add(
                         BottomNavItemTapped(index),
                       );
@@ -92,8 +94,8 @@ class _CoachMainWrapperScreenState extends State<CoachMainWrapperScreen> {
                     children: const [
                       CoachHomeScreen(),
                       PlaceholderScreen(title: 'Schedule'),
-                      PlaceholderScreen(title: 'Progress'),
-                      PlaceholderScreen(title: 'Awards'),
+                      StatisticsWelcomeScreen(),
+                    PlaceholderScreen(title: 'Awards'),
                       CoachProfileScreen(),
                     ],
                   ),
@@ -114,7 +116,7 @@ class _CoachMainWrapperScreenState extends State<CoachMainWrapperScreen> {
 class PlaceholderScreen extends StatelessWidget {
   final String title;
 
-  const PlaceholderScreen({Key? key, required this.title}) : super(key: key);
+  const PlaceholderScreen({super.key, required this.title});
 
   @override
   Widget build(BuildContext context) {

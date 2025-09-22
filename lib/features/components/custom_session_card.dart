@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import '../../core/themes/asset_custom.dart';
 import '../../core/themes/level_utils.dart';
 import '../../core/themes/theme_colors.dart';
-import 'ball_image.dart'; // Import your BallAssetProvider
+import 'ball_image.dart';
 
 class SessionLevelCard extends StatelessWidget {
   final String levelName;
@@ -27,7 +27,6 @@ class SessionLevelCard extends StatelessWidget {
       levelNumber,
     );
 
-    // Create a lighter background color for the inner container
     final Color sessionBackgroundColor = Color.lerp(
       levelGradient.colors.first,
       AppColors.white,
@@ -47,7 +46,6 @@ class SessionLevelCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.center,
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Level header - single level name display
               Text(
                 levelName,
                 style: TextStyle(
@@ -57,8 +55,6 @@ class SessionLevelCard extends StatelessWidget {
                 ),
               ),
               SizedBox(height: SizeConfig.scaleHeight(8)),
-
-              // Create Session container
               GestureDetector(
                 onTap: onTap,
                 child: Container(
@@ -78,9 +74,7 @@ class SessionLevelCard extends StatelessWidget {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.center,
-                      // mainAxisSize: MainAxisSize.min,
                       children: [
-                        // Golf ball icon using swing ball asset
                         BallImage(
                           ballType: BallType.swingOne,
                           levelType: levelType,

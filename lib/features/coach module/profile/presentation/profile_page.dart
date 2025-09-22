@@ -1,4 +1,5 @@
 import 'package:bitesize_golf/core/themes/asset_custom.dart';
+import 'package:bitesize_golf/features/coach%20module/edit%20profile/edit%20bloc/edit_coach_bloc.dart';
 import 'package:bitesize_golf/features/components/custom_button.dart';
 import 'package:bitesize_golf/route/navigator_service.dart';
 import 'package:bitesize_golf/route/routes_names.dart';
@@ -11,6 +12,7 @@ import '../../../../core/themes/theme_colors.dart';
 import '../../../components/avatar_widget.dart';
 import '../../../components/custom_scaffold.dart';
 import '../../../components/utils/size_config.dart';
+import '../../edit profile/presentation/edit_coach_profile_page.dart';
 import '../../schedul session/presentation/schedule_session_page.dart';
 import '../profile bloc/profile_bloc.dart';
 import '../profile bloc/profile_event.dart';
@@ -27,7 +29,7 @@ class _CoachProfileScreenState extends State<CoachProfileScreen> {
   @override
   void initState() {
     super.initState();
-    context.read<CoachProfileBloc>().add(const LoadProfileData());
+    context.read<CoachProfileBloc>().add(const CoachLoadProfileData());
   }
 
   @override
@@ -38,13 +40,13 @@ class _CoachProfileScreenState extends State<CoachProfileScreen> {
       scrollable: false,
       body: BlocBuilder<CoachProfileBloc, CoachProfileState>(
         builder: (context, state) {
-          if (state is ProfileLoading) {
+          if (state is CoachProfileLoading) {
             return _buildLoadingState();
           }
-          if (state is ProfileError) {
+          if (state is CoachProfileError) {
             return _buildErrorState(state.message);
           }
-          if (state is ProfileLoaded) {
+          if (state is CoachProfileLoaded) {
             return _buildProfileContent(state);
           }
           return _buildInitialState();
@@ -97,8 +99,9 @@ class _CoachProfileScreenState extends State<CoachProfileScreen> {
           ),
           SizedBox(height: SizeConfig.scaleHeight(24)),
           ElevatedButton(
-            onPressed: () =>
-                context.read<CoachProfileBloc>().add(const RefreshProfile()),
+            onPressed: () => context.read<CoachProfileBloc>().add(
+              const CoachRefreshProfile(),
+            ),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.greenDark,
               padding: EdgeInsets.symmetric(
@@ -125,7 +128,7 @@ class _CoachProfileScreenState extends State<CoachProfileScreen> {
     );
   }
 
-  Widget _buildProfileContent(ProfileLoaded state) {
+  Widget _buildProfileContent(CoachProfileLoaded state) {
     return SingleChildScrollView(
       child: Stack(
         children: [
@@ -156,7 +159,7 @@ class _CoachProfileScreenState extends State<CoachProfileScreen> {
               ),
               _buildInfoCard(
                 'Golf Club:',
-                state.coach.selectedClubName ?? 'Not specified',
+                state.coach.assignedClubName ?? 'Not Assigned',
                 'assets/profile assets/club.png',
               ),
               _buildInfoCard(
@@ -185,7 +188,7 @@ class _CoachProfileScreenState extends State<CoachProfileScreen> {
             left: 0,
             right: 0,
             child: Center(
-              child: AvatarWidget(avatarUrl: state.coach.avatarUrl),
+              child: AvatarWidget(avatarUrl: state.coach.profilePic),
             ),
           ),
         ],
@@ -229,9 +232,6 @@ class _CoachProfileScreenState extends State<CoachProfileScreen> {
                   case 'edit_profile':
                     _handleEditProfile();
                     break;
-                  // case 'subscription':
-                  //   _handleSubscription();
-                  //   break;
                   case 'log_out':
                     logout(context);
                     break;
@@ -321,30 +321,13 @@ class _CoachProfileScreenState extends State<CoachProfileScreen> {
   }
 
   void _handleEditProfile() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Edit Profile tapped'),
-        backgroundColor: AppColors.greenDark,
-      ),
-    );
-    // Add navigation to edit profile screen here
-  }
-
-  void _handleSubscription() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Subscription tapped'),
-        backgroundColor: AppColors.greenDark,
-      ),
-    );
-    // Add navigation to subscription screen here
-  }
-
-  void _handleLogOut() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Log Out tapped'),
-        backgroundColor: AppColors.error,
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => BlocProvider<EditCoachBloc>(
+          create: (context) => EditCoachBloc(),
+          child: EditCoachPage(),
+        ),
       ),
     );
   }

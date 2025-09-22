@@ -2,24 +2,20 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:hive_flutter/hive_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:bitesize_golf/route/app_router.dart';
 import 'core/connectivity check/screens/internet_overlay_screen.dart';
-import 'core/constants/app_constants.dart';
 import 'core/themes/app_theme.dart';
 import 'core/themes/theme_provider.dart';
 import 'features/auth/bloc/auth_bloc.dart';
 import 'features/auth/bloc/auth_event.dart';
 import 'firebase_options.dart';
-import 'injection.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  await Hive.initFlutter();
-  await configureDependencies();
   await FirebaseAuth.instance.authStateChanges().first;
+
   runApp(const MyApp());
 }
 
@@ -31,7 +27,7 @@ class MyApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
-        BlocProvider(create: (_) => getIt<AuthBloc>()..add(AuthAppStarted())),
+        BlocProvider(create: (_) => AuthBloc()..add(AuthAppStarted())),
       ],
       child: const AppContent(),
     );
@@ -49,10 +45,10 @@ class _AppContentState extends State<AppContent> {
   @override
   Widget build(BuildContext context) {
     return Consumer<ThemeProvider>(
-      builder: (context, themeProvider, _){
+      builder: (context, themeProvider, _) {
         return MaterialApp.router(
           debugShowCheckedModeBanner: false,
-          title: AppName,
+          title: 'Bitesize-Golf',
           theme: themeProvider.isDarkMode
               ? AppTheme.darkTheme(context)
               : AppTheme.lightTheme(context),

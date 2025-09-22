@@ -1,13 +1,13 @@
+import 'package:bitesize_golf/Models/level%20model/level_model.dart';
 import 'package:bitesize_golf/features/components/utils/size_config.dart';
 import 'package:flutter/material.dart';
 import 'package:bitesize_golf/core/themes/theme_colors.dart';
-import 'package:bitesize_golf/features/level/entity/level_entity.dart';
 import '../../core/themes/level_utils.dart';
 import '../coach module/home/data/home_level_repo.dart';
 
 class LevelDropdown extends StatefulWidget {
-  final Level? selectedLevel;
-  final Function(Level) onLevelSelected;
+  final LevelModel? selectedLevel;
+  final Function(LevelModel) onLevelSelected;
   final String? label;
   final String? hint;
 
@@ -25,7 +25,7 @@ class LevelDropdown extends StatefulWidget {
 
 class _LevelDropdownState extends State<LevelDropdown> {
   final LevelRepository _levelRepository = LevelRepository();
-  List<Level> _levels = [];
+  List<LevelModel> _levels = [];
   bool _isLoading = true;
   String? _error;
   final GlobalKey _dropdownKey = GlobalKey();

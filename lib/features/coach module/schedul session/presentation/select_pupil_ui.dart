@@ -1,7 +1,7 @@
-import 'package:bitesize_golf/features/pupils%20modules/pupil/data/models/pupil_model.dart';
-import 'package:bitesize_golf/features/level/entity/level_entity.dart';
+import 'package:bitesize_golf/Models/level%20model/level_model.dart';
 import 'package:flutter/material.dart';
 
+import '../../../../Models/pupil model/pupil_model.dart';
 import '../../../../core/themes/theme_colors.dart';
 import '../../../components/custom_scaffold.dart';
 import '../../../components/level_dropdown.dart';
@@ -28,7 +28,7 @@ class _SelectPupilsScreenState extends State<SelectPupilsScreen> {
   late TextEditingController _searchController;
   late List<String> _selectedIds;
   List<PupilModel> _filteredPupils = [];
-  Level? _selectedLevel; // Changed from String to Level
+  LevelModel? _selectedLevel; // Changed from String to Level
 
   @override
   void initState() {
@@ -149,7 +149,7 @@ class _SelectPupilsScreenState extends State<SelectPupilsScreen> {
         _filteredPupils.every((pupil) => _selectedIds.contains(pupil.id));
   }
 
-  void _onLevelSelected(Level level) {
+  void _onLevelSelected(LevelModel level) {
     setState(() {
       _selectedLevel = level;
       _filterPupils();
@@ -242,6 +242,20 @@ class _SelectPupilsScreenState extends State<SelectPupilsScreen> {
   }
 
   Widget _buildPupilsList() {
+    if (_filteredPupils.isEmpty) {
+      return Expanded(
+        child: Center(
+          child: Text(
+            'No pupils are assigned to you.',
+            style: TextStyle(
+              fontSize: SizeConfig.scaleWidth(14),
+              color: AppColors.grey600,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ),
+      );
+    }
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(12),
@@ -296,10 +310,11 @@ class _SelectPupilsScreenState extends State<SelectPupilsScreen> {
       leading: CircleAvatar(
         radius: SizeConfig.scaleWidth(20),
         backgroundColor: AppColors.grey400,
-        backgroundImage: pupil.avatar != null && pupil.avatar!.isNotEmpty
-            ? NetworkImage(pupil.avatar!)
+        backgroundImage:
+            pupil.profilePic != null && pupil.profilePic!.isNotEmpty
+            ? NetworkImage(pupil.profilePic!)
             : null,
-        child: pupil.avatar == null || pupil.avatar!.isEmpty
+        child: pupil.profilePic == null || pupil.profilePic!.isEmpty
             ? Text(
                 pupil.name.isNotEmpty ? pupil.name[0].toUpperCase() : '?',
                 style: TextStyle(

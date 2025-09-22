@@ -1,33 +1,26 @@
-import '../../../level/entity/level_entity.dart';
-import '../../pupil/data/models/pupil_model.dart';
+import 'package:equatable/equatable.dart';
+import '../../../../Models/pupil model/pupil_model.dart';
 
-abstract class ProfileEvent {
-  const ProfileEvent();
+abstract class PupilProfileEvent extends Equatable {
+  const PupilProfileEvent();
+
+  @override
+  List<Object?> get props => [];
 }
 
-class LoadProfileData extends ProfileEvent {
-  const LoadProfileData();
+class PupilLoadProfileData extends PupilProfileEvent {
+  const PupilLoadProfileData();
 }
 
-class RefreshProfile extends ProfileEvent {
-  const RefreshProfile();
+class PupilRefreshProfile extends PupilProfileEvent {
+  const PupilRefreshProfile();
 }
 
-class UpdateProfile extends ProfileEvent {
+class PupilUpdateProfile extends PupilProfileEvent {
   final PupilModel updatedPupil;
 
-  const UpdateProfile(this.updatedPupil);
-}
+  const PupilUpdateProfile(this.updatedPupil);
 
-class _ProfileDataUpdated extends ProfileEvent {
-  final PupilModel pupil;
-  final Level currentLevel;
-
-  const _ProfileDataUpdated({required this.pupil, required this.currentLevel});
-}
-
-class _ProfileError extends ProfileEvent {
-  final String message;
-
-  const _ProfileError(this.message);
+  @override
+  List<Object> get props => [updatedPupil];
 }

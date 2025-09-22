@@ -1,7 +1,7 @@
-import 'package:bitesize_golf/features/pupils%20modules/pupil/data/models/pupil_model.dart';
-import 'package:bitesize_golf/features/level/entity/level_entity.dart';
+import 'package:bitesize_golf/Models/level%20model/level_model.dart';
 import 'package:flutter/material.dart';
 
+import '../../../../Models/pupil model/pupil_model.dart';
 import '../../../../core/themes/theme_colors.dart';
 import '../../../components/custom_scaffold.dart';
 import '../../../components/level_dropdown.dart';
@@ -28,7 +28,7 @@ class _SearchStatsScreenState extends State<SearchStatsScreen> {
   late TextEditingController _searchController;
   late List<String> _selectedIds;
   List<PupilModel> _filteredPupils = [];
-  Level? _selectedLevel;
+  LevelModel? _selectedLevel;
 
   @override
   void initState() {
@@ -36,7 +36,6 @@ class _SearchStatsScreenState extends State<SearchStatsScreen> {
     _searchController = TextEditingController();
     _selectedIds = List.from(widget.selectedPupilIds ?? []);
     _filteredPupils = widget.allPupils ?? [];
-
 
     _searchController.addListener(_filterPupils);
     _filterPupils();
@@ -54,13 +53,13 @@ class _SearchStatsScreenState extends State<SearchStatsScreen> {
         final matchesSearch = pupil.name.toLowerCase().contains(
           _searchController.text.toLowerCase(),
         );
-        final matchesLevel = _selectedLevel == null ||
+        final matchesLevel =
+            _selectedLevel == null ||
             pupil.currentLevel == _selectedLevel!.levelNumber;
         return matchesSearch && matchesLevel;
       }).toList();
     });
   }
-
 
   String _getLevelName(int levelNumber) {
     switch (levelNumber) {
@@ -148,7 +147,7 @@ class _SearchStatsScreenState extends State<SearchStatsScreen> {
         _filteredPupils.every((pupil) => _selectedIds.contains(pupil.id));
   }
 
-  void _onLevelSelected(Level level) {
+  void _onLevelSelected(LevelModel level) {
     setState(() {
       _selectedLevel = level;
       _filterPupils();
@@ -185,6 +184,7 @@ class _SearchStatsScreenState extends State<SearchStatsScreen> {
             controller: _searchController,
             levelType: LevelType.redLevel,
             onChanged: (value) {
+              // The _filterPupils() is already called by the listener
             },
             onClear: () {
               _searchController.clear();
@@ -192,6 +192,8 @@ class _SearchStatsScreenState extends State<SearchStatsScreen> {
             showClearButton: true,
           ),
           SizedBox(height: SizeConfig.scaleHeight(12)),
+
+          // Updated to use the new LevelDropdown
           LevelDropdown(
             selectedLevel: _selectedLevel,
             onLevelSelected: _onLevelSelected,
@@ -292,10 +294,11 @@ class _SearchStatsScreenState extends State<SearchStatsScreen> {
       leading: CircleAvatar(
         radius: SizeConfig.scaleWidth(20),
         backgroundColor: AppColors.grey400,
-        backgroundImage: pupil.avatar != null && pupil.avatar!.isNotEmpty
-            ? NetworkImage(pupil.avatar!)
+        backgroundImage:
+            pupil.profilePic != null && pupil.profilePic!.isNotEmpty
+            ? NetworkImage(pupil.profilePic!)
             : null,
-        child: pupil.avatar == null || pupil.avatar!.isEmpty
+        child: pupil.profilePic == null || pupil.profilePic!.isEmpty
             ? Text(
                 pupil.name.isNotEmpty ? pupil.name[0].toUpperCase() : '?',
                 style: TextStyle(

@@ -1,5 +1,5 @@
-import 'package:bitesize_golf/features/auth/data/entities/user.dart';
-import 'package:bitesize_golf/features/auth/data/models/user_model.dart';
+import 'package:bitesize_golf/Models/user%20model/user_model.dart';
+
 import 'package:equatable/equatable.dart';
 
 abstract class AuthState extends Equatable {
@@ -14,7 +14,7 @@ class AuthInitial extends AuthState {}
 class AuthLoading extends AuthState {}
 
 class AuthAuthenticated extends AuthState {
-  final User user;
+  final UserModel user;
 
   const AuthAuthenticated(this.user);
 
@@ -27,7 +27,7 @@ class AuthUnauthenticated extends AuthState {
 }
 
 class AuthGuestSignedIn extends AuthState {
-  final User user;
+  final UserModel user;
 
   const AuthGuestSignedIn(this.user);
 
@@ -53,6 +53,14 @@ class AuthPasswordResetSent extends AuthState {
   List<Object> get props => [email];
 }
 
+class AuthCoachPendingVerification extends AuthState {
+  final UserModel user;
+  const AuthCoachPendingVerification(this.user);
+
+  @override
+  List<Object?> get props => [user];
+}
+
 class AuthEmailVerificationSent extends AuthState {
   const AuthEmailVerificationSent();
 }
@@ -63,7 +71,7 @@ class AuthProfileCompleted extends AuthState {
 }
 
 class AuthProfileCompletionRequired extends AuthState {
-  final User user;
+  final UserModel user;
 
   const AuthProfileCompletionRequired(this.user);
 

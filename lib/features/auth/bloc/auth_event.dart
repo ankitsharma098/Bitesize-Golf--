@@ -53,18 +53,21 @@ class AuthResetPasswordRequested extends AuthEvent {
 
 class AuthEmailVerificationRequested extends AuthEvent {}
 
-// New events for profile completion
+/// Profile completion (Pupil)
 class AuthCompletePupilProfileRequested extends AuthEvent {
   final String pupilId;
-  final String userId; // Changed from parentId to userId for consistency
+  final String userId;
   final String name;
   final DateTime? dateOfBirth;
   final String? handicap;
-  final String? selectedCoachId; // Added - this is the key field
+
+  /// user-selected values (pending approval)
+  final String? selectedCoachId;
   final String? selectedCoachName;
   final String? selectedClubId;
-  final String? selectedClubName; // Added for consistency
-  final String? avatar;
+  final String? selectedClubName;
+
+  final String? profilePic;
 
   const AuthCompletePupilProfileRequested({
     required this.pupilId,
@@ -76,7 +79,7 @@ class AuthCompletePupilProfileRequested extends AuthEvent {
     this.selectedCoachName,
     this.selectedClubId,
     this.selectedClubName,
-    this.avatar,
+    this.profilePic,
   });
 
   @override
@@ -90,33 +93,31 @@ class AuthCompletePupilProfileRequested extends AuthEvent {
     selectedCoachName,
     selectedClubId,
     selectedClubName,
-    avatar,
+    profilePic,
   ];
 }
 
+/// Profile completion (Coach)
 class AuthCompleteCoachProfileRequested extends AuthEvent {
   final String coachId;
   final String userId;
   final String name;
-  final String? bio;
   final int? experience;
-  final List<String>? qualifications;
-  final List<String>? specialties;
-  final String? selectedClubId; // Changed from clubId
-  final String? selectedClubName; // Added
-  final String? avatar;
+
+  /// user-selected values (pending approval)
+  final String? selectedClubId;
+  final String? selectedClubName;
+
+  final String? profilePic;
 
   const AuthCompleteCoachProfileRequested({
     required this.coachId,
     required this.userId,
     required this.name,
-    this.bio,
     this.experience,
-    this.qualifications,
-    this.specialties,
     this.selectedClubId,
     this.selectedClubName,
-    this.avatar,
+    this.profilePic,
   });
 
   @override
@@ -124,12 +125,9 @@ class AuthCompleteCoachProfileRequested extends AuthEvent {
     coachId,
     userId,
     name,
-    bio,
     experience,
-    qualifications,
-    specialties,
     selectedClubId,
     selectedClubName,
-    avatar,
+    profilePic,
   ];
 }

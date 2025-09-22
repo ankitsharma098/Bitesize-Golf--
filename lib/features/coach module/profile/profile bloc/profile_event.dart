@@ -1,19 +1,19 @@
-import 'package:bitesize_golf/features/coaches/data/models/coach_model.dart';
+import '../../../../Models/coaches model/coach_model.dart';
 
 abstract class CoachProfileEvent {
   const CoachProfileEvent();
 }
 
-class LoadProfileData extends CoachProfileEvent {
-  const LoadProfileData();
+class CoachLoadProfileData extends CoachProfileEvent {
+  const CoachLoadProfileData();
 }
 
-class RefreshProfile extends CoachProfileEvent {
-  const RefreshProfile();
+class CoachRefreshProfile extends CoachProfileEvent {
+  const CoachRefreshProfile();
 }
 
-class UpdateProfile extends CoachProfileEvent {
+class UpdateCoachProfile extends CoachProfileEvent {
   final CoachModel updatedCoach;
 
-  const UpdateProfile(this.updatedCoach);
+  const UpdateCoachProfile(this.updatedCoach);
 }

@@ -1,10 +1,9 @@
-import 'package:bitesize_golf/features/coach%20module/schedul%20session/data/model/session_schedule_model.dart';
-import 'package:bitesize_golf/features/pupils%20modules/lesson%20Scheduled/bloc/pupil_lesson_scheduled_event.dart';
-import 'package:bitesize_golf/features/pupils%20modules/lesson%20Scheduled/bloc/pupil_lesson_scheduled_state.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../coach module/schedul session/data/entity/session_schedule_entity.dart';
+import '../../../../Models/scheduled model/scheduled_model.dart';
 import '../data/pupil_lesson_scheduled_repo.dart';
+import 'pupil_lesson_scheduled_event.dart';
+import 'pupil_lesson_scheduled_state.dart';
 
 class LessonScheduleBloc
     extends Bloc<LessonScheduleEvent, LessonScheduleState> {
@@ -36,7 +35,6 @@ class LessonScheduleBloc
         }
       }
 
-      // Sort sessions by session number
       allSessions.sort((a, b) => a.sessionNumber.compareTo(b.sessionNumber));
 
       emit(

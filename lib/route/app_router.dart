@@ -1,25 +1,26 @@
 import 'package:bitesize_golf/features/coach%20module/session/presentation/start_new_session.dart';
-import 'package:bitesize_golf/features/coach%20module/statistics/presentation/search_stats_screen.dart';
 import 'package:bitesize_golf/route/routes_names.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+import '../core/utils/pending_approval_screen.dart';
+import '../features/auth subscription/presentation/auth_subscription_screen.dart';
 import '../features/auth/bloc/auth_bloc.dart';
 import '../features/auth/bloc/auth_state.dart';
-import '../features/auth/presentation/pages/LetsStart_page.dart';
-import '../features/auth/presentation/pages/update_coach_profile.dart';
-import '../features/auth/presentation/pages/update_pupil_profile_page.dart';
-import '../features/auth/presentation/pages/forgot_password.dart';
-import '../features/auth/presentation/pages/login_page.dart';
-import '../features/auth/presentation/pages/register_page.dart';
-import '../features/auth/presentation/pages/splash_page.dart';
-import '../features/auth/presentation/pages/welcome_page.dart';
+import '../features/auth/presentation/LetsStart_page.dart';
+import '../features/auth/presentation/login_page.dart';
+import '../features/auth/presentation/register_page.dart';
+import '../features/auth/presentation/splash_page.dart';
+import '../features/auth/presentation/update_coach_profile.dart';
+import '../features/auth/presentation/update_pupil_profile_page.dart';
+import '../features/auth/presentation/forgot_password.dart';
+import '../features/auth/presentation/welcome_page.dart';
 import '../features/coach module/home/presentation/main_wrapper.dart';
 import '../features/coach module/statistics/presentation/pupil_stats_screen.dart';
+import '../features/coach module/statistics/presentation/search_stats_screen.dart';
 import '../features/guest module/home/presentation/main_wrapper.dart';
 import '../features/pupils modules/home/presentation/main_wrapper.dart';
-import '../features/subscription/presentation/pages/subscription_page.dart';
-import '../injection.dart';
 
 class AppRouter {
   static final GoRouter router = GoRouter(
@@ -30,6 +31,11 @@ class AppRouter {
         path: RouteNames.splash,
         name: 'splash',
         builder: (context, state) => const SplashScreen(),
+      ),
+      GoRoute(
+        path: RouteNames.pendingVerification,
+        name: 'pendingVerification',
+        builder: (context, state) => const PendingApprovalScreen(),
       ),
 
       GoRoute(
@@ -52,7 +58,7 @@ class AppRouter {
         builder: (context, state) {
           // read the query parameter ?pupilId=xyz
           final pupilId = state.uri.queryParameters['pupilId'];
-          return SubscriptionScreen(pupilId: pupilId);
+          return SubscriptionScreen();
         },
       ),
       GoRoute(
@@ -92,7 +98,6 @@ class AppRouter {
         name: 'coachHome',
         builder: (context, state) => const CoachMainWrapperScreen(),
       ),
-
       GoRoute(
         path: RouteNames.createSession,
         name: 'create-session',
@@ -101,8 +106,8 @@ class AppRouter {
 
       GoRoute(
         path: RouteNames.pupilHome,
-        name: 'pupilHome',
-        builder: (context, state) => const MainWrapperScreen(),
+        name: '/pupil/home',
+        builder: (context, state) => const PupilMainWrapperScreen(),
       ),
 
       GoRoute(
@@ -113,12 +118,12 @@ class AppRouter {
       GoRoute(
         path: RouteNames.pupilstats,
         name: 'Statistics',
-        builder: (context, state) =>  PupilStatsScreen(),
+        builder: (context, state) => PupilStatsScreen(),
       ),
       GoRoute(
         path: RouteNames.searchStats,
         name: 'searchStats',
-        builder: (context, state) =>  SearchStatsScreen(),
+        builder: (context, state) => SearchStatsScreen(),
       ),
     ],
     redirect: _handleRedirect,
@@ -168,7 +173,7 @@ class AppRouter {
     // This prevents redirect loops
 
     try {
-      final authBloc = getIt<AuthBloc>();
+      final authBloc = context.read<AuthBloc>();
       final authState = authBloc.state;
 
       // Only redirect if we have a clear auth state

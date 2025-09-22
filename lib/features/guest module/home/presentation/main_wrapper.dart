@@ -4,10 +4,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/themes/theme_colors.dart';
 import '../../../components/utils/size_config.dart';
-import '../../custom bottom navigation/bloc/custom_bottom_navigation_bloc.dart';
-import '../../custom bottom navigation/bloc/custom_bottom_navigation_event.dart';
-import '../../custom bottom navigation/bloc/custom_bottom_navigation_state.dart';
-import '../../custom bottom navigation/presentation/custom_bottom_navigation.dart';
+import '../../../custom bottom navigation/bloc/custom_bottom_navigation_bloc.dart';
+import '../../../custom bottom navigation/bloc/custom_bottom_navigation_event.dart';
+import '../../../custom bottom navigation/bloc/custom_bottom_navigation_state.dart';
+import '../../../custom bottom navigation/presentation/custom_bottom_navigation.dart';
 import '../../profile/data/guest_profile_bloc.dart';
 
 class MainGuestWrapperScreen extends StatefulWidget {

@@ -1,6 +1,4 @@
-import 'package:bitesize_golf/features/coach%20module/schedul%20session/data/model/session_schedule_model.dart';
-
-import '../../../coach module/schedul session/data/entity/session_schedule_entity.dart';
+import '../../../../Models/scheduled model/scheduled_model.dart';
 
 abstract class LessonScheduleState {}
 

@@ -1,25 +1,25 @@
-import 'package:bitesize_golf/features/coaches/data/models/coach_model.dart';
+import '../../../../Models/coaches model/coach_model.dart';
 
 abstract class CoachProfileState {
   const CoachProfileState();
 }
 
-class ProfileInitial extends CoachProfileState {
-  const ProfileInitial();
+class CoachProfileInitial extends CoachProfileState {
+  const CoachProfileInitial();
 }
 
-class ProfileLoading extends CoachProfileState {
-  const ProfileLoading();
+class CoachProfileLoading extends CoachProfileState {
+  const CoachProfileLoading();
 }
 
-class ProfileLoaded extends CoachProfileState {
+class CoachProfileLoaded extends CoachProfileState {
   final CoachModel coach;
 
-  const ProfileLoaded({required this.coach});
+  const CoachProfileLoaded({required this.coach});
 }
 
-class ProfileError extends CoachProfileState {
+class CoachProfileError extends CoachProfileState {
   final String message;
 
-  const ProfileError(this.message);
+  const CoachProfileError(this.message);
 }

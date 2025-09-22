@@ -1,27 +1,26 @@
-import '../../../level/entity/level_entity.dart';
-import '../../pupil/data/models/pupil_model.dart';
+import '../../../../Models/level model/level_model.dart';
+import '../../../../Models/pupil model/pupil_model.dart';
 
-abstract class ProfileState {
-  const ProfileState();
+abstract class PupilProfileState {
+  const PupilProfileState();
 }
 
-class ProfileInitial extends ProfileState {
-  const ProfileInitial();
+class PupilProfileInitial extends PupilProfileState {
+  const PupilProfileInitial();
 }
 
-class ProfileLoading extends ProfileState {
-  const ProfileLoading();
+class PupilProfileLoading extends PupilProfileState {
+  const PupilProfileLoading();
 }
 
-class ProfileLoaded extends ProfileState {
+class PupilProfileLoaded extends PupilProfileState {
   final PupilModel pupil;
-  final Level currentLevel;
+  final LevelModel currentLevel;
 
-  const ProfileLoaded({required this.pupil, required this.currentLevel});
+  const PupilProfileLoaded({required this.pupil, required this.currentLevel});
 }
 
-class ProfileError extends ProfileState {
+class PupilProfileError extends PupilProfileState {
   final String message;
-
-  const ProfileError(this.message);
+  const PupilProfileError(this.message);
 }

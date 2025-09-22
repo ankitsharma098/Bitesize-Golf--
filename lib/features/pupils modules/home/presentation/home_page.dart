@@ -8,30 +8,32 @@ import '../home bloc/home_bloc.dart';
 import '../home bloc/home_event.dart';
 import '../home bloc/home_state.dart';
 
-class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+class PupilHomeScreen extends StatefulWidget {
+  const PupilHomeScreen({super.key});
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  State<PupilHomeScreen> createState() => _PupilHomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _PupilHomeScreenState extends State<PupilHomeScreen> {
   @override
   void initState() {
     super.initState();
+    // Add null check and context availability check
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted && context.mounted) {
-        context.read<HomeBloc>().add(const LoadHomeData());
+        context.read<PupilHomeBloc>().add(const LoadHomeData());
       }
     });
   }
 
   @override
   Widget build(BuildContext context) {
+    print("Pupil home screen");
     return AppScaffold.withCustomAppBar(
       customPadding: EdgeInsets.all(5),
       appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(30),
+        preferredSize: const Size.fromHeight(30), // Custom height
         child: AppBar(
           backgroundColor: Colors.transparent,
           elevation: 0,
@@ -47,7 +49,9 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       //  title: 'Home',
       scrollable: true,
-      body: BlocBuilder<HomeBloc, HomeState>(
+      // appBarType: AppBarType.custom, // or AppBarType.none for no app bar
+      // levelType: LevelType.redLevel, // Dynamic based on user level
+      body: BlocBuilder<PupilHomeBloc, PupilHomeState>(
         builder: (context, state) {
           if (state is HomeLoading) {
             return _buildLoadingState();
@@ -106,7 +110,8 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           SizedBox(height: SizeConfig.scaleHeight(24)),
           ElevatedButton(
-            onPressed: () => context.read<HomeBloc>().add(const RefreshHome()),
+            onPressed: () =>
+                context.read<PupilHomeBloc>().add(const RefreshHome()),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.greenDark,
               padding: EdgeInsets.symmetric(

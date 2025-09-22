@@ -1,95 +1,95 @@
 import 'dart:async';
-import 'package:bitesize_golf/features/coach%20module/profile/profile%20bloc/profile_event.dart';
-import 'package:bitesize_golf/features/coach%20module/profile/profile%20bloc/profile_state.dart';
-import 'package:bitesize_golf/features/coaches/data/models/coach_model.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:injectable/injectable.dart';
-import '../../../auth/data/repositories/auth_repo.dart';
-import '../data/pupil_profile_repo.dart';
 
-@injectable
+import '../../../../Models/coaches model/coach_model.dart';
+import '../../../auth/repositories/auth_repo.dart';
+import '../data/pupil_profile_repo.dart';
+import 'profile_event.dart';
+import 'profile_state.dart';
+import '../../../../core/utils/user_utils.dart';
+
 class CoachProfileBloc extends Bloc<CoachProfileEvent, CoachProfileState> {
   final CoachProfilePageRepo _dashboardRepository;
-  final AuthRepository _authRepository;
 
   StreamSubscription<CoachModel?>? _coachSubscription;
 
-  CoachProfileBloc(this._dashboardRepository, this._authRepository)
-    : super(const ProfileInitial()) {
-    on<LoadProfileData>(_onLoadProfileData);
-    on<RefreshProfile>(_onRefreshProfile);
-    on<UpdateProfile>(_onUpdateProfile);
-    on<_ProfileDataUpdated>(_onProfileDataUpdated);
+  CoachProfileBloc(this._dashboardRepository)
+    : super(const CoachProfileInitial()) {
+    on<CoachLoadProfileData>(_onLoadProfileData);
+    on<CoachRefreshProfile>(_onRefreshProfile);
+    on<UpdateCoachProfile>(_onUpdateProfile);
+    on<_UpdateCoachProfileData>(
+      _onUpdateCoachProfileData,
+    ); // Add internal event
   }
 
   Future<void> _onLoadProfileData(
-    LoadProfileData event,
+    CoachLoadProfileData event,
     Emitter<CoachProfileState> emit,
   ) async {
     try {
-      emit(const ProfileLoading());
+      emit(const CoachProfileLoading());
 
-      final currentUser = await _authRepository.getCurrentUser();
-      if (currentUser == null) {
-        emit(const ProfileError('User not found'));
+      final coach = await UserUtil().getCurrentCoach();
+      if (coach == null) {
+        emit(const CoachProfileError('Coach profile not found'));
         return;
       }
 
-      await _startListeningToUpdates(currentUser.uid);
+      await _startListeningToUpdates(coach.id);
     } catch (e) {
-      emit(ProfileError('Failed to load profile: $e'));
+      emit(CoachProfileError('Failed to load profile: $e'));
     }
   }
 
   Future<void> _onRefreshProfile(
-    RefreshProfile event,
+    CoachRefreshProfile event,
     Emitter<CoachProfileState> emit,
   ) async {
     try {
-      final currentUser = await _authRepository.getCurrentUser();
-      if (currentUser == null) {
-        emit(const ProfileError('User not found'));
+      final coach = await UserUtil().getCurrentCoach();
+      if (coach == null) {
+        emit(const CoachProfileError('Coach profile not found'));
         return;
       }
 
-      final coach = await _dashboardRepository.getCoachData(currentUser.uid);
-      if (coach != null) {
-        emit(ProfileLoaded(coach: coach));
-      } else {
-        emit(const ProfileError('Profile data not found'));
-      }
+      emit(CoachProfileLoaded(coach: coach));
     } catch (e) {
-      emit(ProfileError('Failed to refresh profile: $e'));
+      emit(CoachProfileError('Failed to refresh profile: $e'));
     }
   }
 
   Future<void> _onUpdateProfile(
-    UpdateProfile event,
+    UpdateCoachProfile event,
     Emitter<CoachProfileState> emit,
   ) async {
     try {
-      final currentUser = await _authRepository.getCurrentUser();
-      if (currentUser == null) {
-        emit(const ProfileError('User not found'));
+      final coach = await UserUtil().getCurrentCoach();
+      if (coach == null) {
+        emit(const CoachProfileError('Coach profile not found'));
         return;
       }
 
       await _dashboardRepository.updateCoachesProgress(
-        currentUser.uid,
+        coach.id,
         event.updatedCoach,
       );
-
-      // The stream will automatically update the UI
+      // Firestore stream will update the UI
     } catch (e) {
-      emit(ProfileError('Failed to update profile: $e'));
+      emit(CoachProfileError('Failed to update profile: $e'));
     }
   }
 
-  void _onProfileDataUpdated(
-    _ProfileDataUpdated event,
+  // Internal event handler for stream updates
+  void _onUpdateCoachProfileData(
+    _UpdateCoachProfileData event,
     Emitter<CoachProfileState> emit,
   ) {
-    emit(ProfileLoaded(coach: event.coach));
+    if (event.error != null) {
+      emit(CoachProfileError(event.error!));
+    } else if (event.coach != null) {
+      emit(CoachProfileLoaded(coach: event.coach!));
+    }
   }
 
   Future<void> _startListeningToUpdates(String userId) async {
@@ -100,11 +100,16 @@ class CoachProfileBloc extends Bloc<CoachProfileEvent, CoachProfileState> {
         .listen(
           (coach) {
             if (coach != null) {
-              add(_ProfileDataUpdated(coach: coach));
+              // Use add() with internal event instead of direct add(UpdateCoachProfile)
+              add(_UpdateCoachProfileData(coach: coach));
             }
           },
           onError: (error) {
-            add(_ProfileError('Failed to load profile data: $error'));
+            add(
+              _UpdateCoachProfileData(
+                error: 'Failed to load profile bloc: $error',
+              ),
+            );
           },
         );
   }
@@ -116,14 +121,13 @@ class CoachProfileBloc extends Bloc<CoachProfileEvent, CoachProfileState> {
   }
 }
 
-class _ProfileDataUpdated extends CoachProfileEvent {
-  final CoachModel coach;
+// Internal event for handling stream updates
+class _UpdateCoachProfileData extends CoachProfileEvent {
+  final CoachModel? coach;
+  final String? error;
 
-  const _ProfileDataUpdated({required this.coach});
-}
+  const _UpdateCoachProfileData({this.coach, this.error});
 
-class _ProfileError extends CoachProfileEvent {
-  final String message;
-
-  const _ProfileError(this.message);
+  @override
+  List<Object?> get props => [coach, error];
 }

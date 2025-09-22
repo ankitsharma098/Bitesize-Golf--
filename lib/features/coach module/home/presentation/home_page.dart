@@ -23,7 +23,7 @@ class _CoachHomeScreenState extends State<CoachHomeScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted && context.mounted) {
-        context.read<CoachHomeBloc>().add(LoadHomeData());
+        context.read<CoachHomeBloc>().add(LoadCoachHomeData());
       }
     });
   }
@@ -50,13 +50,13 @@ class _CoachHomeScreenState extends State<CoachHomeScreen> {
       scrollable: true,
       body: BlocBuilder<CoachHomeBloc, CoachHomeState>(
         builder: (context, state) {
-          if (state is HomeLoading) {
+          if (state is CoachHomeLoading) {
             return _buildLoadingState();
           }
-          if (state is HomeError) {
+          if (state is CoachHomeError) {
             return _buildErrorState(state.message);
           }
-          if (state is HomeLoaded) {
+          if (state is CoachHomeLoaded) {
             return _buildHomeContent(state);
           }
           return _buildInitialState();
@@ -106,7 +106,8 @@ class _CoachHomeScreenState extends State<CoachHomeScreen> {
           ),
           SizedBox(height: SizeConfig.scaleHeight(24)),
           ElevatedButton(
-            onPressed: () => context.read<CoachHomeBloc>().add(RefreshHome()),
+            onPressed: () =>
+                context.read<CoachHomeBloc>().add(RefreshCoachHome()),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.greenDark,
               padding: EdgeInsets.symmetric(
@@ -133,13 +134,11 @@ class _CoachHomeScreenState extends State<CoachHomeScreen> {
     );
   }
 
-  Widget _buildHomeContent(HomeLoaded state) {
+  Widget _buildHomeContent(CoachHomeLoaded state) {
     return Padding(
       padding: EdgeInsets.all(SizeConfig.scaleWidth(0)),
       child: ListView.builder(
-        padding: EdgeInsets.symmetric(
-          vertical: SizeConfig.scaleHeight(10),
-        ), // Vertical padding for the list
+        padding: EdgeInsets.symmetric(vertical: SizeConfig.scaleHeight(10)),
         itemCount: state.levels.length,
         shrinkWrap: true,
         physics: NeverScrollableScrollPhysics(),
@@ -149,9 +148,7 @@ class _CoachHomeScreenState extends State<CoachHomeScreen> {
             level.levelNumber,
           );
           return Padding(
-            padding: EdgeInsets.only(
-              bottom: SizeConfig.scaleHeight(15),
-            ), // Space between cards
+            padding: EdgeInsets.only(bottom: SizeConfig.scaleHeight(15)),
             child: CurrentLevelCard(
               levelName: level.name,
               levelNumber: level.levelNumber,

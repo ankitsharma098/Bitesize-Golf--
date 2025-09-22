@@ -50,7 +50,7 @@ class NoInternetScreen extends StatelessWidget {
 
               // Description
               Text(
-                'Please check your internet connection and try again. Make sure you are connected to Wi-Fi or mobile data.',
+                'Please check your internet connection and try again. Make sure you are connected to Wi-Fi or mobile bloc.',
                 style: theme.textTheme.bodyLarge?.copyWith(
                   color: colorScheme.outline,
                 ),
@@ -117,61 +117,58 @@ class NoInternetScreen extends StatelessWidget {
 
     showDialog(
       context: context,
-      builder:
-          (context) => AlertDialog(
-            backgroundColor: colorScheme.surface,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-            title: Text(
-              'Network Settings',
-              style: theme.textTheme.titleLarge?.copyWith(
+      builder: (context) => AlertDialog(
+        backgroundColor: colorScheme.surface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text(
+          'Network Settings',
+          style: theme.textTheme.titleLarge?.copyWith(
+            color: colorScheme.onSurface,
+          ),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'To fix connectivity issues:',
+              style: theme.textTheme.bodyMedium?.copyWith(
                 color: colorScheme.onSurface,
               ),
             ),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'To fix connectivity issues:',
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: colorScheme.onSurface,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                _buildSettingItem(
-                  context,
-                  Icons.wifi_rounded,
-                  'Check Wi-Fi connection',
-                  'Ensure Wi-Fi is enabled and connected',
-                ),
-                const SizedBox(height: 12),
-                _buildSettingItem(
-                  context,
-                  Icons.signal_cellular_4_bar_rounded,
-                  'Check mobile data',
-                  'Verify mobile data is enabled',
-                ),
-                const SizedBox(height: 12),
-                _buildSettingItem(
-                  context,
-                  Icons.airplanemode_inactive_rounded,
-                  'Airplane mode',
-                  'Make sure airplane mode is off',
-                ),
-              ],
+            const SizedBox(height: 16),
+            _buildSettingItem(
+              context,
+              Icons.wifi_rounded,
+              'Check Wi-Fi connection',
+              'Ensure Wi-Fi is enabled and connected',
             ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: Text(
-                  'Close',
-                  style: GoogleFonts.inter(fontWeight: FontWeight.w500),
-                ),
-              ),
-            ],
+            const SizedBox(height: 12),
+            _buildSettingItem(
+              context,
+              Icons.signal_cellular_4_bar_rounded,
+              'Check mobile bloc',
+              'Verify mobile bloc is enabled',
+            ),
+            const SizedBox(height: 12),
+            _buildSettingItem(
+              context,
+              Icons.airplanemode_inactive_rounded,
+              'Airplane mode',
+              'Make sure airplane mode is off',
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text(
+              'Close',
+              style: GoogleFonts.inter(fontWeight: FontWeight.w500),
+            ),
           ),
+        ],
+      ),
     );
   }
 

@@ -1,11 +1,10 @@
-import 'package:bitesize_golf/features/coach%20module/schedul%20session/data/model/session_schedule_model.dart';
 import 'package:bitesize_golf/features/components/utils/size_config.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import '../../../Models/scheduled model/scheduled_model.dart';
 import '../../../core/themes/theme_colors.dart';
-import '../../coach module/schedul session/data/entity/session_schedule_entity.dart';
 
 class SessionsTable extends StatelessWidget {
   final List<SessionModel> sessions;

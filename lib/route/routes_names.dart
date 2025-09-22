@@ -21,11 +21,15 @@ class RouteNames {
   static const coachHome = '/coach/home';
   static const createSession = '/create-session';
 
+  static const pupilstats = "/stats";
+  static const searchStats = "/searchStats";
+
   static const pupilHome = '/pupil/home';
   static const guestHome = '/guest/home';
 
   // Auth sub-routes
   static const emailVerification = '/email-verification';
+  static const pendingVerification = '/pendingVerification';
 
   // Common
   static const profile = '/profile';

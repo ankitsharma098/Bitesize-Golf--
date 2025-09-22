@@ -1,39 +1,36 @@
 import 'package:bitesize_golf/core/constants/common_controller.dart';
 import 'package:bitesize_golf/core/themes/asset_custom.dart';
-import 'package:bitesize_golf/features/pupils%20modules/pupil/data/models/pupil_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/svg.dart';
 
+import '../../../../Models/pupil model/pupil_model.dart';
 import '../../../../core/themes/level_utils.dart';
 import '../../../../core/themes/theme_colors.dart';
 import '../../../components/avatar_widget.dart';
 import '../../../components/ball_image.dart';
 import '../../../components/custom_scaffold.dart';
 import '../../../components/utils/size_config.dart';
-import '../../../guest module/profile/data/guest_profile_bloc.dart';
-import '../../../guest module/profile/presentation/guest_profile_page.dart';
 import '../../lesson Scheduled/presentation/pupil_lesson_scheduled.dart';
 import '../../subcription/presentation/subscription_page.dart';
-import '../../update profile/data/update_profile_bloc.dart';
+import '../../update profile/bloc/update_profile_bloc.dart';
 import '../../update profile/presentation/update_profile_page.dart';
 import '../profile bloc/profile_bloc.dart';
 import '../profile bloc/profile_event.dart';
 import '../profile bloc/profile_state.dart';
 
-class ProfileScreen extends StatefulWidget {
-  const ProfileScreen({super.key});
+class PupilProfileScreen extends StatefulWidget {
+  const PupilProfileScreen({super.key});
 
   @override
-  State<ProfileScreen> createState() => _ProfileScreenState();
+  State<PupilProfileScreen> createState() => _PupilProfileScreenState();
 }
 
-class _ProfileScreenState extends State<ProfileScreen> {
-
+class _PupilProfileScreenState extends State<PupilProfileScreen> {
   @override
   void initState() {
     super.initState();
-    context.read<ProfileBloc>().add(const LoadProfileData());
+    context.read<PupilProfileBloc>().add(const PupilLoadProfileData());
   }
 
   @override
@@ -42,15 +39,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
       screenType: ScreenType.fullScreen,
       appBarType: AppBarType.none,
       scrollable: false,
-      body: BlocBuilder<ProfileBloc, ProfileState>(
+      body: BlocBuilder<PupilProfileBloc, PupilProfileState>(
         builder: (context, state) {
-          if (state is ProfileLoading) {
+          if (state is PupilProfileLoading) {
             return _buildLoadingState();
           }
-          if (state is ProfileError) {
+          if (state is PupilProfileError) {
             return _buildErrorState(state.message);
           }
-          if (state is ProfileLoaded) {
+          if (state is PupilProfileLoaded) {
             return _buildProfileContent(state);
           }
           return _buildInitialState();
@@ -103,8 +100,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
           SizedBox(height: SizeConfig.scaleHeight(24)),
           ElevatedButton(
-            onPressed: () =>
-                context.read<ProfileBloc>().add(const RefreshProfile()),
+            onPressed: () => context.read<PupilProfileBloc>().add(
+              const PupilRefreshProfile(),
+            ),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.greenDark,
               padding: EdgeInsets.symmetric(
@@ -131,13 +129,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildProfileContent(ProfileLoaded state) {
+  Widget _buildProfileContent(PupilProfileLoaded state) {
     return SingleChildScrollView(
       child: Stack(
         children: [
           Column(
             children: [
-              _buildHeaderSection(),
+              _buildHeaderSection(state.pupil.id),
 
               SizedBox(height: SizeConfig.scaleHeight(60)),
               Text(
@@ -159,7 +157,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
               _buildInfoCard(
                 'Golf Club:',
-                state.pupil.selectedClubName ?? 'Not specified',
+                state.pupil.assignedClubName ?? 'Not assigned',
                 'assets/profile assets/club.png',
               ),
               _buildInfoCard(
@@ -186,14 +184,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
             top: SizeConfig.scaleHeight(130),
             left: 0,
             right: 0,
-            child: Center(child: AvatarWidget(avatarUrl: state.pupil.avatar)),
+            child: Center(
+              child: AvatarWidget(avatarUrl: state.pupil.profilePic),
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildHeaderSection() {
+  Widget _buildHeaderSection(String userId) {
     return SizedBox(
       height: SizeConfig.scaleHeight(200),
       width: double.infinity,
@@ -232,10 +232,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     _handleEditProfile();
                     break;
                   case 'subscription':
-                    _handleSubscription();
+                    _handleSubscription(userId);
                     break;
                   case 'log_out':
-                logout(context);
+                    logout(context);
                     break;
                 }
               },
@@ -328,39 +328,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => BlocProvider<UpdateProfileBloc>(
-          create: (context) => UpdateProfileBloc(),
-          child: const EditProfilePage(),
+        builder: (context) => BlocProvider<UpdatePupilProfileBloc>(
+          create: (context) => UpdatePupilProfileBloc(),
+          child: const EditPupilProfilePage(),
         ),
       ),
     );
   }
 
-  void _handleSubscription() {
+  void _handleSubscription(String userId) {
     Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (context) => SubscriptionPage(
-          planName: "Annual Plan",
-          price: "\$60/year",
-          startDate: DateTime(2024, 3, 20),
-          endDate: DateTime(2025, 12, 20),
-        ),
-      ),
-    );
-  }
-
-  void _handleLogOut() {
-    // print("Logout");
-    // Navigator.push(
-    //   context,
-    //   MaterialPageRoute(builder: (context) => GuestProfilePage()),
-    // );
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Log Out tapped'),
-        backgroundColor: AppColors.error,
-      ),
+      MaterialPageRoute(builder: (context) => SubscriptionPage(userId: userId)),
     );
   }
 
@@ -455,7 +434,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               color: AppColors.redDark,
               height: 25,
               width: 25,
-            )
+            ),
           ],
         ),
       ),

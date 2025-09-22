@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/themes/theme_colors.dart';
 import '../../../features/components/utils/size_config.dart';
-import '../pupils modules/pupil/data/models/pupil_model.dart';
+import '../../Models/pupil model/pupil_model.dart';
 
 class ProfileInfoWidget extends StatelessWidget {
   final PupilModel pupil;
@@ -62,10 +62,10 @@ class ProfileInfoWidget extends StatelessWidget {
                   ),
                   child: CircleAvatar(
                     radius: SizeConfig.scaleWidth(40),
-                    backgroundImage: pupil.avatar != null
-                        ? NetworkImage(pupil.avatar!)
+                    backgroundImage: pupil.profilePic != null
+                        ? NetworkImage(pupil.profilePic!)
                         : null,
-                    child: pupil.avatar == null
+                    child: pupil.profilePic == null
                         ? Icon(
                             Icons.person,
                             size: SizeConfig.scaleWidth(40),

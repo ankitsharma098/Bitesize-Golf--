@@ -1,92 +1,74 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:injectable/injectable.dart';
 
-import '../../../level/entity/level_entity.dart';
-import '../../pupil/data/models/pupil_model.dart';
+import '../../../../Models/level model/level_model.dart';
+import '../../../../Models/pupil model/pupil_model.dart';
+import '../../../../core/constants/firebase_collections_names.dart';
 
-@LazySingleton()
 class DashboardRepository {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-
-  // Collections
-  CollectionReference get _pupils => _firestore.collection('pupils');
-  CollectionReference get _levels => _firestore.collection('levels');
-
-  // Get current pupil data
-  Future<PupilModel?> getPupilData(String userId) async {
-    try {
-      final pupilDoc = await _pupils.doc(userId).get();
-
-      if (!pupilDoc.exists) return null;
-
-      return PupilModel.fromJson(pupilDoc.data() as Map<String, dynamic>);
-    } catch (e) {
-      print('Error getting pupil data: $e');
-      throw Exception('Failed to get pupil data: $e');
-    }
-  }
-
-  // Listen to pupil data changes
   Stream<PupilModel?> getPupilDataStream(String userId) {
-    return _pupils.doc(userId).snapshots().map((doc) {
+    return FirestoreCollections.pupilsCol.doc(userId).snapshots().map((doc) {
       if (!doc.exists) return null;
-      return PupilModel.fromJson(doc.data() as Map<String, dynamic>);
+      final data = doc.data()!;
+      data['id'] = doc.id;
+      return PupilModel.fromFirestore(data);
     });
   }
 
-  // Get all levels
-  Future<List<Level>> getAllLevels() async {
+  Future<List<LevelModel>> getAllLevels() async {
     try {
-      final levelsQuery = await _levels
+      final levelsQuery = await FirestoreCollections.levelsCol
           .where('isActive', isEqualTo: true)
           .where('isPublished', isEqualTo: true)
           .orderBy('levelNumber')
           .get();
 
-      return levelsQuery.docs
-          .map((doc) => Level.fromJson(doc.data() as Map<String, dynamic>))
-          .toList();
+      return levelsQuery.docs.map((doc) {
+        final data = doc.data();
+        data['id'] = doc.id;
+        return LevelModel.fromJson(data);
+      }).toList();
     } catch (e) {
       print('Error getting levels: $e');
       throw Exception('Failed to get levels: $e');
     }
   }
 
-  // Listen to levels changes
-  Stream<List<Level>> getLevelsStream() {
-    return _levels
+  Stream<List<LevelModel>> getLevelsStream() {
+    return FirestoreCollections.levelsCol
         .where('isActive', isEqualTo: true)
         .where('isPublished', isEqualTo: true)
         .orderBy('levelNumber')
         .snapshots()
         .map(
-          (snapshot) => snapshot.docs
-              .map((doc) => Level.fromJson(doc.data() as Map<String, dynamic>))
-              .toList(),
+          (snapshot) => snapshot.docs.map((doc) {
+            final data = doc.data();
+            data['id'] = doc.id;
+            return LevelModel.fromFirestore(data);
+          }).toList(),
         );
   }
 
-  // Update pupil progress
   Future<void> updatePupilProgress(
     String userId,
     PupilModel updatedPupil,
   ) async {
     try {
-      await _pupils.doc(userId).update(updatedPupil.toJson());
+      await FirestoreCollections.pupilsCol
+          .doc(userId)
+          .update(updatedPupil.toFirestore());
     } catch (e) {
       print('Error updating pupil progress: $e');
       throw Exception('Failed to update pupil progress: $e');
     }
   }
 
-  // Update specific level progress
   Future<void> updateLevelProgress(
     String userId,
     int levelNumber,
     Map<String, dynamic> progressData,
   ) async {
     try {
-      await _pupils.doc(userId).update({
+      await FirestoreCollections.pupilsCol.doc(userId).update({
         'levelProgress.$levelNumber': progressData,
         'lastActivityDate': FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),
@@ -97,10 +79,9 @@ class DashboardRepository {
     }
   }
 
-  // Unlock next level
   Future<void> unlockLevel(String userId, int levelNumber) async {
     try {
-      await _pupils.doc(userId).update({
+      await FirestoreCollections.pupilsCol.doc(userId).update({
         'unlockedLevels': FieldValue.arrayUnion([levelNumber]),
         'lastActivityDate': FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),

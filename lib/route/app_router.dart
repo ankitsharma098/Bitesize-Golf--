@@ -17,6 +17,8 @@ import '../features/auth/presentation/update_pupil_profile_page.dart';
 import '../features/auth/presentation/forgot_password.dart';
 import '../features/auth/presentation/welcome_page.dart';
 import '../features/coach module/home/presentation/main_wrapper.dart';
+import '../features/coach module/statistics/presentation/pupil_stats_screen.dart';
+import '../features/coach module/statistics/presentation/search_stats_screen.dart';
 import '../features/guest module/home/presentation/main_wrapper.dart';
 import '../features/pupils modules/home/presentation/main_wrapper.dart';
 
@@ -112,6 +114,16 @@ class AppRouter {
         path: RouteNames.guestHome,
         name: 'guestHome',
         builder: (context, state) => const MainGuestWrapperScreen(),
+      ),
+      GoRoute(
+        path: RouteNames.pupilstats,
+        name: 'Statistics',
+        builder: (context, state) => PupilStatsScreen(),
+      ),
+      GoRoute(
+        path: RouteNames.searchStats,
+        name: 'searchStats',
+        builder: (context, state) => SearchStatsScreen(),
       ),
     ],
     redirect: _handleRedirect,

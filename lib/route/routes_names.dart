@@ -21,6 +21,9 @@ class RouteNames {
   static const coachHome = '/coach/home';
   static const createSession = '/create-session';
 
+  static const pupilstats = "/stats";
+  static const searchStats = "/searchStats";
+
   static const pupilHome = '/pupil/home';
   static const guestHome = '/guest/home';
 

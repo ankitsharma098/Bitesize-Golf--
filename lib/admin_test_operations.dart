@@ -993,7 +993,7 @@ Future<void> createGamesOfRedLevel(FirebaseFirestore firestore) async {
       // 2. Create new document with auto-generated ID
       final docRef = firestore.collection('games').doc(); // auto-id
 
-      // 3. Prepare bloc with proper ID and server timestamps
+      // 3. Prepare book bloc with proper ID and server timestamps
       final gameToUpload = GameModel.fromFirestore(gameData).copyWith(
         id: docRef.id,
         createdAt:

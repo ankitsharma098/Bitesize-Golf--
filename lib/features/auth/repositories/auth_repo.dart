@@ -114,7 +114,7 @@ class AuthRepository {
         password: password,
       );
       final user = await getCurrentUser();
-      if (user == null) throw Exception('User bloc not found');
+      if (user == null) throw Exception('User book bloc not found');
 
       await SharedPrefsService.storeUserId(user.uid);
       return user;

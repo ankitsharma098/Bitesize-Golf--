@@ -11,7 +11,7 @@ import 'home_state.dart';
 
 class CoachHomeBloc extends Bloc<CoachHomeEvent, CoachHomeState> {
   final CoachProfilePageRepo _coachRepo = CoachProfilePageRepo();
-  final LevelRepository _levelRepo = LevelRepository();
+  final CoachHomeRepo _levelRepo = CoachHomeRepo();
 
   StreamSubscription<CoachModel?>? _coachSubscription;
   StreamSubscription<List<LevelModel>>? _levelsSubscription;
@@ -102,7 +102,9 @@ class CoachHomeBloc extends Bloc<CoachHomeEvent, CoachHomeState> {
           },
           onError: (error) {
             add(
-              _UpdateCoachHomeData(error: 'Failed to load coach bloc: $error'),
+              _UpdateCoachHomeData(
+                error: 'Failed to load coach book bloc: $error',
+              ),
             );
           },
         );

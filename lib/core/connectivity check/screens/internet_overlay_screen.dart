@@ -98,7 +98,7 @@ class NoInternetOverlay extends StatelessWidget {
 
               // Description
               Text(
-                'Please check your internet connection and try again. Make sure you are connected to Wi-Fi or mobile bloc.',
+                'Please check your internet connection and try again. Make sure you are connected to Wi-Fi or mobile book bloc.',
                 style: theme.textTheme.bodyLarge?.copyWith(
                   color: colorScheme.outline,
                 ),

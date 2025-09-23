@@ -14,6 +14,7 @@ class BookModel {
   final DateTime createdAt;
   final DateTime updatedAt;
   final String createdBy;
+  final int totalPages;
 
   const BookModel({
     required this.id,
@@ -29,6 +30,7 @@ class BookModel {
     required this.createdAt,
     required this.updatedAt,
     required this.createdBy,
+    required this.totalPages, // Add to constructor
   });
 
   factory BookModel.create({
@@ -39,6 +41,7 @@ class BookModel {
     required int levelNumber,
     required String pdfUrl,
     String accessTier = 'free',
+    required int totalPages, // Add to factory
     bool isActive = true,
     DateTime? publishedAt,
     int sortOrder = 0,
@@ -59,6 +62,7 @@ class BookModel {
       createdAt: now,
       updatedAt: now,
       createdBy: createdBy,
+      totalPages: totalPages, // Initialize
     );
   }
 
@@ -78,6 +82,7 @@ class BookModel {
     'createdAt': Timestamp.fromDate(createdAt),
     'updatedAt': Timestamp.fromDate(updatedAt),
     'createdBy': createdBy,
+    'totalPages': totalPages, // Add to Firestore map
   };
 
   factory BookModel.fromFirestore(Map<String, dynamic> json) => BookModel(
@@ -94,6 +99,7 @@ class BookModel {
     createdAt: _toDateTime(json['createdAt']),
     updatedAt: _toDateTime(json['updatedAt']),
     createdBy: json['createdBy'] ?? '',
+    totalPages: json['totalPages'] ?? 0, // Parse totalPages
   );
 
   BookModel copyWith({
@@ -124,6 +130,7 @@ class BookModel {
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
     createdBy: createdBy ?? this.createdBy,
+    totalPages: totalPages ?? this.totalPages,
   );
 
   static DateTime _toDateTime(dynamic v) {

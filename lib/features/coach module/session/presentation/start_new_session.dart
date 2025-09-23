@@ -1,5 +1,3 @@
-import 'package:bitesize_golf/features/coach%20module/home/home%20bloc/home_event.dart';
-import 'package:bitesize_golf/features/coach%20module/home/home%20bloc/home_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/themes/level_utils.dart';
@@ -7,7 +5,7 @@ import '../../../../core/themes/theme_colors.dart';
 import '../../../components/custom_scaffold.dart';
 import '../../../components/custom_session_card.dart';
 import '../../../components/utils/size_config.dart';
-import '../../home/home bloc/home_bloc.dart';
+import '../bloc/create_session_bloc.dart';
 
 class CreateSessionScreen extends StatelessWidget {
   const CreateSessionScreen({super.key});
@@ -15,7 +13,7 @@ class CreateSessionScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) => CoachHomeBloc()..add(LoadCoachHomeData()),
+      create: (context) => CreateSessionBloc()..add(LoadLevels()),
       child: const CreateSessionScreenView(),
     );
   }
@@ -31,27 +29,14 @@ class CreateSessionScreenView extends StatefulWidget {
 
 class _CreateSessionScreenViewState extends State<CreateSessionScreenView> {
   @override
-  void initState() {
-    super.initState();
-    // Add null check and context availability check
-    // WidgetsBinding.instance.addPostFrameCallback((_) {
-    //   if (mounted && context.mounted) {
-    //     context.read<CoachHomeBloc>().add(LoadHomeData());
-    //   }
-    // });
-  }
-
-  @override
   Widget build(BuildContext context) {
     return AppScaffold.withCustomAppBar(
       customPadding: EdgeInsets.all(0),
       appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(
-          100,
-        ), // Custom height for red header
+        preferredSize: const Size.fromHeight(100),
         child: Container(
           decoration: BoxDecoration(
-            color: Colors.red,
+            color: AppColors.redDark,
             borderRadius: BorderRadius.only(
               bottomLeft: Radius.circular(SizeConfig.scaleWidth(0)),
               bottomRight: Radius.circular(SizeConfig.scaleWidth(0)),
@@ -92,7 +77,6 @@ class _CreateSessionScreenViewState extends State<CreateSessionScreenView> {
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Description text
           Padding(
             padding: EdgeInsets.all(SizeConfig.scaleWidth(8)),
             child: Text(
@@ -104,16 +88,15 @@ class _CreateSessionScreenViewState extends State<CreateSessionScreenView> {
               ),
             ),
           ),
-          // Level cards
-          BlocBuilder<CoachHomeBloc, CoachHomeState>(
+          BlocBuilder<CreateSessionBloc, CreateSessionState>(
             builder: (context, state) {
-              if (state is CoachHomeLoading) {
+              if (state is CreateSessionLoading) {
                 return _buildLoadingState();
               }
-              if (state is CoachHomeError) {
+              if (state is CreateSessionError) {
                 return _buildErrorState(state.message);
               }
-              if (state is CoachHomeLoaded) {
+              if (state is CreateSessionLoaded) {
                 return _buildLevelGrid(state);
               }
               return _buildInitialState();
@@ -166,7 +149,7 @@ class _CreateSessionScreenViewState extends State<CreateSessionScreenView> {
           SizedBox(height: SizeConfig.scaleHeight(24)),
           ElevatedButton(
             onPressed: () =>
-                context.read<CoachHomeBloc>().add(RefreshCoachHome()),
+                context.read<CreateSessionBloc>().add(RefreshLevels()),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.greenDark,
               padding: EdgeInsets.symmetric(
@@ -193,7 +176,7 @@ class _CreateSessionScreenViewState extends State<CreateSessionScreenView> {
     );
   }
 
-  Widget _buildLevelGrid(CoachHomeLoaded state) {
+  Widget _buildLevelGrid(CreateSessionLoaded state) {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: SizeConfig.scaleWidth(8)),
       child: GridView.builder(
@@ -203,7 +186,7 @@ class _CreateSessionScreenViewState extends State<CreateSessionScreenView> {
           crossAxisCount: 2,
           crossAxisSpacing: SizeConfig.scaleWidth(12),
           mainAxisSpacing: SizeConfig.scaleHeight(12),
-          childAspectRatio: 1.1, // Adjusted to match UI proportions better
+          childAspectRatio: 1.1,
         ),
         itemCount: state.levels.length,
         itemBuilder: (context, index) {

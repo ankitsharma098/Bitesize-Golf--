@@ -27,7 +27,7 @@ class PupilHomeBloc extends Bloc<PupilHomeEvent, PupilHomeState> {
     try {
       emit(const HomeLoading());
 
-      print("Loading home bloc...");
+      print("Loading home book bloc...");
 
       final userId = await SharedPrefsService.getUserId();
       if (userId == null || userId.isEmpty) {
@@ -38,7 +38,7 @@ class PupilHomeBloc extends Bloc<PupilHomeEvent, PupilHomeState> {
       print("Start listening for user: $userId");
       await _startListeningToUpdates();
     } catch (e) {
-      print("Error loading home bloc: $e");
+      print("Error loading home book bloc: $e");
       emit(HomeError('Failed to load home: $e'));
     }
   }
@@ -59,7 +59,7 @@ class PupilHomeBloc extends Bloc<PupilHomeEvent, PupilHomeState> {
         );
         emit(HomeLoaded(pupil: pupil, levels: levels));
       } else {
-        emit(const HomeError('Pupil bloc not found'));
+        emit(const HomeError('Pupil book bloc not found'));
       }
     } catch (e) {
       print("Error refreshing home: $e");
@@ -94,7 +94,7 @@ class PupilHomeBloc extends Bloc<PupilHomeEvent, PupilHomeState> {
 
       print("Setting up streams for pupil: ${pupil.id}");
 
-      // Variables to track both bloc streams
+      // Variables to track both book bloc streams
       PupilModel? currentPupil;
       List<LevelModel>? currentLevels;
       bool pupilLoaded = false;
@@ -116,7 +116,7 @@ class PupilHomeBloc extends Bloc<PupilHomeEvent, PupilHomeState> {
           .getPupilDataStream(pupil.id)
           .listen(
             (pupilData) {
-              print("Pupil bloc received: ${pupilData?.name}");
+              print("Pupil book bloc received: ${pupilData?.name}");
               if (pupilData != null) {
                 currentPupil = pupilData;
                 pupilLoaded = true;
@@ -125,14 +125,18 @@ class PupilHomeBloc extends Bloc<PupilHomeEvent, PupilHomeState> {
             },
             onError: (error) {
               print("Error in pupil stream: $error");
-              add(_UpdateHomeData(error: 'Failed to load pupil bloc: $error'));
+              add(
+                _UpdateHomeData(
+                  error: 'Failed to load pupil book bloc: $error',
+                ),
+              );
             },
           );
 
       // Listen to level updates
       _levelsSubscription = _dashboardRepository.getLevelsStream().listen(
         (levels) {
-          print("Levels bloc received: ${levels.length} levels");
+          print("Levels book bloc received: ${levels.length} levels");
           currentLevels = levels;
           levelsLoaded = true;
           tryEmitLoaded();
@@ -144,7 +148,7 @@ class PupilHomeBloc extends Bloc<PupilHomeEvent, PupilHomeState> {
       );
     } catch (e) {
       print("Error setting up streams: $e");
-      add(_UpdateHomeData(error: 'Failed to initialize bloc streams: $e'));
+      add(_UpdateHomeData(error: 'Failed to initialize book bloc streams: $e'));
     }
   }
 

@@ -137,13 +137,19 @@ class PupilProfileBloc extends Bloc<PupilProfileEvent, PupilProfileState> {
                   _UpdateProfileData(pupil: pupil, currentLevel: currentLevel),
                 );
               } catch (e) {
-                add(_UpdateProfileData(error: 'Failed to load level bloc: $e'));
+                add(
+                  _UpdateProfileData(
+                    error: 'Failed to load level book bloc: $e',
+                  ),
+                );
               }
             }
           },
           onError: (error) {
             add(
-              _UpdateProfileData(error: 'Failed to load profile bloc: $error'),
+              _UpdateProfileData(
+                error: 'Failed to load profile book bloc: $error',
+              ),
             );
           },
         );

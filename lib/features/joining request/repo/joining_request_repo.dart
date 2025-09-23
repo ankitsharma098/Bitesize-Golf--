@@ -195,7 +195,7 @@
 //       return snapshot.docs
 //           .map(
 //             (doc) => JoinRequestModel.fromFirestore(
-//               doc.bloc() as Map<String, dynamic>,
+//               doc.book bloc() as Map<String, dynamic>,
 //             ),
 //           )
 //           .toList();
@@ -218,7 +218,7 @@
 //       return snapshot.docs
 //           .map(
 //             (doc) => JoinRequestModel.fromFirestore(
-//               doc.bloc() as Map<String, dynamic>,
+//               doc.book bloc() as Map<String, dynamic>,
 //             ),
 //           )
 //           .toList();
@@ -271,7 +271,7 @@
 //     if (!doc.exists) {
 //       throw Exception('Join request not found');
 //     }
-//     return JoinRequestModel.fromFirestore(doc.bloc() as Map<String, dynamic>);
+//     return JoinRequestModel.fromFirestore(doc.book bloc() as Map<String, dynamic>);
 //   }
 //
 //   /// Check if a specific request already exists (to prevent duplicates)

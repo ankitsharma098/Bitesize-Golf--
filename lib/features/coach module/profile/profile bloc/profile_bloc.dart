@@ -107,7 +107,7 @@ class CoachProfileBloc extends Bloc<CoachProfileEvent, CoachProfileState> {
           onError: (error) {
             add(
               _UpdateCoachProfileData(
-                error: 'Failed to load profile bloc: $error',
+                error: 'Failed to load profile book bloc: $error',
               ),
             );
           },

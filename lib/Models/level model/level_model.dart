@@ -53,12 +53,12 @@ class LevelModel extends Equatable {
   factory LevelModel.fromFirestoreDoc(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>?;
     if (data == null) {
-      throw Exception('Document bloc is null for level: ${doc.id}');
+      throw Exception('Document book bloc is null for level: ${doc.id}');
     }
     return LevelModel.fromJson(data);
   }
 
-  // Factory constructor for Firestore bloc (Map format)
+  // Factory constructor for Firestore book bloc (Map format)
   factory LevelModel.fromFirestore(Map<String, dynamic> data) {
     return LevelModel.fromJson(data);
   }

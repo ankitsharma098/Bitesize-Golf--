@@ -50,7 +50,7 @@ class NoInternetScreen extends StatelessWidget {
 
               // Description
               Text(
-                'Please check your internet connection and try again. Make sure you are connected to Wi-Fi or mobile bloc.',
+                'Please check your internet connection and try again. Make sure you are connected to Wi-Fi or mobile book bloc.',
                 style: theme.textTheme.bodyLarge?.copyWith(
                   color: colorScheme.outline,
                 ),
@@ -147,8 +147,8 @@ class NoInternetScreen extends StatelessWidget {
             _buildSettingItem(
               context,
               Icons.signal_cellular_4_bar_rounded,
-              'Check mobile bloc',
-              'Verify mobile bloc is enabled',
+              'Check mobile book bloc',
+              'Verify mobile book bloc is enabled',
             ),
             const SizedBox(height: 12),
             _buildSettingItem(

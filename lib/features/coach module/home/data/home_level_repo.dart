@@ -2,7 +2,7 @@ import 'package:bitesize_golf/Models/level%20model/level_model.dart';
 
 import '../../../../core/constants/firebase_collections_names.dart';
 
-class LevelRepository {
+class CoachHomeRepo {
   final _levels = FirestoreCollections.levelsCol;
 
   /// Get all published and active levels

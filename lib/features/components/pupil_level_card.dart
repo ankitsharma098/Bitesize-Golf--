@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 
+import '../../core/themes/asset_custom.dart';
 import '../../core/themes/theme_colors.dart';
 
 class CustomLevelCard extends StatelessWidget {
@@ -18,93 +20,41 @@ class CustomLevelCard extends StatelessWidget {
     required this.onTap,
   });
 
-  LinearGradient _getGradient() {
+  LevelType _getLevelType() {
     switch (levelNumber) {
       case 1:
-        return LevelType.redLevel.gradient;
+        return LevelType.redLevel;
       case 2:
-        return LevelType.orangeLevel.gradient;
+        return LevelType.orangeLevel;
       case 3:
-        return LevelType.yellowLevel.gradient;
+        return LevelType.yellowLevel;
       case 4:
-        return LevelType.greenLevel.gradient;
+        return LevelType.greenLevel;
       case 5:
-        return LevelType.blueLevel.gradient;
+        return LevelType.blueLevel;
       case 6:
-        return LevelType.indigoLevel.gradient;
+        return LevelType.indigoLevel;
       case 7:
-        return LevelType.violetLevel.gradient;
+        return LevelType.violetLevel;
       case 8:
-        return LevelType.coralLevel.gradient;
+        return LevelType.coralLevel;
       case 9:
-        return LevelType.silverLevel.gradient;
+        return LevelType.silverLevel;
       case 10:
-        return LevelType.goldLevel.gradient;
+        return LevelType.goldLevel;
       default:
-        return LevelType.redLevel.gradient; // Default to red gradient
-    }
-  }
-
-  Color _getLightColor() {
-    switch (levelNumber) {
-      case 1:
-        return LevelType.redLevel.lightColor;
-      case 2:
-        return LevelType.orangeLevel.lightColor;
-      case 3:
-        return LevelType.yellowLevel.lightColor;
-      case 4:
-        return LevelType.greenLevel.lightColor;
-      case 5:
-        return LevelType.blueLevel.lightColor;
-      case 6:
-        return LevelType.indigoLevel.lightColor;
-      case 7:
-        return LevelType.violetLevel.lightColor;
-      case 8:
-        return LevelType.coralLevel.lightColor;
-      case 9:
-        return LevelType.silverLevel.lightColor;
-      case 10:
-        return LevelType.goldLevel.lightColor;
-      default:
-        return LevelType.redLevel.lightColor; // Default to red light color
-    }
-  }
-
-  String getSwingAsset() {
-    switch (levelNumber) {
-      case 1:
-        return 'assets/swing_balls_1/Level=red.png';
-      case 2:
-        return 'assets/swing_balls_1/Level=orange.png';
-      case 3:
-        return 'assets/swing_balls_1/Level=Yellow.png';
-      case 4:
-        return 'assets/swing_balls_1/Level=Green.png';
-      case 5:
-        return 'assets/swing_balls_1/Level=Blue.png';
-      case 6:
-        return 'assets/swing_balls_1/Level=Indigo.png';
-      case 7:
-        return 'assets/swing_balls_1/Level=Violet.png';
-      case 8:
-        return 'assets/swing_balls_1/Level=Coral.png';
-      case 9:
-        return 'assets/swing_balls_1/Level=Silver.png';
-      case 10:
-        return 'assets/swing_balls_1/Level=Gold.png';
-      default:
-        return 'assets/swing_balls_1/Level=red.png'; // Default to red light color
+        return LevelType.redLevel; // Default to red level
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final levelType = _getLevelType();
+
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        gradient: _getGradient(),
+        gradient: levelType.gradient,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Padding(
@@ -121,7 +71,6 @@ class CustomLevelCard extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    // Icon(Icons.check, color: Colors.white, size: 24),
                     Image.asset("assets/bird/bird.png", width: 40, height: 40),
                     const SizedBox(width: 8),
                     Text(
@@ -155,22 +104,31 @@ class CustomLevelCard extends StatelessWidget {
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 decoration: BoxDecoration(
-                  color: _getLightColor(),
+                  color: levelType.lightColor,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    // Icon placeholder - to be managed by you
-                    Image.asset(
-                      getSwingAsset(),
+                    // Using BallAssetProvider for swing ball
+                    SvgPicture.asset(
+                      BallAssetProvider.getSwingOneBall(levelType),
                       width: 34,
                       height: 32,
-                    ), // Space for your icon
-                    Text(
+                      placeholderBuilder: (context) {
+                        // Fallback to a generic icon if asset fails to load
+                        return Icon(
+                          Icons.sports_golf,
+                          size: 32,
+                          color: levelType.color,
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 4),
+                    const Text(
                       'Go to Level',
                       style: TextStyle(
-                        color: Colors.black, // Use gradient start color
+                        color: Colors.black,
                         fontWeight: FontWeight.w500,
                         fontSize: 16,
                       ),

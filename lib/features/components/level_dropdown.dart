@@ -24,7 +24,7 @@ class LevelDropdown extends StatefulWidget {
 }
 
 class _LevelDropdownState extends State<LevelDropdown> {
-  final LevelRepository _levelRepository = LevelRepository();
+  final CoachHomeRepo _levelRepository = CoachHomeRepo();
   List<LevelModel> _levels = [];
   bool _isLoading = true;
   String? _error;

@@ -1,9 +1,11 @@
+import 'package:bitesize_golf/Models/level%20model/level_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/themes/theme_colors.dart';
 import '../../../components/custom_scaffold.dart';
 import '../../../components/pupil_level_card.dart';
 import '../../../components/utils/size_config.dart';
+import '../../Pupil Levels/presentation/level_intro_screen.dart';
 import '../home bloc/home_bloc.dart';
 import '../home bloc/home_event.dart';
 import '../home bloc/home_state.dart';
@@ -153,7 +155,7 @@ class _PupilHomeScreenState extends State<PupilHomeScreen> {
               levelNumber: level.levelNumber,
               isUnlocked: isUnlocked,
               isCompleted: isCompleted,
-              onTap: () => _navigateToLevel(level.levelNumber),
+              onTap: () => _navigateToLevel(level),
             );
           }),
           SizedBox(height: SizeConfig.scaleHeight(100)),
@@ -162,12 +164,18 @@ class _PupilHomeScreenState extends State<PupilHomeScreen> {
     );
   }
 
-  void _navigateToLevel(int levelNumber) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Navigating to Level $levelNumber'),
-        backgroundColor: AppColors.greenDark,
+  void _navigateToLevel(LevelModel level) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => LevelDetailScreen(levelModel: level),
       ),
     );
+    // ScaffoldMessenger.of(context).showSnackBar(
+    //   SnackBar(
+    //     content: Text('Navigating to Level $levelNumber'),
+    //     backgroundColor: AppColors.greenDark,
+    //   ),
+    // );
   }
 }

@@ -332,17 +332,6 @@ class _EditPupilProfilePageState extends State<EditPupilProfilePage> {
     );
   }
 
-  void _handleSave() {
-    if (!_formKey.currentState!.validate()) return;
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text("Profile updated successfully!"),
-        backgroundColor: Colors.green,
-      ),
-    );
-  }
-
   @override
   void dispose() {
     firstNameCtrl.dispose();

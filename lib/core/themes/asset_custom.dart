@@ -30,25 +30,25 @@ class BallAssetProvider {
   static String _getLevelFileName(LevelType levelType) {
     switch (levelType) {
       case LevelType.redLevel:
-        return 'Level=red.png';
+        return 'Level=red.svg';
       case LevelType.orangeLevel:
-        return 'Level=orange.png';
+        return 'Level=orange.svg';
       case LevelType.yellowLevel:
-        return 'Level=Yellow.png';
+        return 'Level=Yellow.svg';
       case LevelType.greenLevel:
-        return 'Level=Green.png';
+        return 'Level=Green.svg';
       case LevelType.blueLevel:
-        return 'Level=Blue.png';
+        return 'Level=Blue.svg';
       case LevelType.indigoLevel:
-        return 'Level=Indigo.png';
+        return 'Level=Indigo.svg';
       case LevelType.violetLevel:
-        return 'Level=Violet.png';
+        return 'Level=Violet.svg';
       case LevelType.coralLevel:
-        return 'Level=Coral.png';
+        return 'Level=Coral.svg';
       case LevelType.silverLevel:
-        return 'Level=Silver.png';
+        return 'Level=Silver.svg';
       case LevelType.goldLevel:
-        return 'Level=Gold.png';
+        return 'Level=Gold.svg';
     }
   }
 

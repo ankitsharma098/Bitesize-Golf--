@@ -113,7 +113,7 @@ class CustomRadioGroup<T> extends StatelessWidget {
   }
 }
 
-/* ---------- bloc class ---------- */
+/* ---------- book bloc class ---------- */
 class RadioOption<T> {
   final T value;
   final String label;

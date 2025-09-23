@@ -3,7 +3,7 @@ import '../../../../Models/coaches model/coach_model.dart';
 import '../../../../core/constants/firebase_collections_names.dart';
 
 class CoachProfilePageRepo {
-  // Listen to coach bloc changes
+  // Listen to coach book bloc changes
   Stream<CoachModel?> getCoachesDataStream(String userId) {
     return FirestoreCollections.coachesCol.doc(userId).snapshots().map((doc) {
       if (!doc.exists) return null;

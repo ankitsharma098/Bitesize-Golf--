@@ -51,7 +51,7 @@ class _CoachMainWrapperScreenState extends State<CoachMainWrapperScreen> {
     return MultiProvider(
       providers: [
         Provider<CoachProfilePageRepo>(create: (_) => CoachProfilePageRepo()),
-        Provider<LevelRepository>(create: (_) => LevelRepository()),
+        Provider<CoachHomeRepo>(create: (_) => CoachHomeRepo()),
         Provider<AuthRepository>(create: (_) => AuthRepository()),
       ],
       child: MultiBlocProvider(

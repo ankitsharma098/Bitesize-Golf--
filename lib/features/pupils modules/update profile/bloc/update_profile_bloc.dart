@@ -198,7 +198,7 @@ class UpdatePupilProfileBloc
                 final pupil = PupilModel.fromFirestore(doc.data()!);
                 add(_UpdateProfileData(pupil));
               } catch (e) {
-                add(_ProfileError("Failed to parse profile bloc: $e"));
+                add(_ProfileError("Failed to parse profile book bloc: $e"));
               }
             }
           },

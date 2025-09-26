@@ -1,4 +1,5 @@
 import 'package:bitesize_golf/core/utils/user_utils.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../../../Models/quiz attempt model/quiz_attempt_model.dart';
 import '../../../../../Models/quiz model/quiz_model.dart';
 import '../../../../../core/constants/firebase_collections_names.dart';
@@ -251,6 +252,53 @@ class QuizRepository {
       throw Exception('Failed to fetch quiz attempts by level: $e');
     }
   }
+  // Add these methods to your QuizRepository class
+
+  /// Resume an in-progress quiz
+  Future<QuizAttemptModel?> resumeQuizAttempt(String attemptId) async {
+    try {
+      final doc = await FirestoreCollections.quizAttemptsCol
+          .doc(attemptId)
+          .get();
+
+      if (!doc.exists || doc.data() == null) {
+        return null;
+      }
+
+      final attempt = QuizAttemptModel.fromFirestore(
+        doc.data() as Map<String, dynamic>,
+      );
+
+      // Only return if it's actually in progress
+      if (attempt.status == 'in_progress') {
+        return attempt;
+      }
+
+      return null;
+    } catch (e) {
+      throw Exception('Failed to resume quiz attempt: $e');
+    }
+  }
+
+  /// Check if a specific quiz has an active attempt
+  Future<bool> hasActiveAttempt(String quizId) async {
+    try {
+      final pupil = await _userUtil.getCurrentPupil();
+      if (pupil == null) return false;
+
+      final querySnapshot = await FirestoreCollections.quizAttemptsCol
+          .where('pupilId', isEqualTo: pupil.id)
+          .where('quizId', isEqualTo: quizId)
+          .where('status', isEqualTo: 'in_progress')
+          .limit(1)
+          .get();
+
+      return querySnapshot.docs.isNotEmpty;
+    } catch (e) {
+      print('Failed to check active attempts: $e');
+      return false;
+    }
+  }
 
   /// Get best quiz attempt for a quiz (highest score)
   Future<QuizAttemptModel?> getBestQuizAttempt(String quizId) async {
@@ -271,16 +319,6 @@ class QuizRepository {
       return completedAttempts.first;
     } catch (e) {
       throw Exception('Failed to get best quiz attempt: $e');
-    }
-  }
-
-  /// Get latest quiz attempt for a quiz (most recent)
-  Future<QuizAttemptModel?> getLatestQuizAttempt(String quizId) async {
-    try {
-      final attempts = await getQuizAttempts(quizId);
-      return attempts.isNotEmpty ? attempts.first : null;
-    } catch (e) {
-      throw Exception('Failed to get latest quiz attempt: $e');
     }
   }
 
@@ -330,26 +368,6 @@ class QuizRepository {
       };
     } catch (e) {
       throw Exception('Failed to get level quiz stats: $e');
-    }
-  }
-
-  /// Check if user can retake a quiz
-  Future<bool> canRetakeQuiz(String quizId) async {
-    try {
-      final quiz = await getQuizById(quizId);
-      if (quiz == null || !quiz.allowRetakes) return false;
-
-      if (quiz.maxAttempts != null) {
-        final attempts = await getQuizAttempts(quizId);
-        final completedAttempts = attempts
-            .where((attempt) => attempt.status == 'completed')
-            .length;
-        return completedAttempts < quiz.maxAttempts!;
-      }
-
-      return true;
-    } catch (e) {
-      throw Exception('Failed to check retake eligibility: $e');
     }
   }
 
@@ -430,6 +448,97 @@ class QuizRepository {
       };
     } catch (e) {
       throw Exception('Failed to get quiz progress summary: $e');
+    }
+  }
+
+  // Add these methods to your QuizRepository class
+  Future<void> saveQuizProgress(
+    String attemptId,
+    List<QuestionResponse> responses,
+    int scoreObtained,
+  ) async {
+    try {
+      final now = DateTime.now();
+
+      await FirestoreCollections.quizAttemptsCol.doc(attemptId).update({
+        'responses': responses.map((r) => r.toFirestore()).toList(),
+        'scoreObtained': scoreObtained,
+        'updatedAt': now
+            .toIso8601String(), // Use ISO string instead of Timestamp
+      });
+    } catch (e) {
+      // Log error but don't throw - we don't want to break quiz flow
+      print('Failed to save quiz progress: $e');
+    }
+  }
+
+  /// Get latest quiz attempt for a quiz (most recent by startedAt timestamp)
+  Future<QuizAttemptModel?> getLatestQuizAttempt(String quizId) async {
+    try {
+      final pupil = await _userUtil.getCurrentPupil();
+      if (pupil == null) return null;
+
+      final querySnapshot = await FirestoreCollections.quizAttemptsCol
+          .where('pupilId', isEqualTo: pupil.id)
+          .where('quizId', isEqualTo: quizId)
+          .orderBy('startedAt', descending: true) // Most recent first
+          .limit(1) // Only get the latest one
+          .get();
+
+      if (querySnapshot.docs.isEmpty) return null;
+
+      final doc = querySnapshot.docs.first;
+      final data = doc.data() as Map<String, dynamic>;
+      return QuizAttemptModel.fromFirestore(data);
+    } catch (e) {
+      throw Exception('Failed to get latest quiz attempt: $e');
+    }
+  }
+
+  /// Check if user can retake a quiz based on attempt history and quiz settings
+  Future<bool> canRetakeQuiz(String quizId) async {
+    try {
+      final quiz = await getQuizById(quizId);
+      if (quiz == null || !quiz.allowRetakes) return false;
+
+      if (quiz.maxAttempts != null) {
+        final pupil = await _userUtil.getCurrentPupil();
+        if (pupil == null) return false;
+
+        // Count only COMPLETED attempts (not in-progress, abandoned, or expired)
+        final querySnapshot = await FirestoreCollections.quizAttemptsCol
+            .where('pupilId', isEqualTo: pupil.id)
+            .where('quizId', isEqualTo: quizId)
+            .where('status', isEqualTo: 'completed')
+            .get();
+
+        return querySnapshot.docs.length < quiz.maxAttempts!;
+      }
+
+      return true; // No max attempts limit
+    } catch (e) {
+      throw Exception('Failed to check retake eligibility: $e');
+    }
+  }
+
+  /// Get active (in-progress) quiz attempts for a user
+  Future<List<QuizAttemptModel>> getActiveQuizAttempts() async {
+    try {
+      final pupil = await _userUtil.getCurrentPupil();
+      if (pupil == null) return [];
+
+      final querySnapshot = await FirestoreCollections.quizAttemptsCol
+          .where('pupilId', isEqualTo: pupil.id)
+          .where('status', isEqualTo: 'in_progress')
+          .orderBy('startedAt', descending: true)
+          .get();
+
+      return querySnapshot.docs.map((doc) {
+        final data = doc.data() as Map<String, dynamic>;
+        return QuizAttemptModel.fromFirestore(data);
+      }).toList();
+    } catch (e) {
+      throw Exception('Failed to fetch active quiz attempts: $e');
     }
   }
 }

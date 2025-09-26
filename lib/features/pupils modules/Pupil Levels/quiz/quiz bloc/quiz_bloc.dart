@@ -9,8 +9,6 @@ import 'quiz_state.dart';
 
 class QuizBloc extends Bloc<QuizEvent, QuizState> {
   final QuizRepository _repository = QuizRepository();
-  Timer? _timer;
-  int _timeRemaining = 0;
 
   QuizBloc() : super(QuizInitial()) {
     on<LoadQuiz>(_onLoadQuiz);
@@ -19,13 +17,7 @@ class QuizBloc extends Bloc<QuizEvent, QuizState> {
     on<NextQuestion>(_onNextQuestion);
     on<PreviousQuestion>(_onPreviousQuestion);
     on<SubmitQuiz>(_onSubmitQuiz);
-    on<TimerTicked>(_onTimerTicked);
-  }
-
-  @override
-  Future<void> close() {
-    _timer?.cancel();
-    return super.close();
+    on<RetakeQuiz>(_onRetakeQuiz);
   }
 
   Future<void> _onLoadQuiz(LoadQuiz event, Emitter<QuizState> emit) async {
@@ -34,20 +26,72 @@ class QuizBloc extends Bloc<QuizEvent, QuizState> {
     try {
       QuizModel? quiz;
 
-      // First try to get quiz by ID if provided
+      // Get quiz by ID if provided, otherwise get first quiz by level
       if (event.quizId.isNotEmpty) {
         quiz = await _repository.getQuizById(event.quizId);
+      } else {
+        quiz = await _repository.getFirstQuizByLevel(event.levelNumber);
       }
-
-      // If no quiz found by ID, get first quiz by level
-      quiz ??= await _repository.getFirstQuizByLevel(event.levelNumber);
 
       if (quiz == null) {
         emit(const QuizError(message: 'No quiz found for this level'));
         return;
       }
 
-      emit(QuizLoaded(quiz: quiz));
+      // Get the latest attempt for this quiz
+      final latestAttempt = await _repository.getLatestQuizAttempt(quiz.id);
+
+      if (latestAttempt == null) {
+        // No previous attempts - show welcome screen for fresh start
+        emit(QuizLoaded(quiz: quiz, previousAttempt: null));
+        return;
+      }
+
+      // Handle different attempt statuses
+      switch (latestAttempt.status) {
+        case 'in_progress':
+          // Resume the in-progress quiz
+          final currentQuestionIndex = _getCurrentQuestionIndex(
+            quiz,
+            latestAttempt,
+          );
+          final hasAnsweredCurrent = _hasAnsweredCurrentQuestion(
+            quiz,
+            latestAttempt,
+            currentQuestionIndex,
+          );
+
+          emit(
+            QuizInProgress(
+              quiz: quiz,
+              attempt: latestAttempt,
+              currentQuestionIndex: currentQuestionIndex,
+              timeRemaining: 0, // No timer functionality
+              hasAnsweredCurrentQuestion: hasAnsweredCurrent,
+            ),
+          );
+          break;
+
+        case 'completed':
+          // Check if retakes are allowed and user hasn't exceeded attempts
+          final canRetake = await _repository.canRetakeQuiz(quiz.id);
+
+          if (canRetake) {
+            // Show welcome screen with option to retake
+            emit(QuizLoaded(quiz: quiz, previousAttempt: latestAttempt));
+          } else {
+            // Max attempts exceeded - show final results
+            emit(QuizCompleted(quiz: quiz, attempt: latestAttempt));
+          }
+          break;
+
+        case 'abandoned':
+        case 'expired':
+        default:
+          // Previous attempt was not completed properly - show welcome for restart
+          emit(QuizLoaded(quiz: quiz, previousAttempt: latestAttempt));
+          break;
+      }
     } catch (e) {
       emit(QuizError(message: e.toString()));
     }
@@ -60,7 +104,7 @@ class QuizBloc extends Bloc<QuizEvent, QuizState> {
       try {
         emit(QuizLoading());
 
-        // Initialize quiz attempt
+        // Create new quiz attempt
         final attempt = await _repository.startQuizAttempt(
           currentState.quiz.id,
           currentState.quiz.levelNumber,
@@ -68,19 +112,13 @@ class QuizBloc extends Bloc<QuizEvent, QuizState> {
           currentState.quiz.totalPoints,
         );
 
-        // Set up timer if quiz has time limit
-        if (currentState.quiz.timeLimit != null) {
-          _timeRemaining =
-              currentState.quiz.timeLimit! * 60; // Convert to seconds
-          _startTimer();
-        }
-
         emit(
           QuizInProgress(
             quiz: currentState.quiz,
             attempt: attempt,
             currentQuestionIndex: 0,
-            timeRemaining: _timeRemaining,
+            timeRemaining: 0, // No timer
+            hasAnsweredCurrentQuestion: false,
           ),
         );
       } catch (e) {
@@ -89,22 +127,76 @@ class QuizBloc extends Bloc<QuizEvent, QuizState> {
     }
   }
 
-  void _onAnswerQuestion(AnswerQuestion event, Emitter<QuizState> emit) {
+  Future<void> _onRetakeQuiz(RetakeQuiz event, Emitter<QuizState> emit) async {
+    if (state is QuizLoaded || state is QuizCompleted) {
+      final quiz = state is QuizLoaded
+          ? (state as QuizLoaded).quiz
+          : (state as QuizCompleted).quiz;
+
+      try {
+        // Double-check retake eligibility
+        final canRetake = await _repository.canRetakeQuiz(quiz.id);
+        if (!canRetake) {
+          emit(
+            const QuizError(message: 'No more retakes allowed for this quiz'),
+          );
+          return;
+        }
+
+        emit(QuizLoading());
+
+        // Create new quiz attempt for retake
+        final attempt = await _repository.startQuizAttempt(
+          quiz.id,
+          quiz.levelNumber,
+          quiz.totalQuestions,
+          quiz.totalPoints,
+        );
+
+        emit(
+          QuizInProgress(
+            quiz: quiz,
+            attempt: attempt,
+            currentQuestionIndex: 0,
+            timeRemaining: 0, // No timer
+            hasAnsweredCurrentQuestion: false,
+          ),
+        );
+      } catch (e) {
+        emit(QuizError(message: e.toString()));
+      }
+    }
+  }
+
+  void _onAnswerQuestion(AnswerQuestion event, Emitter<QuizState> emit) async {
     if (state is QuizInProgress) {
       final currentState = state as QuizInProgress;
       final currentIndex = currentState.currentQuestionIndex;
       final question = currentState.quiz.questions[currentIndex];
+
+      // Don't allow answering if already answered (one-time selection)
+      if (currentState.hasAnsweredCurrentQuestion) {
+        return;
+      }
+
+      // FIX: Convert option letter to actual option text for comparison
+      final selectedOptionIndex =
+          event.selectedAnswer.codeUnitAt(0) - 65; // A=0, B=1, C=2, D=3
+      final selectedOptionText = question.options?[selectedOptionIndex] ?? '';
 
       // Create response for current question
       final response = QuestionResponse(
         questionId: question.questionId,
         question: question.question,
         options: question.options ?? [],
-        selectedAnswer: event.selectedAnswer,
+        selectedAnswer:
+            event.selectedAnswer, // Keep the letter for UI reference
         correctAnswer: question.correctAnswer,
-        isCorrect: event.selectedAnswer == question.correctAnswer,
+        // FIX: Compare the actual option text with correctAnswer
+        isCorrect: selectedOptionText == question.correctAnswer,
         points: question.points,
-        pointsEarned: event.selectedAnswer == question.correctAnswer
+        // FIX: Award points based on correct comparison
+        pointsEarned: selectedOptionText == question.correctAnswer
             ? question.points
             : 0,
         wasSkipped: false,
@@ -115,17 +207,7 @@ class QuizBloc extends Bloc<QuizEvent, QuizState> {
       final updatedResponses = List<QuestionResponse>.from(
         currentState.attempt.responses,
       );
-
-      // Replace if answer already exists, otherwise add
-      final existingIndex = updatedResponses.indexWhere(
-        (r) => r.questionId == question.questionId,
-      );
-
-      if (existingIndex != -1) {
-        updatedResponses[existingIndex] = response;
-      } else {
-        updatedResponses.add(response);
-      }
+      updatedResponses.add(response);
 
       // Calculate updated score
       final scoreObtained = updatedResponses.fold<int>(
@@ -139,12 +221,24 @@ class QuizBloc extends Bloc<QuizEvent, QuizState> {
         updatedAt: DateTime.now(),
       );
 
+      // Immediately save progress to Firestore
+      try {
+        await _repository.saveQuizProgress(
+          updatedAttempt.id,
+          updatedResponses,
+          scoreObtained,
+        );
+      } catch (error) {
+        print('Auto-save failed: $error');
+      }
+
       emit(
         QuizInProgress(
           quiz: currentState.quiz,
           attempt: updatedAttempt,
           currentQuestionIndex: currentIndex,
-          timeRemaining: _timeRemaining,
+          timeRemaining: 0, // No timer
+          hasAnsweredCurrentQuestion: true,
         ),
       );
     }
@@ -156,34 +250,29 @@ class QuizBloc extends Bloc<QuizEvent, QuizState> {
       final nextIndex = currentState.currentQuestionIndex + 1;
 
       if (nextIndex < currentState.quiz.questions.length) {
+        // Check if next question has been answered
+        final nextQuestion = currentState.quiz.questions[nextIndex];
+        final hasAnsweredNext = currentState.attempt.responses.any(
+          (r) => r.questionId == nextQuestion.questionId,
+        );
+
         emit(
           QuizInProgress(
             quiz: currentState.quiz,
             attempt: currentState.attempt,
             currentQuestionIndex: nextIndex,
-            timeRemaining: _timeRemaining,
+            timeRemaining: 0, // No timer
+            hasAnsweredCurrentQuestion: hasAnsweredNext,
           ),
         );
       }
     }
   }
 
+  // Remove previous question functionality - no going back
   void _onPreviousQuestion(PreviousQuestion event, Emitter<QuizState> emit) {
-    if (state is QuizInProgress) {
-      final currentState = state as QuizInProgress;
-      final previousIndex = currentState.currentQuestionIndex - 1;
-
-      if (previousIndex >= 0) {
-        emit(
-          QuizInProgress(
-            quiz: currentState.quiz,
-            attempt: currentState.attempt,
-            currentQuestionIndex: previousIndex,
-            timeRemaining: _timeRemaining,
-          ),
-        );
-      }
-    }
+    // Do nothing - previous functionality removed
+    return;
   }
 
   Future<void> _onSubmitQuiz(SubmitQuiz event, Emitter<QuizState> emit) async {
@@ -191,14 +280,10 @@ class QuizBloc extends Bloc<QuizEvent, QuizState> {
       final currentState = state as QuizInProgress;
 
       try {
-        _timer?.cancel();
-
-        // Calculate final results
-        final totalTimeTaken = currentState.quiz.timeLimit != null
-            ? (currentState.quiz.timeLimit! * 60) - _timeRemaining
-            : DateTime.now()
-                  .difference(currentState.attempt.startedAt)
-                  .inSeconds;
+        // Calculate final results - use actual duration
+        final totalTimeTaken = DateTime.now()
+            .difference(currentState.attempt.startedAt)
+            .inSeconds;
 
         final passed =
             currentState.attempt.scoreObtained >=
@@ -224,35 +309,31 @@ class QuizBloc extends Bloc<QuizEvent, QuizState> {
     }
   }
 
-  void _onTimerTicked(TimerTicked event, Emitter<QuizState> emit) {
-    if (state is QuizInProgress) {
-      final currentState = state as QuizInProgress;
-      _timeRemaining = event.timeRemaining;
+  // Helper method to determine current question index based on responses
+  int _getCurrentQuestionIndex(QuizModel quiz, QuizAttemptModel attempt) {
+    if (attempt.responses.isEmpty) return 0;
 
-      if (_timeRemaining <= 0) {
-        // Time's up, auto-submit
-        add(const SubmitQuiz());
-        return;
-      }
-
-      emit(
-        QuizInProgress(
-          quiz: currentState.quiz,
-          attempt: currentState.attempt,
-          currentQuestionIndex: currentState.currentQuestionIndex,
-          timeRemaining: _timeRemaining,
-        ),
+    // Find the first unanswered question
+    for (int i = 0; i < quiz.questions.length; i++) {
+      final question = quiz.questions[i];
+      final hasResponse = attempt.responses.any(
+        (r) => r.questionId == question.questionId,
       );
+      if (!hasResponse) return i;
     }
+
+    // All questions answered, go to last question for review
+    return quiz.questions.length - 1;
   }
 
-  void _startTimer() {
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (_timeRemaining > 0) {
-        add(TimerTicked(timeRemaining: _timeRemaining - 1));
-      } else {
-        timer.cancel();
-      }
-    });
+  // Helper method to check if current question is answered
+  bool _hasAnsweredCurrentQuestion(
+    QuizModel quiz,
+    QuizAttemptModel attempt,
+    int questionIndex,
+  ) {
+    if (questionIndex >= quiz.questions.length) return false;
+    final question = quiz.questions[questionIndex];
+    return attempt.responses.any((r) => r.questionId == question.questionId);
   }
 }

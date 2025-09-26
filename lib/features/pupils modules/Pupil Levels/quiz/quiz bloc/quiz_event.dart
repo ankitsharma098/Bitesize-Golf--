@@ -1,5 +1,10 @@
-abstract class QuizEvent {
+import 'package:equatable/equatable.dart';
+
+abstract class QuizEvent extends Equatable {
   const QuizEvent();
+
+  @override
+  List<Object> get props => [];
 }
 
 class LoadQuiz extends QuizEvent {
@@ -7,16 +12,26 @@ class LoadQuiz extends QuizEvent {
   final int levelNumber;
 
   const LoadQuiz({required this.quizId, required this.levelNumber});
+
+  @override
+  List<Object> get props => [quizId, levelNumber];
 }
 
 class StartQuiz extends QuizEvent {
   const StartQuiz();
 }
 
+class RetakeQuiz extends QuizEvent {
+  const RetakeQuiz();
+}
+
 class AnswerQuestion extends QuizEvent {
   final String selectedAnswer;
 
   const AnswerQuestion({required this.selectedAnswer});
+
+  @override
+  List<Object> get props => [selectedAnswer];
 }
 
 class NextQuestion extends QuizEvent {
@@ -29,10 +44,4 @@ class PreviousQuestion extends QuizEvent {
 
 class SubmitQuiz extends QuizEvent {
   const SubmitQuiz();
-}
-
-class TimerTicked extends QuizEvent {
-  final int timeRemaining;
-
-  const TimerTicked({required this.timeRemaining});
 }

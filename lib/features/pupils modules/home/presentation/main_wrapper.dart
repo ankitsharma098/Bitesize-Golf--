@@ -8,8 +8,12 @@ import '../../../custom bottom navigation/bloc/custom_bottom_navigation_bloc.dar
 import '../../../custom bottom navigation/bloc/custom_bottom_navigation_event.dart';
 import '../../../custom bottom navigation/bloc/custom_bottom_navigation_state.dart';
 import '../../../custom bottom navigation/presentation/custom_bottom_navigation.dart';
+import '../../challenges/questions/presentation/welcome_page.dart';
+import '../../games/presentation/level_page.dart';
+import '../../games/presentation/welcome_page.dart';
 import '../../profile/presentation/profile_page.dart';
 import '../../profile/profile bloc/profile_bloc.dart';
+import '../../quiz/questions/presentation/welcome_page.dart';
 import '../data/dashboard_repo.dart';
 import '../home bloc/home_bloc.dart';
 import 'home_page.dart';
@@ -79,16 +83,16 @@ class _PupilMainWrapperScreenState extends State<PupilMainWrapperScreen> {
                     },
                     children: const [
                       PupilHomeScreen(),
-                      PlaceholderScreen(title: 'Schedule'),
-                      PlaceholderScreen(title: 'Progress'),
-                      PlaceholderScreen(title: 'Awards'),
+                      LevelPage(),
+                      ChallengeWelcomePage(),
+                      RedQuizWelcomeScreen(),
                       PupilProfileScreen(),
                     ],
                   ),
                   bottomNavigationBar: CustomBottomNavBar(
                     currentIndex: state.selectedIndex,
                     onTap: (index) =>
-                        _onTabTapped(context, index), // Pass context
+                        _onTabTapped(context, index),
                   ),
                 );
               },
@@ -103,7 +107,7 @@ class _PupilMainWrapperScreenState extends State<PupilMainWrapperScreen> {
 class PlaceholderScreen extends StatelessWidget {
   final String title;
 
-  const PlaceholderScreen({Key? key, required this.title}) : super(key: key);
+  const PlaceholderScreen({super.key, required this.title});
 
   @override
   Widget build(BuildContext context) {

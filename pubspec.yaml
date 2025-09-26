@@ -56,6 +56,11 @@ dependencies:
   image_picker: ^1.2.0
   intl: ^0.20.2
   flutter_svg: ^2.2.1
+  video_player: ^2.10.0
+
+
+
+
 
 dev_dependencies:
   flutter_test:
@@ -99,6 +104,7 @@ flutter:
     - assets/setting/
     - assets/date time/
     - assets/bottom/
+    - assets/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

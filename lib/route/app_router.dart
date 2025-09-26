@@ -1,9 +1,10 @@
 import 'package:bitesize_golf/features/coach%20module/session/presentation/start_new_session.dart';
+import 'package:bitesize_golf/features/pupils%20modules/challenges/questions/presentation/challenge_start_page.dart';
+import 'package:bitesize_golf/features/pupils%20modules/quiz/questions/presentation/quiz_start_page.dart';
 import 'package:bitesize_golf/route/routes_names.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-
 import '../core/utils/pending_approval_screen.dart';
 import '../features/auth subscription/presentation/auth_subscription_screen.dart';
 import '../features/auth/bloc/auth_bloc.dart';
@@ -20,6 +21,8 @@ import '../features/coach module/home/presentation/main_wrapper.dart';
 import '../features/coach module/statistics/presentation/pupil_stats_screen.dart';
 import '../features/coach module/statistics/presentation/search_stats_screen.dart';
 import '../features/guest module/home/presentation/main_wrapper.dart';
+import '../features/pupils modules/games/presentation/game_start_page.dart';
+import '../features/pupils modules/home/presentation/home_page.dart';
 import '../features/pupils modules/home/presentation/main_wrapper.dart';
 
 class AppRouter {
@@ -124,6 +127,25 @@ class AppRouter {
         path: RouteNames.searchStats,
         name: 'searchStats',
         builder: (context, state) => SearchStatsScreen(),
+      ),
+      GoRoute(
+        path: RouteNames.quizStart,
+        name: 'quizStart',
+        builder: (context, state) => QuizScreen(),
+      ),
+      GoRoute(
+        path: RouteNames.challengeStart,
+        name: 'challengeStart',
+        builder: (context, state) => ChallengeStartPage(),
+      ),
+      GoRoute(
+        path: RouteNames.gameStart,
+        name: 'gameStart',
+        builder: (context, state) => GameVideoScreen(),
+      ),      GoRoute(
+        path: RouteNames.pupilLevel,
+        name: 'pupilLevel',
+        builder: (context, state) => PupilHomeScreen(),
       ),
     ],
     redirect: _handleRedirect,

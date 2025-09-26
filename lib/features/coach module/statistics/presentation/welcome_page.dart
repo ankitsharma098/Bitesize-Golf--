@@ -42,19 +42,16 @@ class StatisticsWelcomeScreen extends StatelessWidget {
                   const SizedBox(height: 16),
                   const Text(
                     "Track your pupils' progress and improve their game:\n\n"
-                        "• Review stats: See their performance over time.\n"
-                        "• Spot trends: Identify areas for improvement.\n"
-                        "• Monitor club performance: Check which clubs they use best.\n"
-                        "• Target your next coaching sessions where they will have the most impact.\n\n"
-                        "Select a pupil to view detailed stats and create training goals.",
+                    "• Review stats: See their performance over time.\n"
+                    "• Spot trends: Identify areas for improvement.\n"
+                    "• Monitor club performance: Check which clubs they use best.\n"
+                    "• Target your next coaching sessions where they will have the most impact.\n\n"
+                    "Select a pupil to view detailed stats and create training goals.",
                     textAlign: TextAlign.left,
-                    style: TextStyle(fontSize: 14, color:AppColors.grey900),
+                    style: TextStyle(fontSize: 14, color: AppColors.grey900),
                   ),
                   const SizedBox(height: 16),
-                  Image.asset(
-                    "assets/stats/Level=red.png",
-                    height: 100,
-                  ),
+                  Image.asset("assets/stats/Level=red.png", height: 100),
                 ],
               ),
             ),

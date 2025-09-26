@@ -1,6 +1,4 @@
-// lib/route/app_routes.dart
 class RouteNames {
-  // Welcome & Auth
   static const splash = '/splash';
   static const welcome = '/welcome';
   static const login = '/login';
@@ -24,6 +22,7 @@ class RouteNames {
   static const pupilstats = "/stats";
   static const searchStats = "/searchStats";
 
+  // pupil
   static const pupilHome = '/pupil/home';
   static const guestHome = '/guest/home';
 
@@ -35,7 +34,10 @@ class RouteNames {
   static const profile = '/profile';
   static const settings = '/settings';
 
-  //coaches
-  static const pupilstats = "/stats";
-  static const searchStats = "/searchStats";
+  //quiz
+  static const quizStart = '/quizStart';
+  static const challengeStart = '/challengeStart';
+  static const gameStart = '/gameStart';
+  static const pupilLevel = '/pupilLevel';
+
 }

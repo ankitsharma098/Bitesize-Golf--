@@ -17,7 +17,7 @@ class PupilHomeBloc extends Bloc<PupilHomeEvent, PupilHomeState> {
     on<LoadHomeData>(_onLoadHomeData);
     on<RefreshHome>(_onRefreshHome);
     on<NavigateToLevel>(_onNavigateToLevel);
-    on<_UpdateHomeData>(_onUpdateHomeData); // Add internal event
+    on<_UpdateHomeData>(_onUpdateHomeData);
   }
 
   Future<void> _onLoadHomeData(
@@ -68,10 +68,8 @@ class PupilHomeBloc extends Bloc<PupilHomeEvent, PupilHomeState> {
   }
 
   void _onNavigateToLevel(NavigateToLevel event, Emitter<PupilHomeState> emit) {
-    // UI can handle navigation (snackbar, page push, etc.)
   }
 
-  // Internal event handler for stream updates
   void _onUpdateHomeData(_UpdateHomeData event, Emitter<PupilHomeState> emit) {
     if (event.pupil != null && event.levels != null) {
       print(
@@ -94,24 +92,20 @@ class PupilHomeBloc extends Bloc<PupilHomeEvent, PupilHomeState> {
 
       print("Setting up streams for pupil: ${pupil.id}");
 
-      // Variables to track both bloc streams
       PupilModel? currentPupil;
       List<LevelModel>? currentLevels;
       bool pupilLoaded = false;
       bool levelsLoaded = false;
 
-      // Helper function to add internal event when both are loaded
       void tryEmitLoaded() {
         if (pupilLoaded &&
             levelsLoaded &&
             currentPupil != null &&
             currentLevels != null) {
-          // Use add() instead of emit() to trigger internal event
           add(_UpdateHomeData(pupil: currentPupil, levels: currentLevels));
         }
       }
 
-      // Listen to pupil updates
       _pupilSubscription = _dashboardRepository
           .getPupilDataStream(pupil.id)
           .listen(
@@ -129,7 +123,6 @@ class PupilHomeBloc extends Bloc<PupilHomeEvent, PupilHomeState> {
             },
           );
 
-      // Listen to level updates
       _levelsSubscription = _dashboardRepository.getLevelsStream().listen(
         (levels) {
           print("Levels bloc received: ${levels.length} levels");
@@ -156,7 +149,6 @@ class PupilHomeBloc extends Bloc<PupilHomeEvent, PupilHomeState> {
   }
 }
 
-// Internal event for handling stream updates
 class _UpdateHomeData extends PupilHomeEvent {
   final PupilModel? pupil;
   final List<LevelModel>? levels;

@@ -11,6 +11,7 @@ import '../../../custom bottom navigation/bloc/custom_bottom_navigation_state.da
 import '../../../custom bottom navigation/presentation/custom_bottom_navigation.dart';
 import '../../profile/presentation/profile_page.dart';
 import '../../profile/profile bloc/profile_bloc.dart';
+import '../../statistics/presentation/search_stats_screen.dart';
 import '../data/home_level_repo.dart';
 import '../home bloc/home_bloc.dart';
 import 'home_page.dart';
@@ -80,7 +81,7 @@ class _CoachMainWrapperScreenState extends State<CoachMainWrapperScreen> {
                     children: const [
                       CoachHomeScreen(),
                       PlaceholderScreen(title: 'Schedule'),
-                      PlaceholderScreen(title: 'Progress'),
+                      SearchStatsScreen(),
                       PlaceholderScreen(title: 'Awards'),
                       CoachProfileScreen(),
                     ],
@@ -88,7 +89,7 @@ class _CoachMainWrapperScreenState extends State<CoachMainWrapperScreen> {
                   bottomNavigationBar: CustomBottomNavBar(
                     currentIndex: state.selectedIndex,
                     onTap: (index) =>
-                        _onTabTapped(context, index), // Pass context
+                        _onTabTapped(context, index),
                   ),
                 );
               },

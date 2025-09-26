@@ -1,15 +1,14 @@
-import 'package:bitesize_golf/features/components/custom_button.dart';
-import 'package:bitesize_golf/route/navigator_service.dart';
-import 'package:bitesize_golf/route/routes_names.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-
 import '../../../../core/storage/shared_preference_utils.dart';
 import '../../../../core/themes/theme_colors.dart';
-import '../auth_subscription_bloc/auth_subscription_bloc.dart'
-    show SubscriptionBloc;
+import '../../components/custom_button.dart';
+import '../auth_subscription_bloc/auth_subscription_bloc.dart';
 import '../auth_subscription_bloc/auth_subscription_event.dart';
 import '../auth_subscription_bloc/auth_subscription_state.dart';
+
+import '../../../../route/navigator_service.dart';
+import '../../../../route/routes_names.dart';
 
 class SubscriptionScreen extends StatelessWidget {
   const SubscriptionScreen({super.key});
@@ -35,13 +34,15 @@ class SubscriptionScreenView extends StatelessWidget {
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
+        automaticallyImplyLeading: false,
         title: const Text(
           'Subscription',
           style: TextStyle(color: Colors.black, fontWeight: FontWeight.w600),
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.close, color: Colors.black),
+            icon: Container(padding: EdgeInsets.all(5),decoration: BoxDecoration(color: AppColors.grey100,borderRadius: BorderRadius.circular(5))
+                ,child: const Icon(Icons.close, color: Colors.black)),
             onPressed: () => Navigator.pop(context),
           ),
         ],
@@ -65,16 +66,13 @@ class SubscriptionScreenView extends StatelessWidget {
                 backgroundColor: Colors.red,
               ),
             );
-          } else if (state is SubscriptionError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('Error: ${state.message}'),
-                backgroundColor: Colors.red,
-              ),
-            );
           }
         },
         builder: (context, state) {
+          final isLoading = state is SubscriptionPurchasing;
+          final canPurchase =
+              state is SubscriptionPlansLoaded && state.selectedPlan != null;
+
           return Column(
             children: [
               Container(
@@ -87,52 +85,62 @@ class SubscriptionScreenView extends StatelessWidget {
                   ),
                 ),
               ),
+
               Expanded(
-                child: LayoutBuilder(
-                  builder: (_, constraints) {
-                    return SingleChildScrollView(
-                      child: ConstrainedBox(
-                        constraints: BoxConstraints(
-                          minWidth: constraints.maxWidth,
-                          minHeight: constraints.maxHeight,
-                        ),
-                        child: IntrinsicHeight(
-                          child: Padding(
-                            padding: const EdgeInsets.all(20),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Center(
-                                  child: Text(
-                                    'Choose your Subscription',
-                                    style: TextStyle(
-                                      fontSize: 24,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(height: 20),
-
-                                if (state is SubscriptionLoading)
-                                  const Center(
-                                    child: CircularProgressIndicator(),
-                                  )
-                                else if (state is SubscriptionPlansLoaded)
-                                  _buildPlanSelection(context, state)
-                                else if (state is SubscriptionPurchasing)
-                                  _buildPurchasingState(state),
-
-                                const SizedBox(height: 30),
-                                _buildFeatureList(),
-                                const Spacer(),
-                                _buildContinueButton(context, state),
-                              ],
-                            ),
+                child: Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Center(
+                        child: Text(
+                          'Choose your Subscription',
+                          style: TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
                       ),
-                    );
-                  },
+                      const SizedBox(height: 20),
+
+                      if (state is SubscriptionLoading)
+                        const Center(child: CircularProgressIndicator())
+                      else if (state is SubscriptionPlansLoaded)
+                        _buildPlanSelection(context, state),
+
+                      const SizedBox(height: 30),
+                      _buildFeatureList(),
+                      const Spacer(),
+
+                      SizedBox(
+                        width: double.infinity,
+                        child: CustomButtonFactory.primary(
+                          text: isLoading ? 'Processing...' : 'Continue',
+                          onPressed: isLoading || !canPurchase
+                              ? null
+                              : () async {
+                            final userId =
+                            await SharedPrefsService.getUserId();
+                            if (userId == null) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                      'User ID required for subscription'),
+                                  backgroundColor: Colors.orange,
+                                ),
+                              );
+                              return;
+                            }
+                            context.read<SubscriptionBloc>().add(
+                              PurchaseSubscriptionEvent(userId),
+                            );
+                          },
+                          levelType: LevelType.redLevel,
+                          isLoading: isLoading,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ],
@@ -143,194 +151,124 @@ class SubscriptionScreenView extends StatelessWidget {
   }
 
   Widget _buildPlanSelection(
-    BuildContext context,
-    SubscriptionPlansLoaded state,
-  ) {
+      BuildContext context, SubscriptionPlansLoaded state) {
     final maxCardWidth = (MediaQuery.of(context).size.width - 64) / 2;
 
-    return Wrap(
-      spacing: 16,
-      runSpacing: 12,
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
       children: state.plans.map((plan) {
         final isSelected = state.selectedPlan == plan;
 
-        return ConstrainedBox(
-          constraints: BoxConstraints(maxWidth: maxCardWidth),
-          child: GestureDetector(
-            onTap: () => context.read<SubscriptionBloc>().add(
-              SelectSubscriptionPlan(plan),
-            ),
-            child: Stack(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    border: Border.all(
-                      color: isSelected ? Colors.red : Colors.grey[300]!,
-                      width: isSelected ? 2 : 1,
-                    ),
-                    borderRadius: BorderRadius.circular(8),
-                    color: isSelected
-                        ? Colors.red.withOpacity(0.05)
-                        : Colors.white,
+        return GestureDetector(
+          onTap: () => context.read<SubscriptionBloc>().add(
+            SelectSubscriptionPlan(plan),
+          ),
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Container(
+                width: 160, // 👈 thoda bada width diya
+                padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 20),
+                margin: const EdgeInsets.symmetric(horizontal: 12),
+                decoration: BoxDecoration(
+                  border: Border.all(
+                    color: isSelected ? Colors.red : Colors.grey[300]!,
+                    width: isSelected ? 2 : 1,
                   ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        plan.title,
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: isSelected
-                              ? FontWeight.bold
-                              : FontWeight.normal,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        plan.price,
-                        style: const TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.red,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        '${plan.unlockedLevels} levels',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey[600],
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
+                  borderRadius: BorderRadius.circular(10),
+                  color: Colors.white,
                 ),
-                if (plan.saveText.isNotEmpty)
-                  Positioned(
-                    top: -8,
-                    right: -8,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 4,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      plan.title,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.normal,
                       ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      plan.price,
+                      style: const TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.red,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              if (plan.saveText.isNotEmpty)
+                Positioned(
+                  top: -12,
+                  right: -18,
+                  child: Transform.rotate(
+                    angle: -12,
+                    child: Container(
+                      padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
                         color: Colors.red,
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(
                         plan.saveText,
                         style: const TextStyle(
                           color: Colors.white,
-                          fontSize: 10,
+                          fontSize: 11,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                     ),
                   ),
-                if (isSelected)
-                  const Positioned(
-                    top: 8,
-                    left: 8,
-                    child: CircleAvatar(
-                      radius: 10,
-                      backgroundColor: Colors.red,
-                      child: Icon(Icons.check, color: Colors.white, size: 14),
-                    ),
+                ),
+
+              if (isSelected)
+                const Positioned(
+                  top: 8,
+                  left: 8,
+                  child: CircleAvatar(
+                    radius: 10,
+                    backgroundColor: Colors.red,
+                    child: Icon(Icons.check, color: Colors.white, size: 14),
                   ),
-              ],
-            ),
+                ),
+            ],
           ),
         );
       }).toList(),
     );
-  }
 
-  Widget _buildPurchasingState(SubscriptionPurchasing state) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        border: Border.all(color: Colors.blue),
-        borderRadius: BorderRadius.circular(8),
-        color: Colors.blue.withOpacity(0.05),
-      ),
-      child: Row(
-        children: [
-          const CircularProgressIndicator(strokeWidth: 2),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Text(
-              'Processing ${state.selectedPlan.title} subscription...',
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-            ),
-          ),
-        ],
-      ),
-    );
   }
 
   Widget _buildFeatureList() {
+    final features = [
+      'Access to all 10 golf levels',
+      'Interactive challenges & fun games',
+      'Progress tracking and achievements',
+      'Designed by top junior golf coaches',
+    ];
+
     return Column(
-      children: [
-        _buildFeatureItem('Access to premium golf levels'),
-        _buildFeatureItem('Interactive challenges & fun games'),
-        _buildFeatureItem('Progress tracking and achievements'),
-        _buildFeatureItem('Designed by top junior golf coaches'),
-        _buildFeatureItem('Video lessons and tutorials'),
-        _buildFeatureItem('Coach feedback system'),
-      ],
+      children: features.map((f) => _buildFeatureItem(f)).toList(),
     );
   }
 
   Widget _buildFeatureItem(String text) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
+      padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
         children: [
           const Icon(Icons.check, color: Colors.green, size: 20),
           const SizedBox(width: 12),
-          Expanded(child: Text(text, style: const TextStyle(fontSize: 16))),
+          Expanded(
+            child: Text(text, style: const TextStyle(fontSize: 16)),
+          ),
         ],
       ),
     );
   }
-
-  Widget _buildContinueButton(BuildContext context, SubscriptionState state) {
-    final isLoading = state is SubscriptionPurchasing;
-    final canPurchase =
-        state is SubscriptionPlansLoaded && state.selectedPlan != null;
-
-    return SizedBox(
-      width: double.infinity,
-      child: CustomButtonFactory.primary(
-        text: isLoading
-            ? 'Processing...'
-            : (canPurchase
-            ? 'Continue with ${state.selectedPlan!.title}'
-            : 'Continue'),
-        onPressed: isLoading || !canPurchase
-            ? null
-            : () async {
-          final userId = await SharedPrefsService.getUserId();
-          if (userId == null) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('User ID required for subscription'),
-                backgroundColor: Colors.orange,
-              ),
-            );
-            return;
-          }
-          context.read<SubscriptionBloc>().add(
-            PurchaseSubscriptionEvent(userId),
-          );
-        },
-        levelType: LevelType.redLevel,
-        isLoading: isLoading,
-      ),
-    );
-  }
-
 }

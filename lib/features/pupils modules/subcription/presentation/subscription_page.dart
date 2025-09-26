@@ -10,7 +10,7 @@ import '../../../components/utils/size_config.dart';
 import '../data/subscription_bloc.dart';
 
 class SubscriptionPage extends StatelessWidget {
-  final String userId; // we’ll fetch the pupil’s subscription by ID
+  final String userId;
 
   const SubscriptionPage({super.key, required this.userId});
 

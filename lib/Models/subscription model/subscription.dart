@@ -17,7 +17,7 @@ class Subscription {
     this.startDate,
     this.endDate,
     this.autoRenew = false,
-    this.maxUnlockedLevels = 3,
+    this.maxUnlockedLevels = 10,
   });
 
   /* ---------------- computed helpers ---------------- */
@@ -31,7 +31,7 @@ class Subscription {
   factory Subscription.free() => const Subscription(
     status: SubscriptionStatus.active,
     tier: SubscriptionTier.free,
-    maxUnlockedLevels: 3,
+    maxUnlockedLevels: 10,
   );
 
   factory Subscription.premium({

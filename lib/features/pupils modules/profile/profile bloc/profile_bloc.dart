@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
-
 import '../../../../Models/level model/level_model.dart';
 import '../../../../Models/pupil model/pupil_model.dart';
 import '../../../../core/constants/firebase_collections_names.dart';
@@ -11,11 +10,12 @@ import 'profile_state.dart';
 class PupilProfileBloc extends Bloc<PupilProfileEvent, PupilProfileState> {
   StreamSubscription? _pupilSubscription;
 
-  PupilProfileBloc() : super(const PupilProfileInitial()) {
+  PupilProfileBloc() : super(const PupilProfileInitial())
+  {
     on<PupilLoadProfileData>(_onLoadProfileData);
     on<PupilRefreshProfile>(_onRefreshProfile);
     on<PupilUpdateProfile>(_onUpdateProfile);
-    on<_UpdateProfileData>(_onUpdateProfileData); // Add internal event
+    on<_UpdateProfileData>(_onUpdateProfileData);
   }
 
   Future<void> _onLoadProfileData(
@@ -45,22 +45,18 @@ class PupilProfileBloc extends Bloc<PupilProfileEvent, PupilProfileState> {
         emit(const PupilProfileError('Pupil profile not found'));
         return;
       }
-
       final levelQuery = await FirestoreCollections.levelsCol
           .where('isActive', isEqualTo: true)
           .where('isPublished', isEqualTo: true)
           .orderBy('levelNumber')
           .get();
-
       final levels = levelQuery.docs
           .map((doc) => LevelModel.fromJson(doc.data()))
           .toList();
-
       final currentLevel = levels.firstWhere(
         (lvl) => lvl.levelNumber == pupil.currentLevel,
         orElse: () => levels.first,
       );
-
       emit(PupilProfileLoaded(pupil: pupil, currentLevel: currentLevel));
     } catch (e) {
       emit(PupilProfileError('Failed to refresh profile: $e'));
@@ -77,7 +73,6 @@ class PupilProfileBloc extends Bloc<PupilProfileEvent, PupilProfileState> {
         emit(const PupilProfileError('Pupil profile not found'));
         return;
       }
-
       await FirestoreCollections.pupilsCol
           .doc(pupil.id)
           .update(event.updatedPupil.toFirestore());
@@ -86,7 +81,6 @@ class PupilProfileBloc extends Bloc<PupilProfileEvent, PupilProfileState> {
     }
   }
 
-  // Internal event handler for stream updates
   void _onUpdateProfileData(
     _UpdateProfileData event,
     Emitter<PupilProfileState> emit,
@@ -105,7 +99,6 @@ class PupilProfileBloc extends Bloc<PupilProfileEvent, PupilProfileState> {
 
   Future<void> _startListeningToUpdates(String userId) async {
     await _pupilSubscription?.cancel();
-
     _pupilSubscription = FirestoreCollections.pupilsCol
         .doc(userId)
         .snapshots()
@@ -116,23 +109,18 @@ class PupilProfileBloc extends Bloc<PupilProfileEvent, PupilProfileState> {
                 final pupil = PupilModel.fromFirestore(
                   doc.data() as Map<String, dynamic>,
                 );
-
                 final levelQuery = await FirestoreCollections.levelsCol
                     .where('isActive', isEqualTo: true)
                     .where('isPublished', isEqualTo: true)
                     .orderBy('levelNumber')
                     .get();
-
                 final levels = levelQuery.docs
                     .map((d) => LevelModel.fromJson(d.data()))
                     .toList();
-
                 final currentLevel = levels.firstWhere(
                   (lvl) => lvl.levelNumber == pupil.currentLevel,
                   orElse: () => levels.first,
                 );
-
-                // Use add() instead of emit()
                 add(
                   _UpdateProfileData(pupil: pupil, currentLevel: currentLevel),
                 );
@@ -156,12 +144,10 @@ class PupilProfileBloc extends Bloc<PupilProfileEvent, PupilProfileState> {
   }
 }
 
-// Internal event for handling stream updates
 class _UpdateProfileData extends PupilProfileEvent {
   final PupilModel? pupil;
   final LevelModel? currentLevel;
   final String? error;
-
   const _UpdateProfileData({this.pupil, this.currentLevel, this.error});
 
   @override

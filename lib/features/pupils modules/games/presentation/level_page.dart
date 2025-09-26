@@ -1,21 +1,22 @@
+import 'package:bitesize_golf/features/pupils%20modules/games/presentation/welcome_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/themes/theme_colors.dart';
 import '../../../components/custom_scaffold.dart';
 import '../../../components/pupil_level_card.dart';
 import '../../../components/utils/size_config.dart';
-import '../home bloc/home_bloc.dart';
-import '../home bloc/home_event.dart';
-import '../home bloc/home_state.dart';
+import '../../home/home bloc/home_bloc.dart';
+import '../../home/home bloc/home_event.dart';
+import '../../home/home bloc/home_state.dart';
 
-class PupilHomeScreen extends StatefulWidget {
-  const PupilHomeScreen({super.key});
+class LevelPage extends StatefulWidget {
+  const LevelPage({super.key});
 
   @override
-  State<PupilHomeScreen> createState() => _PupilHomeScreenState();
+  State<LevelPage> createState() => _LevelPageState();
 }
 
-class _PupilHomeScreenState extends State<PupilHomeScreen> {
+class _LevelPageState extends State<LevelPage> {
   @override
   void initState() {
     super.initState();
@@ -32,7 +33,7 @@ class _PupilHomeScreenState extends State<PupilHomeScreen> {
     return AppScaffold.withCustomAppBar(
       customPadding: EdgeInsets.all(5),
       appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(30), // Custom height
+        preferredSize: const Size.fromHeight(30),
         child: AppBar(
           backgroundColor: Colors.transparent,
           elevation: 0,
@@ -46,7 +47,6 @@ class _PupilHomeScreenState extends State<PupilHomeScreen> {
           ),
         ),
       ),
-      //  title: 'Home',
       scrollable: true,
       body: BlocBuilder<PupilHomeBloc, PupilHomeState>(
         builder: (context, state) {
@@ -142,14 +142,14 @@ class _PupilHomeScreenState extends State<PupilHomeScreen> {
           ...state.levels.map((level) {
             bool isUnlocked =
                 state.pupil.unlockedLevels.contains(level.levelNumber) ||
-                level.levelNumber <= state.pupil.currentLevel;
+                    level.levelNumber <= state.pupil.currentLevel;
             bool isCompleted = level.levelNumber < state.pupil.currentLevel;
             return CustomLevelCard(
               levelName: level.name,
               levelNumber: level.levelNumber,
               isUnlocked: isUnlocked,
               isCompleted: isCompleted,
-              onTap: () => _navigateToLevel(level.levelNumber),
+              onTap: () => _navigateToLevel(level.levelNumber, level.name),
             );
           }),
           SizedBox(height: SizeConfig.scaleHeight(100)),
@@ -158,11 +158,17 @@ class _PupilHomeScreenState extends State<PupilHomeScreen> {
     );
   }
 
-  void _navigateToLevel(int levelNumber) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Navigating to Level $levelNumber'),
-        backgroundColor: AppColors.greenDark,
+  void _navigateToLevel(int levelNumber, String levelName) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const GameWelcomePage(),
+        settings: RouteSettings(
+          arguments: {
+            'levelNumber': levelNumber,
+            'levelName': levelName,
+          },
+        ),
       ),
     );
   }

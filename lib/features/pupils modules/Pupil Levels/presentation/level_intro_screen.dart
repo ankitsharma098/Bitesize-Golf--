@@ -51,7 +51,7 @@ class LevelDetailScreen extends StatelessWidget {
               // Description Content
               _buildDescriptionContent(),
 
-              SizedBox(height: SizeConfig.scaleHeight(24)),
+              // SizedBox(height: SizeConfig.scaleHeight(24)),
 
               // Golf Ball Character (placeholder for now)
               _buildCharacterSection(),
@@ -144,35 +144,18 @@ class LevelDetailScreen extends StatelessWidget {
     return SizedBox(
       height: SizeConfig.scaleHeight(150),
       child: Center(
-        child: SvgPicture.asset(
+        child: Image.asset(
           BallAssetProvider.getWelcomeBall(_getLevelTypeFromModel()),
-          width: SizeConfig.scaleWidth(100),
-          height: SizeConfig.scaleWidth(100),
+          width: SizeConfig.scaleWidth(220),
+          height: SizeConfig.scaleWidth(160),
           fit: BoxFit.contain,
-          allowDrawingOutsideViewBox: true,
+          // allowDrawingOutsideViewBox: true,
           errorBuilder: (context, error, stackTrace) {
-            //print("Error ${error}");
+            print("Error ${error}");
             return Icon(
               Icons.sports_golf,
               size: SizeConfig.scaleWidth(40),
               color: _getLevelTypeFromModel().color,
-            );
-          },
-
-          placeholderBuilder: (context) {
-            // Fallback to a generic icon if asset fails to load
-            return Container(
-              width: SizeConfig.scaleWidth(80),
-              height: SizeConfig.scaleWidth(80),
-              decoration: BoxDecoration(
-                color: AppColors.grey300,
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                Icons.sports_golf,
-                size: SizeConfig.scaleWidth(40),
-                color: _getLevelTypeFromModel().color,
-              ),
             );
           },
         ),

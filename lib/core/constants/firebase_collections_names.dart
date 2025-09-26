@@ -15,6 +15,8 @@ abstract class FirestoreCollections {
   static const String subscriptionLogs = 'subscriptionLogs';
   static const String books = 'books';
   static const String bookProgress = 'book_progress';
+  static const String quizzes = 'quizzes';
+  static const String quizAttempts = 'quizAttempts';
 
   /* ---------- typed CollectionReference helpers ---------- */
   static CollectionReference<Map<String, dynamic>> get usersCol =>
@@ -54,4 +56,9 @@ abstract class FirestoreCollections {
       FirebaseFirestore.instance.collection(books);
   static CollectionReference get bookProgressCol =>
       FirebaseFirestore.instance.collection(bookProgress);
+
+  static CollectionReference get quizzesCol =>
+      FirebaseFirestore.instance.collection(quizzes);
+  static CollectionReference get quizAttemptsCol =>
+      FirebaseFirestore.instance.collection(quizAttempts);
 }

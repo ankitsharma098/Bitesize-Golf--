@@ -1,3 +1,4 @@
+import 'package:bitesize_golf/features/components/utils/size_config.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 
@@ -71,7 +72,11 @@ class CustomLevelCard extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    Image.asset("assets/bird/bird.png", width: 40, height: 40),
+                    SvgPicture.asset(
+                      "assets/bird/bird.png",
+                      width: 40,
+                      height: 40,
+                    ),
                     const SizedBox(width: 8),
                     Text(
                       levelName,
@@ -89,7 +94,7 @@ class CustomLevelCard extends StatelessWidget {
                   Positioned(
                     top: 0,
                     right: 2,
-                    child: Image.asset(
+                    child: SvgPicture.asset(
                       "assets/lock/lock.png",
                       width: 35,
                       height: 35,
@@ -100,9 +105,10 @@ class CustomLevelCard extends StatelessWidget {
             const SizedBox(height: 16),
             GestureDetector(
               onTap: isUnlocked ? onTap : null,
+
               child: Container(
                 width: double.infinity,
-                padding: const EdgeInsets.symmetric(vertical: 12),
+                //padding: const EdgeInsets.symmetric(vertical: 12),
                 decoration: BoxDecoration(
                   color: levelType.lightColor,
                   borderRadius: BorderRadius.circular(12),
@@ -111,20 +117,23 @@ class CustomLevelCard extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     // Using BallAssetProvider for swing ball
-                    SvgPicture.asset(
-                      BallAssetProvider.getSwingOneBall(levelType),
-                      width: 34,
-                      height: 32,
-                      placeholderBuilder: (context) {
-                        // Fallback to a generic icon if asset fails to load
-                        return Icon(
-                          Icons.sports_golf,
-                          size: 32,
-                          color: levelType.color,
-                        );
-                      },
+                    Padding(
+                      padding: const EdgeInsets.only(top: 5.0, bottom: 3),
+                      child: Image.asset(
+                        BallAssetProvider.getSwingOneBall(levelType),
+                        width: SizeConfig.scaleWidth(80),
+                        height: SizeConfig.scaleWidth(50),
+
+                        fit: BoxFit.contain,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Icon(
+                            Icons.sports_golf,
+                            size: 32,
+                            color: levelType.color,
+                          );
+                        },
+                      ),
                     ),
-                    const SizedBox(height: 4),
                     const Text(
                       'Go to Level',
                       style: TextStyle(

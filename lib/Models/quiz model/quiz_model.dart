@@ -12,7 +12,6 @@ class QuizModel {
   final List<QuizQuestionModel> questions;
   final int totalQuestions;
   final int totalPoints;
-  final int estimatedTime;
   final String accessTier;
   final bool isActive;
   final int sortOrder;
@@ -32,7 +31,6 @@ class QuizModel {
     required this.questions,
     required this.totalQuestions,
     required this.totalPoints,
-    required this.estimatedTime,
     required this.accessTier,
     required this.isActive,
     required this.sortOrder,
@@ -71,7 +69,6 @@ class QuizModel {
       questions: questions,
       totalQuestions: totalQ,
       totalPoints: totalP,
-      estimatedTime: estimated,
       accessTier: accessTier,
       isActive: true,
       sortOrder: sortOrder,
@@ -93,7 +90,6 @@ class QuizModel {
     'questions': questions.map((q) => q.toFirestore()).toList(),
     'totalQuestions': totalQuestions,
     'totalPoints': totalPoints,
-    'estimatedTime': estimatedTime,
     'accessTier': accessTier,
     'isActive': isActive,
     'sortOrder': sortOrder,
@@ -118,7 +114,6 @@ class QuizModel {
         [],
     totalQuestions: json['totalQuestions'] ?? 0,
     totalPoints: json['totalPoints'] ?? 0,
-    estimatedTime: json['estimatedTime'] ?? 0,
     accessTier: json['accessTier'] ?? 'free',
     isActive: json['isActive'] ?? true,
     sortOrder: json['sortOrder'] ?? 0,
@@ -158,7 +153,6 @@ class QuizModel {
     questions: questions ?? this.questions,
     totalQuestions: totalQuestions ?? this.totalQuestions,
     totalPoints: totalPoints ?? this.totalPoints,
-    estimatedTime: estimatedTime ?? this.estimatedTime,
     accessTier: accessTier ?? this.accessTier,
     isActive: isActive ?? this.isActive,
     sortOrder: sortOrder ?? this.sortOrder,

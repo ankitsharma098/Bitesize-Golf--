@@ -38,7 +38,7 @@ class LevelOverviewData {
     return LevelOverviewData(
       bookPagesRead: 0,
       totalBookPages: 15,
-      quizQuestionsAnswered: 4,
+      quizQuestionsAnswered: 0,
       totalQuizQuestions: 10,
       challengesCompleted: 0,
       totalChallenges: 6,

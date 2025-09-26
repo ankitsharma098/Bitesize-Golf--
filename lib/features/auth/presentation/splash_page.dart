@@ -2,6 +2,7 @@ import 'package:bitesize_golf/Models/coaches%20model/coach_model.dart';
 import 'package:bitesize_golf/core/utils/user_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../route/routes_names.dart';
 import '../../components/custom_scaffold.dart';
@@ -68,7 +69,7 @@ class _SplashScreenState extends State<SplashScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Image.asset("assets/logo/logo.png", width: 100, height: 100),
+              SvgPicture.asset("assets/logo/logo.png", width: 100, height: 100),
               const SizedBox(height: 40),
               const LinearProgressIndicator(
                 backgroundColor: Colors.white24,

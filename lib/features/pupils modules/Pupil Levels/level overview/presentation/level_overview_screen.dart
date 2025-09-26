@@ -9,6 +9,7 @@ import '../../../../components/custom_button.dart';
 import '../../../../components/custom_scaffold.dart';
 import '../../../../components/utils/size_config.dart';
 import '../../book/presentation/pupil_book_screen.dart';
+import '../../quiz/presentation/quiz_screen.dart';
 import '../bloc/level_overview__bloc.dart';
 import '../bloc/level_overview__event.dart';
 import '../bloc/level_overview__state.dart';
@@ -148,7 +149,9 @@ class _LevelOverviewView extends StatelessWidget {
                       progress:
                           '${data.quizQuestionsAnswered}/${data.totalQuizQuestions} questions',
                       subtitle: 'answered',
-                      buttonText: 'Continue Quiz',
+                      buttonText: data.quizQuestionsAnswered > 0
+                          ? 'Continue Quiz'
+                          : 'Take Quiz',
                       assetPath: BallAssetProvider.getSwingBall(
                         _getLevelTypeFromModel(),
                       ),
@@ -238,26 +241,21 @@ class _LevelOverviewView extends StatelessWidget {
       child: Column(
         children: [
           // Character Image
-          SizedBox(
-            height: SizeConfig.scaleHeight(80),
-            child: Center(
-              child: SvgPicture.asset(
-                'assets/learn_balls/Level=Coral.svg',
-                width: SizeConfig.scaleWidth(60),
-                height: SizeConfig.scaleWidth(60),
-                fit: BoxFit.contain,
-                errorBuilder: (context, error, stackTrace) {
-                  return Icon(
-                    Icons.sports_golf,
-                    size: SizeConfig.scaleWidth(40),
-                    color: _getLevelTypeFromModel().color,
-                  );
-                },
-              ),
-            ),
+          Image.asset(
+            assetPath,
+            width: SizeConfig.scaleWidth(60),
+            height: SizeConfig.scaleWidth(80),
+            fit: BoxFit.contain,
+            errorBuilder: (context, error, stackTrace) {
+              return Icon(
+                Icons.sports_golf,
+                size: SizeConfig.scaleWidth(40),
+                color: _getLevelTypeFromModel().color,
+              );
+            },
           ),
 
-          SizedBox(height: SizeConfig.scaleHeight(12)),
+          // SizedBox(height: SizeConfig.scaleHeight(12)),
 
           // Title
           Text(
@@ -379,7 +377,12 @@ class _LevelOverviewView extends StatelessWidget {
 
   void _navigateToQuiz(BuildContext context) {
     // TODO: Navigate to quiz screen
-    print('Navigate to Quiz');
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => QuizScreen(levelModel: levelModel),
+      ),
+    );
   }
 
   void _navigateToChallenges(BuildContext context) {

@@ -81,7 +81,7 @@ class BookWelcomeWidget extends StatelessWidget {
                   SizedBox(height: SizeConfig.scaleHeight(32)),
 
                   // Character Illustration
-                  SvgPicture.asset(
+                  Image.asset(
                     BallAssetProvider.getKnowBall(levelType),
                     width: SizeConfig.scaleWidth(120),
                     height: SizeConfig.scaleWidth(120),
